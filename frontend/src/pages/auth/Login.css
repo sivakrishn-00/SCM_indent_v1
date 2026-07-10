@@ -1,0 +1,577 @@
+/* Font import for Outfit */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+
+.login-page-wrapper {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  /* Deep premium amethyst-purple to indigo background split */
+  background: linear-gradient(to bottom, #ffffff 40%, #2f074d 40%);
+  font-family: 'Outfit', 'Inter', sans-serif;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+/* Background grid overlay patterns to create highly professional corporate textures */
+.login-page-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* Faint charcoal grid lines on top white section */
+  background-image: 
+    linear-gradient(rgba(0, 0, 0, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.035) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bg-texture-purple {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60%;
+  /* Subtle light grid lines overlay for textured accent on bottom purple section */
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Entrance Animation for the login card container */
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* The Solid Centered Card Container */
+.login-card-container {
+  width: 90%;
+  max-width: 980px; 
+  height: 570px;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 25px 65px rgba(47, 7, 77, 0.28), 
+              0 2px 5px rgba(0, 0, 0, 0.04);
+  display: flex;
+  overflow: hidden;
+  z-index: 10;
+  position: relative;
+  animation: cardEntrance 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* LEFT PANEL: Wave Graphic Panel */
+.login-visual-panel {
+  width: 45%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background-color: #4d1375;
+}
+
+.wave-svg {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 104%;
+  height: 102%;
+  object-fit: fill;
+}
+
+/* Shimmering / swaying waves keyframes for a dynamic "water flow" texture */
+@keyframes waveSway {
+  0% {
+    transform: scaleX(1) skewX(0deg);
+  }
+  50% {
+    transform: scaleX(1.04) skewX(1deg);
+  }
+  100% {
+    transform: scaleX(1) skewX(0deg);
+  }
+}
+
+.wave-svg path:nth-child(even) {
+  animation: waveSway 10s ease-in-out infinite alternate;
+  transform-origin: left center;
+}
+
+.wave-svg path:nth-child(odd) {
+  animation: waveSway 14s ease-in-out infinite alternate;
+  transform-origin: left center;
+}
+
+/* RIGHT PANEL: Form Panel */
+.login-form-panel {
+  width: 55%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 5rem;
+  position: relative;
+  background: #ffffff;
+}
+
+/* scattered circles */
+.scattered-circle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  transition: transform 0.3s ease;
+}
+
+/* Floating animation for scattered dots */
+@keyframes floatDot {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) translateX(3px) scale(1.08);
+  }
+}
+
+.scattered-circle {
+  animation: floatDot 5s ease-in-out infinite;
+}
+
+/* Varying float speeds & delays for natural parallax */
+.dot-1 { animation-duration: 5s; animation-delay: 0.1s; top: 12%; right: 42%; width: 12px; height: 12px; opacity: 0.4; }
+.dot-2 { animation-duration: 7s; animation-delay: 0.3s; top: 22%; right: 18%; width: 18px; height: 18px; opacity: 0.5; }
+.dot-3 { animation-duration: 4s; animation-delay: 0.5s; top: 8%; right: 4%; width: 8px; height: 8px; opacity: 0.4; }
+.dot-4 { animation-duration: 6s; animation-delay: 0.2s; top: 40%; right: 1.5%; width: 18px; height: 18px; opacity: 0.5; }
+.dot-5 { animation-duration: 8s; animation-delay: 0.7s; top: 42%; left: 8%; width: 16px; height: 16px; opacity: 0.4; }
+.dot-6 { animation-duration: 5s; animation-delay: 0.4s; bottom: 30%; left: 35%; width: 9px; height: 9px; opacity: 0.5; }
+.dot-7 { animation-duration: 6s; animation-delay: 0.8s; bottom: 22%; left: 6%; width: 10px; height: 10px; opacity: 0.4; }
+.dot-8 { animation-duration: 7s; animation-delay: 0.1s; bottom: 4%; right: 20%; width: 8px; height: 8px; opacity: 0.3; }
+.dot-9 { animation-duration: 5s; animation-delay: 0.6s; bottom: -2%; right: -2%; width: 16px; height: 16px; opacity: 0.5; }
+
+/* Colored accent dots from BAVYA Palette */
+.scattered-circle.gold { background-color: #fbb03b; }
+.scattered-circle.orange { background-color: #f7931e; }
+.scattered-circle.pink { background-color: #d81159; }
+.scattered-circle.purple { background-color: #5e17eb; }
+
+/* Form wrapper size */
+.form-content-wrapper {
+  width: 100%;
+  max-width: 390px;
+  display: flex;
+  flex-direction: column;
+  z-index: 5;
+}
+
+/* Form Headings */
+.form-header {
+  text-align: center;
+  margin-bottom: 2.2rem;
+  position: relative;
+}
+
+.bavya-brand-logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1.25rem;
+}
+
+/* CSS-based pixel-perfect BAVYA Logo symbol */
+.bavya-brand-logo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3.5px;
+  width: 38px;
+  height: 38px;
+}
+
+.petal {
+  width: 100%;
+  height: 100%;
+}
+
+.petal-tl {
+  border-radius: 9px 9px 0 9px;
+  background-color: #fbb03b;
+}
+
+.petal-tr {
+  border-radius: 9px 9px 9px 0;
+  background-color: #f7931e;
+}
+
+.petal-bl {
+  border-radius: 9px 0 9px 9px;
+  background-color: #d81159;
+}
+
+.petal-br {
+  border-radius: 0 9px 9px 9px;
+  background-color: #4d1375;
+}
+
+.bavya-brand-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.form-header h2 {
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #4d1375;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* Underline decoration */
+.title-underline {
+  width: 70px;
+  height: 3.5px;
+  background-color: #4d1375;
+  margin: 0.5rem auto 0 auto;
+  border-radius: 2px;
+}
+
+.step-description {
+  color: #64748b;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin-top: 1rem;
+}
+
+/* Inputs styling with Floating Label support */
+.input-group.floating-label-group {
+  position: relative;
+  margin-bottom: 1.6rem;
+  width: 100%;
+}
+
+.floating-label-group .form-input {
+  width: 100%;
+  padding: 18px 18px 8px 18px; /* Extra top padding to make room for lowered label */
+  background: #ffffff;
+  border: 1px solid #ebd5ff;
+  border-radius: 9px;
+  color: #334155;
+  font-size: 0.98rem;
+  font-family: inherit;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 10px rgba(77, 19, 117, 0.02);
+}
+
+.floating-label-group .form-input:hover {
+  border-color: #dfbaff;
+}
+
+.floating-label-group .form-input:focus {
+  outline: none;
+  border-color: #5e17eb;
+  box-shadow: 0 0 0 4px rgba(94, 23, 235, 0.08);
+}
+
+/* Floating Label label tag positioning */
+.floating-label-group .floating-label {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #c0a8cb;
+  font-size: 0.95rem;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  background-color: transparent;
+  padding: 0 4px;
+}
+
+/* When the input is focused, OR contains text, float the label to the top border */
+.floating-label-group .form-input:focus ~ .floating-label,
+.floating-label-group .form-input:not(:placeholder-shown) ~ .floating-label {
+  top: 0;
+  transform: translateY(-50%) scale(0.8);
+  left: 12px;
+  color: #5e17eb;
+  background-color: #ffffff;
+  font-weight: 600;
+}
+
+/* Password Toggle input style */
+.password-group {
+  display: flex;
+  align-items: center;
+}
+
+.password-group .form-input {
+  padding-right: 48px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 1.2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #c0a8cb;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: color 0.2s ease;
+  z-index: 6; /* Sit above the input */
+}
+
+.password-toggle-btn:hover {
+  color: #5e17eb;
+}
+
+/* Forgot Password Text styling */
+.forgot-password-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 2.2rem;
+}
+
+.forgot-password-link {
+  font-size: 0.88rem;
+  color: #8c96a8;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.forgot-password-link strong {
+  color: #334155;
+  font-weight: 600;
+}
+
+.forgot-password-link:hover {
+  color: #5e17eb;
+}
+
+.forgot-password-link:hover strong {
+  color: #5e17eb;
+}
+
+/* Submit Button Layout (width: ~60% and Centered with PREMIUM SUNSET GRADIENT theme) */
+.submit-btn-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.submit-button {
+  width: 60%;
+  height: 46px;
+  /* Premium 4-color sunset gradient requested by user */
+  background: var(--primary-gradient);
+  border: none;
+  border-radius: 30px; /* Pillow oval shape button */
+  color: #ffffff;
+  font-size: 0.98rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(216, 17, 89, 0.25),
+              0 3px 8px rgba(227, 72, 37, 0.15);
+}
+
+.submit-button:hover {
+  /* Shifts/rotates the gradient beautifully on hover */
+  background: var(--primary-gradient-hover);
+  box-shadow: 0 12px 30px rgba(216, 17, 89, 0.38),
+              0 5px 18px rgba(227, 72, 37, 0.25);
+  transform: translateY(-2px);
+}
+
+.submit-button:active {
+  transform: translateY(0);
+}
+
+.submit-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-spinner-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-spinner {
+  width: 18px;
+  height: 18px;
+  position: relative;
+  display: inline-block;
+  animation: btn-spin 1.2s linear infinite;
+}
+
+.btn-spinner::before,
+.btn-spinner::after {
+  content: '';
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  background-color: #ffffff;
+  border-radius: 5px;
+}
+
+.btn-spinner::before {
+  top: 0;
+  left: 0;
+  border-top-left-radius: 0 !important;
+  box-shadow: 11px 11px 0 #ffffff;
+}
+
+.btn-spinner::after {
+  top: 0;
+  right: 0;
+  border-top-right-radius: 0 !important;
+  box-shadow: -11px 11px 0 #ffffff;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Bottom Sign Up Link styling */
+.signup-prompt-container {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+.signup-link {
+  color: #d81159; /* BAVYA Pink Accent */
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+  margin-left: 2px;
+}
+
+.signup-link:hover {
+  text-decoration: underline;
+  color: #5e17eb; /* BAVYA Purple Accent */
+}
+
+/* Error Banner styling */
+.error-banner {
+  background-color: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #be123c;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1.5rem;
+}
+
+/* First-time login onboarding flow elements */
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.88rem;
+  cursor: pointer;
+  font-weight: 500;
+  margin-top: 1rem;
+  transition: color 0.2s;
+}
+
+.back-btn:hover {
+  color: #5e17eb;
+}
+
+.otp-input {
+  letter-spacing: 0.2em;
+  font-size: 1.25rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+.dev-otp-autofill {
+  margin-top: 0.75rem;
+  padding: 6px 12px;
+  background: rgba(34, 197, 94, 0.08);
+  color: #22c55e;
+  border: 1px dashed rgba(34, 197, 94, 0.25);
+  border-radius: 6px;
+  font-size: 11px;
+  text-align: center;
+}
+
+/* Intermediate screens and tablets (1024px down to 900px) */
+@media (max-width: 1100px) and (min-width: 901px) {
+  .login-card-container {
+    max-width: 860px;
+    height: 520px;
+  }
+  .login-form-panel {
+    padding: 3rem 4rem;
+  }
+  .form-content-wrapper {
+    max-width: 360px;
+  }
+}
+
+/* Responsive Media Queries (Mobile layout) */
+@media (max-width: 900px) {
+  .login-page-wrapper {
+    background: #2f074d;
+    align-items: center;
+    padding: 1rem;
+  }
+
+  .login-card-container {
+    height: auto;
+    max-width: 445px;
+    flex-direction: column;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.22);
+    border-radius: 20px;
+  }
+
+  .login-visual-panel {
+    display: none;
+  }
+
+  .login-form-panel {
+    width: 100%;
+    padding: 3.5rem 2rem;
+  }
+  
+  .form-content-wrapper {
+    max-width: 100%;
+  }
+}

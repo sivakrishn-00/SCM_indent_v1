@@ -1,0 +1,24 @@
+# Virtual Environment
+backend/venv/
+venv/
+.venv/
+
+# Environment Secrets
+.env
+backend/.env
+frontend/.env
+
+# Node Dependencies
+frontend/node_modules/
+node_modules/
+
+# Build & System Artifacts
+frontend/dist/
+dist/
+__pycache__/
+*.pyc
+.DS_Store
+tmp/
+*.db
+*.log
+.gemini/

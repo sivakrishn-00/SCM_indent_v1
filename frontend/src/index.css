@@ -1,0 +1,282 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+  /* High-Vibrancy Premium BAVYA Sunset Theme */
+  --bg-dark: #fafaf9;       /* Warm Stone-50 */
+  --bg-card: rgba(255, 255, 255, 0.75);
+  
+  /* Brand Colors: Sunset Gradient Suite */
+  --primary: #e34825;       /* Red-Orange */
+  --primary-hover: #d81159;  /* Vibrant Magenta */
+  --secondary: #d81159;     /* Vibrant Magenta */
+  --secondary-hover: #b50c45;
+  --accent: #f7931e;        /* Sunset Orange */
+  --accent-mint: #ffeed5;   /* Soft Warm Orange Tint */
+  --accent-warm: #fbb03b;   /* Yellow Gold */
+  
+  /* Sunset Gradients for Premium Buttons & Highlights */
+  --primary-gradient: linear-gradient(135deg, #fbb03b 0%, #f7931e 33%, #e34825 66%, #d81159 100%);
+  --primary-gradient-hover: linear-gradient(135deg, #ffc965 0%, #ffaa49 33%, #ff5d3c 66%, #f62f72 100%);
+  
+  /* Status Colors */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  
+  /* Text */
+  --text-primary: #1c1917;    /* Stone-900 */
+  --text-secondary: #57534e;  /* Stone-600 */
+  --text-muted: #a8a29e;      /* Stone-400 */
+  
+  /* Borders & Glass */
+  --border-glass: rgba(28, 25, 23, 0.06);
+  --border-glow: rgba(227, 72, 37, 0.12);
+  --bg-glass: rgba(255, 255, 255, 0.7);
+  
+  /* Shadows & Transitions */
+  --shadow-premium: 0 20px 40px -15px rgba(28, 25, 23, 0.08);
+  --shadow-glow: 0 0 30px rgba(227, 72, 37, 0.08);
+  --transition-smooth: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, .brand-font {
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Custom Scrollbar styled in the primary sunset key */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(227, 72, 37, 0.15);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Custom Select Dropdown Styling */
+.custom-select-container {
+  position: relative;
+  width: 100%;
+}
+
+.custom-select-container.is-open {
+  z-index: 1000;
+}
+
+.custom-select-trigger {
+  width: 100%;
+  padding: 10px 14px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.custom-select-trigger.compact {
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.custom-select-trigger:focus {
+  outline: none;
+  border-color: #f7931e;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(247, 147, 30, 0.08);
+}
+
+.custom-select-trigger:hover:not(:disabled) {
+  border-color: #cbd5e1;
+  background-color: #f1f5f9;
+}
+
+.custom-select-trigger:disabled {
+  background-color: #f1f5f9;
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.custom-select-trigger .arrow {
+  font-size: 8px;
+  color: var(--text-secondary);
+  transition: transform 0.2s ease;
+}
+
+.custom-select-options {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  padding: 6px 0;
+  margin: 0;
+  list-style: none;
+  z-index: 1050;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.custom-select-options.compact {
+  border-radius: 6px;
+  max-height: 150px;
+}
+
+.custom-select-options.placement-top {
+  top: auto;
+  bottom: calc(100% + 4px);
+  box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.1), 0 -8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.custom-select-search-wrapper {
+  padding: 6px 8px;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  background-color: #ffffff;
+  z-index: 10;
+}
+
+.custom-select-search-input {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  outline: none;
+  background-color: #f8fafc;
+  color: var(--text-primary);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.custom-select-search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(247, 147, 30, 0.15);
+  background-color: #ffffff;
+}
+
+.no-options-found {
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.custom-select-option {
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.custom-select-option.compact {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+
+.custom-select-option:hover {
+  background-color: rgba(216, 17, 89, 0.06); /* Soft Magenta Hover */
+  color: #d81159; /* Magenta hover label */
+  padding-left: 18px;
+}
+
+.custom-select-option.selected {
+  background-color: rgba(227, 72, 37, 0.08); /* Soft Red-Orange Selected */
+  color: #e34825; /* Red-Orange selected label */
+}
+
+.custom-select-option.disabled-option {
+  color: var(--text-muted);
+  font-style: italic;
+  cursor: not-allowed;
+  background-color: #f8fafc;
+}
+.custom-select-option.disabled-option:hover {
+  background-color: #f8fafc;
+  color: var(--text-muted);
+  padding-left: 14px;
+}
+
+/* ==========================================================================
+   GLOBAL BRANDED BAVYA SPINNER (4-PETAL SUNSET FLOWER)
+   ========================================================================== */
+.bavya-spinner {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+  animation: bavya-spin-animation 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.bavya-spinner .petal {
+  width: 100%;
+  height: 100%;
+}
+
+.bavya-spinner .petal-tl {
+  border-radius: 8px 8px 0 8px !important;
+  background-color: #fbb03b !important;
+}
+
+.bavya-spinner .petal-tr {
+  border-radius: 8px 8px 8px 0 !important;
+  background-color: #f7931e !important;
+}
+
+.bavya-spinner .petal-bl {
+  border-radius: 8px 0 8px 8px !important;
+  background-color: #d81159 !important;
+}
+
+.bavya-spinner .petal-br {
+  border-radius: 0 8px 8px 8px !important;
+  background-color: #4d1375 !important;
+}
+
+@keyframes bavya-spin-animation {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+

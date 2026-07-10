@@ -1,0 +1,438 @@
+/* ProfilePage Styling */
+
+.profile-container {
+  padding: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.profile-header-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 24px;
+}
+
+.profile-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--primary-gradient);
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(227, 72, 37, 0.25);
+  transition: all 0.25s ease;
+}
+
+.profile-back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(227, 72, 37, 0.4);
+  background: var(--primary-gradient-hover);
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 30px;
+}
+
+@media (max-width: 900px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.profile-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+  overflow: hidden;
+  padding: 30px;
+}
+
+/* Left Card: Primary Info Card */
+.main-info-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  min-height: 480px;
+}
+
+.profile-banner {
+  width: 100%;
+  height: 80px;
+  background: linear-gradient(135deg, #d81159 0%, #a00639 100%);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.profile-avatar-wrapper {
+  margin-top: 35px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  z-index: 1;
+  margin-bottom: 24px;
+}
+
+.profile-avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: white;
+  border: 4px solid white;
+  box-shadow: 0 10px 20px rgba(216, 17, 89, 0.15);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #d81159;
+  margin-bottom: 16px;
+}
+
+.profile-avatar-wrapper h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+}
+
+.profile-role-badge {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.profile-details-list {
+  width: 100%;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.details-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.details-icon {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.details-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.details-label {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.details-value {
+  font-size: 14.5px;
+  color: #334155;
+  font-weight: 500;
+}
+
+/* Right Card: Hierarchy Chain Card */
+.hierarchy-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.hierarchy-card .card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 18px;
+  margin-bottom: 20px;
+}
+
+.hierarchy-card .header-icon {
+  color: #d81159;
+}
+
+.hierarchy-card .section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.hierarchy-info-banner {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  color: #475569;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.profile-loading-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 0;
+  gap: 16px;
+}
+
+.loading-text {
+  font-size: 13.5px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.profile-error-wrapper {
+  color: #ef4444;
+  font-size: 14px;
+  padding: 20px 0;
+  text-align: center;
+}
+
+/* Timeline Layout */
+.timeline-container {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-left: 20px;
+}
+
+.timeline-container::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 31px;
+  width: 3px;
+  background: linear-gradient(to bottom, #d81159 0%, #f7931e 40%, #fbb03b 75%, #10b981 100%);
+  z-index: 0;
+}
+
+.timeline-node {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 30px;
+  position: relative;
+  z-index: 1;
+}
+
+.timeline-node:last-child {
+  margin-bottom: 0;
+}
+
+.node-marker {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid #cbd5e1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #64748b;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 4px white;
+}
+
+.node-marker.active {
+  border-color: #d81159;
+  color: #d81159;
+  background: #fff0f5;
+}
+
+.node-marker.final {
+  border-color: #f7931e;
+  color: #f7931e;
+  background: #fffbeb;
+}
+
+.node-content {
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  padding: 16px 20px;
+  flex: 1;
+  position: relative;
+}
+
+/* Timeline bubble pointers */
+.node-content::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: -6px;
+  width: 10px;
+  height: 10px;
+  background: #f8fafc;
+  border-left: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+  transform: rotate(45deg);
+}
+
+.node-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.node-role {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+  display: block;
+}
+
+.node-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #8c96a8;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+.node-desc {
+  font-size: 12.5px;
+  color: #475569;
+  margin: 8px 0 0 0;
+  line-height: 1.4;
+}
+
+.node-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.node-badge.leaf {
+  background-color: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+/* Colorful timeline nodes */
+
+/* Current user leaf node style */
+.current-user-node .node-content {
+  border-left: 4px solid #d81159;
+  background: #fffafc;
+}
+.current-user-node .node-content::before {
+  background: #fffafc;
+  border-left: 1px solid #ffedf4;
+  border-bottom: 1px solid #ffedf4;
+}
+
+/* Level 1: Coral */
+.manager-node.level-1 .node-marker {
+  border-color: #e34825;
+  color: #e34825;
+  background: #fff5f2;
+}
+.manager-node.level-1 .node-content {
+  border-left: 4px solid #e34825;
+  background: #fffafa;
+}
+.manager-node.level-1 .node-content::before {
+  background: #fffafa;
+  border-left: 1px solid #ffeedb;
+  border-bottom: 1px solid #ffeedb;
+}
+
+/* Level 2: Orange */
+.manager-node.level-2 .node-marker {
+  border-color: #f7931e;
+  color: #f7931e;
+  background: #fffbf5;
+}
+.manager-node.level-2 .node-content {
+  border-left: 4px solid #f7931e;
+  background: #fffdf9;
+}
+.manager-node.level-2 .node-content::before {
+  background: #fffdf9;
+  border-left: 1px solid #fff3e0;
+  border-bottom: 1px solid #fff3e0;
+}
+
+/* Level 3: Gold */
+.manager-node.level-3 .node-marker {
+  border-color: #fbb03b;
+  color: #fbb03b;
+  background: #fffff2;
+}
+.manager-node.level-3 .node-content {
+  border-left: 4px solid #fbb03b;
+  background: #fffffb;
+}
+.manager-node.level-3 .node-content::before {
+  background: #fffffb;
+  border-left: 1px solid #fffde7;
+  border-bottom: 1px solid #fffde7;
+}
+
+/* Level 4: Emerald Green */
+.manager-node.level-4 .node-marker {
+  border-color: #10b981;
+  color: #10b981;
+  background: #f0fdf4;
+}
+.manager-node.level-4 .node-content {
+  border-left: 4px solid #10b981;
+  background: #fdfdfd;
+}
+.manager-node.level-4 .node-content::before {
+  background: #fdfdfd;
+  border-left: 1px solid #e8f5e9;
+  border-bottom: 1px solid #e8f5e9;
+}
+
+/* End Chain Node: Admin */
+.end-chain-node .node-content {
+  border-left: 4px solid #6366f1;
+  background: #f5f6ff;
+}
+.end-chain-node .node-content::before {
+  background: #f5f6ff;
+  border-left: 1px solid #e8eaf6;
+  border-bottom: 1px solid #e8eaf6;
+}

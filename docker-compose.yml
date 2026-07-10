@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: bit_indent_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: bitindent
+      MYSQL_ROOT_PASSWORD: rootx.
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - bit_indent_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bit_indent_backend
+    restart: always
+    environment:
+      - ENVIRONMENT=production
+      - SECRET_KEY=supersecretkeyforbitindentlogisticsdashboardchangeinproduction
+      - ACCESS_TOKEN_EXPIRE_MINUTES=10080
+      - MYSQL_SERVER=db
+      - MYSQL_PORT=3306
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=rootx.
+      - MYSQL_DB=bitindent
+      - BAVYA_EMS_API_URL=http://103.174.161.68:8001/api/employees
+      - BAVYA_EMS_API_KEY=sk_109c1f31bee649ac8ced469207cba374
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - bit_indent_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: bit_indent_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - bit_indent_network
+
+volumes:
+  mysql_data:
+
+networks:
+  bit_indent_network:
+    driver: bridge
