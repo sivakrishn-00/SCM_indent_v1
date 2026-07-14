@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, Database, Plus, X, Upload, Edit, Power, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Truck, Database, Plus, X, Upload, Edit, Power, Search, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import './Masters.css';
 import CustomSelect from '../../components/CustomSelect';
@@ -93,6 +93,23 @@ export default function Masters({ user, addAuditLog, activeSubTab = 'materials' 
     is_active: true
   });
   const [drugFormMessage, setDrugFormMessage] = useState({ type: '', text: '' });
+
+  // Refill Form Modal State
+  const [showRefillModal, setShowRefillModal] = useState(false);
+  const [refillForm, setRefillForm] = useState({
+    item_code: '',
+    item_name: '',
+    item_group: '',
+    project: '',
+    batch_number: '',
+    refill_quantity: '',
+    unit_mrp: '',
+    expiry_date: '',
+    manufacturing_date: '',
+    supplier: ''
+  });
+  const [refillFormMessage, setRefillFormMessage] = useState({ type: '', text: '' });
+  const [submittingRefill, setSubmittingRefill] = useState(false);
 
   // Bulk Upload State
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -218,6 +235,67 @@ export default function Masters({ user, addAuditLog, activeSubTab = 'materials' 
     };
     fetchPreview();
   }, [selectedProject]);
+
+  const openRefillModal = (drug) => {
+    setRefillFormMessage({ type: '', text: '' });
+    setRefillForm({
+      item_code: drug.item_code,
+      item_name: drug.item_name,
+      item_group: drug.item_group || '',
+      project: drug.project,
+      batch_number: drug.batch_number || '',
+      refill_quantity: '',
+      unit_mrp: drug.unit_mrp || '',
+      expiry_date: formatDateForInput(drug.expiry_date),
+      manufacturing_date: formatDateForInput(drug.manufacturing_date),
+      supplier: drug.supplier || ''
+    });
+    setShowRefillModal(true);
+  };
+
+  const handleRefillSubmit = async (e) => {
+    e.preventDefault();
+    setRefillFormMessage({ type: '', text: '' });
+    setSubmittingRefill(true);
+
+    if (!refillForm.batch_number || !refillForm.refill_quantity) {
+      setRefillFormMessage({ type: 'error', text: 'Batch Number and Refill Quantity are required.' });
+      setSubmittingRefill(false);
+      return;
+    }
+
+    try {
+      const payload = {
+        item_code: refillForm.item_code,
+        project: refillForm.project,
+        batch_number: refillForm.batch_number.trim(),
+        refill_quantity: parseFloat(refillForm.refill_quantity),
+        unit_mrp: refillForm.unit_mrp ? parseFloat(refillForm.unit_mrp) : null,
+        expiry_date: refillForm.expiry_date || null,
+        manufacturing_date: refillForm.manufacturing_date || null,
+        supplier: refillForm.supplier || null
+      };
+
+      await api.drugs.refill(payload);
+      toast.success(`Inventory successfully refilled!`);
+      if (addAuditLog) {
+        addAuditLog(
+          'REFILL',
+          'Masters',
+          `Refilled ${refillForm.item_code} (${refillForm.item_name}) - Batch: ${refillForm.batch_number.trim()}, Qty: ${refillForm.refill_quantity}`
+        );
+      }
+      setTimeout(() => {
+        setShowRefillModal(false);
+        loadData();
+      }, 1000);
+    } catch (err) {
+      toast.error(err.message || 'Failed to submit refill.');
+      setRefillFormMessage({ type: 'error', text: err.message || 'Failed to submit refill.' });
+    } finally {
+      setSubmittingRefill(false);
+    }
+  };
 
   // Open drug Modal (Create/Edit)
   const openDrugModal = (drug = null) => {
@@ -824,7 +902,7 @@ export default function Masters({ user, addAuditLog, activeSubTab = 'materials' 
                         <th onClick={() => handleSort('description')} className="sortable-header">
                           Description {sortField === 'description' && (sortDirection === 'asc' ? ' ▲' : ' ▼')}
                         </th>
-                        <th className="text-center">Actions</th>
+                        <th className="text-center sticky-actions-col">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -855,7 +933,7 @@ export default function Masters({ user, addAuditLog, activeSubTab = 'materials' 
                             <td className="text-muted" style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={d.description}>
                               {d.description || 'N/A'}
                             </td>
-                            <td>
+                            <td className="sticky-actions-col">
                               <div className="action-buttons justify-center">
                                 <button 
                                   type="button"
@@ -864,6 +942,15 @@ export default function Masters({ user, addAuditLog, activeSubTab = 'materials' 
                                   title="Edit Item"
                                 >
                                   <Edit size={14} />
+                                </button>
+                                <button 
+                                  type="button"
+                                  className="action-btn refill-btn-icon" 
+                                  onClick={() => openRefillModal(d)}
+                                  title="Refill Stock"
+                                  style={{ color: '#0284c7' }}
+                                >
+                                  <RefreshCw size={14} />
                                 </button>
                                 <button 
                                   type="button"
@@ -1074,6 +1161,137 @@ export default function Masters({ user, addAuditLog, activeSubTab = 'materials' 
                 {savingConfig ? "Saving..." : "Save Workflow Config"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* REFILL DRUG MODAL */}
+      {showRefillModal && (
+        <div className="dev-modal-overlay" onClick={() => setShowRefillModal(false)}>
+          <div className="dev-modal-card drug-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="dev-modal-header">
+              <h3>Stock Refill Command Center</h3>
+              <button className="close-modal-btn" onClick={() => setShowRefillModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleRefillSubmit}>
+              <div className="dev-modal-body drug-modal-body">
+                {refillFormMessage.text && (
+                  <div className={`form-message-banner ${refillFormMessage.type}`}>
+                    {refillFormMessage.text}
+                  </div>
+                )}
+                
+                <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div>
+                      <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Item Name</span>
+                      <div style={{ fontSize: '14px', fontWeight: '600', color: '#0f172a', marginTop: '4px' }}>{refillForm.item_name}</div>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Item Code</span>
+                      <div style={{ fontSize: '14px', fontWeight: '600', color: '#0f172a', marginTop: '4px' }}>{refillForm.item_code}</div>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Project Site</span>
+                      <div style={{ fontSize: '14px', fontWeight: '600', color: '#0f172a', marginTop: '4px' }}>{refillForm.project}</div>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Category / Group</span>
+                      <div style={{ fontSize: '14px', fontWeight: '600', color: '#0f172a', marginTop: '4px' }}>{refillForm.item_group || 'N/A'}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="drug-form-grid">
+                  <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                    <label>Refill Batch Number *</label>
+                    <input 
+                      type="text" 
+                      value={refillForm.batch_number}
+                      onChange={(e) => setRefillForm(prev => ({ ...prev, batch_number: e.target.value }))}
+                      placeholder="Enter batch number"
+                      required
+                    />
+                    <small style={{ color: '#64748b', fontSize: '11px', marginTop: '4px', display: 'block' }}>
+                      If batch matches, stock will be refilled. Otherwise, a new batch record will be created under same Item Code.
+                    </small>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Quantity to Refill *</label>
+                    <input 
+                      type="number" 
+                      step="any"
+                      min="0.01"
+                      value={refillForm.refill_quantity}
+                      onChange={(e) => setRefillForm(prev => ({ ...prev, refill_quantity: e.target.value }))}
+                      placeholder="e.g. 500"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Unit MRP ($)</label>
+                    <input 
+                      type="number" 
+                      step="any"
+                      min="0"
+                      value={refillForm.unit_mrp}
+                      onChange={(e) => setRefillForm(prev => ({ ...prev, unit_mrp: e.target.value }))}
+                      placeholder="e.g. 15.50"
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                    <label>Supplier / Manufacturer</label>
+                    <input 
+                      type="text" 
+                      value={refillForm.supplier}
+                      onChange={(e) => setRefillForm(prev => ({ ...prev, supplier: e.target.value }))}
+                      placeholder="e.g. Acme Corp"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Manufacturing Date</label>
+                    <input 
+                      type="date" 
+                      value={refillForm.manufacturing_date}
+                      onChange={(e) => setRefillForm(prev => ({ ...prev, manufacturing_date: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Expiry Date</label>
+                    <input 
+                      type="date" 
+                      value={refillForm.expiry_date}
+                      onChange={(e) => setRefillForm(prev => ({ ...prev, expiry_date: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="dev-modal-footer">
+                <button 
+                  type="button" 
+                  className="action-btn-secondary" 
+                  onClick={() => setShowRefillModal(false)}
+                  disabled={submittingRefill}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="action-btn-primary"
+                  disabled={submittingRefill}
+                >
+                  {submittingRefill ? 'Refilling...' : 'Execute Stock Refill'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

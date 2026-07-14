@@ -819,5 +819,24 @@
   border-color: var(--primary);
 }
 
+/* Sticky Actions Column Group */
+.sticky-actions-col {
+  position: sticky !important;
+  right: 0;
+  background-color: #ffffff;
+  z-index: 5;
+  box-shadow: -3px 0 6px rgba(0, 0, 0, 0.06);
+}
+
+th.sticky-actions-col {
+  background-color: #f8fafc !important;
+  z-index: 6 !important;
+}
+
+tr.inactive-row .sticky-actions-col {
+  background-color: #f8fafc !important;
+}
+
+
 
 

@@ -169,6 +169,12 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(payload)
       });
+    },
+    refill(payload) {
+      return api.request('/drugs/refill', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
     }
   },
 
