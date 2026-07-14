@@ -19,6 +19,9 @@ from app.models.drug import DrugMaster
 from app.models.office_inventory import OfficeInventory
 from app.models.transit_inventory import TransitInventory
 from app.models.audit_log import AuditLog
+from app.models.project_config import ProjectApprovalConfig
+from app.models.permission import RolePermission
+from app.models.roster import ShiftRoster
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
