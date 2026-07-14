@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     ENVIRONMENT: str = "development"
+    ENABLE_OTP: bool = False
 
     # MySQL Settings
     MYSQL_SERVER: str = "localhost"

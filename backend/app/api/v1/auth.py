@@ -127,7 +127,8 @@ def login_access_token(
             print(f"Error syncing user role/project on login: {e}")
     
     # Check if first-time login (skip for default admin user or in development mode for easy testing)
-    if user.first_login and user.username != "admin" and settings.ENVIRONMENT != "development":
+    # if user.first_login and user.username != "admin" and settings.ENVIRONMENT != "development":
+    if settings.ENABLE_OTP and user.first_login and user.username != "admin" and settings.ENVIRONMENT != "development":
         return {
             "first_login_required": True,
             "username": user.username,
