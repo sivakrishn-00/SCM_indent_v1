@@ -117,7 +117,7 @@ export default function ReportsPage() {
 
       allGroupedData.forEach(group => {
         // Group Header
-        csvLines.push(`"SHIFT GROUP","Date/Time: ${group.dateTime}","Project: ${group.project || reportProject}","Office/Location: ${group.office_name || 'Global'}","Shift: ${group.shift_type === 'shift_1' ? 'Shift 1' : 'Shift 2'}","Logged By: ${group.logged_by}","Vehicle: ${group.vehicle_number}"`);
+        csvLines.push(`"SHIFT GROUP","Date/Time: ${group.dateTime}","Project: ${group.project || reportProject}","Office/Location: ${group.office_name || 'Global'}","Shift: ${group.shift_type === 'shift_1' ? 'Shift 1' : (group.shift_type === 'general' ? 'General Shift' : 'Shift 2')}","Logged By: ${group.logged_by}","Vehicle: ${group.vehicle_number}"`);
         
         // Item Columns Title
         csvLines.push(`"S.No.","Material / Code","Batch","MFG / EXP","Store OB","Store Received","Store Sent Back","Store Drawn","Store Closing","Bag OB","Bag Received","Bag Sent Back","Bag Consumed","Bag Closing","Unit MRP","Total Cost"`);
@@ -254,7 +254,7 @@ export default function ReportsPage() {
 
       const rows = reportData.map(log => [
         log.date,
-        log.shift_type === 'shift_1' ? 'Shift 1' : 'Shift 2',
+        log.shift_type === 'shift_1' ? 'Shift 1' : (log.shift_type === 'general' ? 'General Shift' : 'Shift 2'),
         log.vehicle_number,
         log.item_name,
         log.item_code,
@@ -785,12 +785,12 @@ export default function ReportsPage() {
                         <span style={{ 
                           padding: '3px 8px', 
                           borderRadius: '6px', 
-                          backgroundColor: log.shift_type === 'shift_1' ? '#f0fdf4' : '#fef2f2',
-                          color: log.shift_type === 'shift_1' ? '#166534' : '#991b1b',
+                          backgroundColor: log.shift_type === 'shift_1' ? '#f0fdf4' : (log.shift_type === 'general' ? '#f0f9ff' : '#fef2f2'),
+                          color: log.shift_type === 'shift_1' ? '#166534' : (log.shift_type === 'general' ? '#0369a1' : '#991b1b'),
                           fontSize: '11px',
                           fontWeight: '600'
                         }}>
-                          {log.shift_type === 'shift_1' ? 'Shift 1' : 'Shift 2'}
+                          {log.shift_type === 'shift_1' ? 'Shift 1' : (log.shift_type === 'general' ? 'General Shift' : 'Shift 2')}
                         </span>
                       </td>
                       <td style={{ padding: '12px 16px', fontSize: '13px', fontWeight: '600', color: '#1e293b' }}>{log.vehicle_number}</td>
@@ -1339,7 +1339,7 @@ export default function ReportsPage() {
                   </div>
                   <div>
                     <span style={{ fontSize: '9px', textTransform: 'uppercase', color: '#64748b', fontWeight: '750', display: 'block' }}>Shift Type</span>
-                    <strong style={{ fontSize: '11px', color: '#1e293b' }}>{group.shift_type === 'shift_1' ? 'Shift 1' : 'Shift 2'}</strong>
+                    <strong style={{ fontSize: '11px', color: '#1e293b' }}>{group.shift_type === 'shift_1' ? 'Shift 1' : (group.shift_type === 'general' ? 'General Shift' : 'Shift 2')}</strong>
                   </div>
                   <div>
                     <span style={{ fontSize: '9px', textTransform: 'uppercase', color: '#64748b', fontWeight: '750', display: 'block' }}>Date / Time</span>
