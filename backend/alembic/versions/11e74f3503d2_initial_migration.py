@@ -9,7 +9,6 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import mysql
 
 
 # revision identifiers, used by Alembic.
@@ -32,7 +31,6 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_consumables_id'), 'consumables', ['id'], unique=False)
     op.create_index(op.f('ix_consumables_name'), 'consumables', ['name'], unique=True)
-    
     op.create_table('users',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('username', sa.String(length=50), nullable=False),
@@ -46,7 +44,6 @@ def upgrade() -> None:
     op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
     op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
     op.create_index(op.f('ix_users_username'), 'users', ['username'], unique=True)
-    
     op.create_table('vehicles',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('vehicle_number', sa.String(length=50), nullable=False),
@@ -58,274 +55,62 @@ def upgrade() -> None:
     op.create_index(op.f('ix_vehicles_id'), 'vehicles', ['id'], unique=False)
     op.create_index(op.f('ix_vehicles_project'), 'vehicles', ['project'], unique=False)
     op.create_index(op.f('ix_vehicles_vehicle_number'), 'vehicles', ['vehicle_number'], unique=True)
-
-    op.create_table('drug_masters',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('item_code', sa.String(length=100), nullable=False),
-    sa.Column('item_name', sa.String(length=255), nullable=False),
-    sa.Column('description', sa.String(length=500), nullable=True),
-    sa.Column('hsn_code', sa.String(length=50), nullable=True),
-    sa.Column('item_group', sa.String(length=100), nullable=True),
-    sa.Column('quantity', sa.Float(), nullable=True),
-    sa.Column('initial_quantity', mysql.DOUBLE(asdecimal=True), nullable=True),
-    sa.Column('uom', sa.String(length=50), nullable=True),
-    sa.Column('unit_mrp', sa.Float(), nullable=True),
-    sa.Column('batch_number', sa.String(length=100), nullable=True),
-    sa.Column('expiry_date', sa.String(length=100), nullable=True),
-    sa.Column('manufacturing_date', sa.String(length=100), nullable=True),
-    sa.Column('supplier', sa.String(length=255), nullable=True),
-    sa.Column('project', sa.String(length=100), nullable=False),
-    sa.Column('is_active', sa.Boolean(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_drug_masters_id'), 'drug_masters', ['id'], unique=False)
-    op.create_index(op.f('ix_drug_masters_item_code'), 'drug_masters', ['item_code'], unique=False)
-    op.create_index(op.f('ix_drug_masters_project'), 'drug_masters', ['project'], unique=False)
-
     op.create_table('indents',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('vehicle_id', sa.Integer(), nullable=True),
-    sa.Column('consumable_id', sa.Integer(), nullable=True),
-    sa.Column('drug_id', sa.Integer(), nullable=True),
+    sa.Column('vehicle_id', sa.Integer(), nullable=False),
+    sa.Column('consumable_id', sa.Integer(), nullable=False),
     sa.Column('requested_qty', sa.Float(), nullable=False),
-    sa.Column('status', sa.Enum('PENDING', 'APPROVED', 'REJECTED', 'DISPATCHED', 'RECEIVED', name='indentstatus'), nullable=False),
+    sa.Column('status', sa.Enum('PENDING', 'APPROVED', 'REJECTED', name='indentstatus'), nullable=False),
     sa.Column('requested_by_id', sa.Integer(), nullable=False),
     sa.Column('approved_by_id', sa.Integer(), nullable=True),
-    sa.Column('office_name', sa.String(length=100), nullable=True),
-    sa.Column('project', sa.String(length=100), nullable=True),
-    sa.Column('batch_number', sa.String(length=100), nullable=True),
     sa.Column('remarks', sa.String(length=255), nullable=True),
-    sa.Column('dispatched_qty', mysql.DOUBLE(asdecimal=True), nullable=True),
-    sa.Column('dispatched_batch_no', mysql.TEXT(), nullable=True),
-    sa.Column('courier_details', mysql.TEXT(), nullable=True),
-    sa.Column('dispatch_remarks', mysql.TEXT(), nullable=True),
-    sa.Column('service_area_code', mysql.TEXT(), nullable=True),
-    sa.Column('current_approver_code', sa.String(length=50), nullable=True),
-    sa.Column('approval_chain', sa.String(length=1000), nullable=False, server_default='[]'),
-    sa.Column('current_chain_index', sa.Integer(), nullable=False, server_default='0'),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['approved_by_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['consumable_id'], ['consumables.id'], ),
     sa.ForeignKeyConstraint(['requested_by_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['vehicle_id'], ['vehicles.id'], ),
-    sa.ForeignKeyConstraint(['drug_id'], ['drug_masters.id'], name='fk_indents_drug_id', ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_indents_id'), 'indents', ['id'], unique=False)
-
     op.create_table('shift_logs',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('date', sa.DateTime(), nullable=False),
     sa.Column('shift_type', sa.Enum('SHIFT_1', 'SHIFT_2', name='shifttype'), nullable=False),
-    sa.Column('vehicle_id', sa.Integer(), nullable=True),
-    sa.Column('consumable_id', sa.Integer(), nullable=True),
-    sa.Column('drug_id', sa.Integer(), nullable=True),
+    sa.Column('vehicle_id', sa.Integer(), nullable=False),
+    sa.Column('consumable_id', sa.Integer(), nullable=False),
     sa.Column('operator_id', sa.Integer(), nullable=False),
     sa.Column('opening_balance', sa.Float(), nullable=False),
     sa.Column('received_qty', sa.Float(), nullable=False),
-    sa.Column('sent_back_qty', mysql.DOUBLE(asdecimal=True), nullable=True, server_default='0'),
     sa.Column('consumed_qty', sa.Float(), nullable=False),
     sa.Column('closing_balance', sa.Float(), nullable=False),
-    sa.Column('damaged_qty', mysql.DOUBLE(asdecimal=True), nullable=True, server_default='0'),
-    sa.Column('project', sa.String(length=100), nullable=True),
-    sa.Column('office_name', sa.String(length=255), nullable=True),
     sa.Column('discrepancy_reason', sa.String(length=255), nullable=True),
-    sa.Column('is_draft', sa.Boolean(), nullable=False, server_default='0'),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['consumable_id'], ['consumables.id'], ),
     sa.ForeignKeyConstraint(['operator_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['vehicle_id'], ['vehicles.id'], ),
-    sa.ForeignKeyConstraint(['drug_id'], ['drug_masters.id'], name='fk_shift_logs_drug_id'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_shift_logs_id'), 'shift_logs', ['id'], unique=False)
-
-    op.create_table('office_inventories',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('project', sa.String(length=100), nullable=False),
-    sa.Column('office_name', sa.String(length=255), nullable=False),
-    sa.Column('drug_id', sa.Integer(), nullable=False),
-    sa.Column('item_code', sa.String(length=100), nullable=True),
-    sa.Column('item_name', sa.String(length=255), nullable=True),
-    sa.Column('batch_number', sa.String(length=100), nullable=True),
-    sa.Column('quantity', sa.Float(), nullable=True),
-    sa.Column('opening_stock', sa.Float(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['drug_id'], ['drug_masters.id'], name='fk_office_inventories_drug_id'),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_office_inventories_id'), 'office_inventories', ['id'], unique=False)
-    op.create_index(op.f('ix_office_inventories_project'), 'office_inventories', ['project'], unique=False)
-    op.create_index(op.f('ix_office_inventories_office_name'), 'office_inventories', ['office_name'], unique=False)
-
-    op.create_table('transit_inventories',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('operator_id', sa.Integer(), nullable=False),
-    sa.Column('project', sa.String(length=100), nullable=False),
-    sa.Column('office_name', sa.String(length=255), nullable=False),
-    sa.Column('drug_id', sa.Integer(), nullable=False),
-    sa.Column('item_code', sa.String(length=100), nullable=True),
-    sa.Column('item_name', sa.String(length=255), nullable=True),
-    sa.Column('batch_number', sa.String(length=100), nullable=True),
-    sa.Column('expiry_date', sa.String(length=100), nullable=True),
-    sa.Column('quantity', sa.Float(), nullable=True),
-    sa.Column('status', sa.String(length=50), nullable=True),
-    sa.Column('handed_over_to_id', sa.Integer(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['drug_id'], ['drug_masters.id'], name='fk_transit_inventories_drug_id'),
-    sa.ForeignKeyConstraint(['operator_id'], ['users.id'], name='fk_transit_inventories_operator_id'),
-    sa.ForeignKeyConstraint(['handed_over_to_id'], ['users.id'], name='fk_transit_inventories_handed_over_to_id'),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_transit_inventories_id'), 'transit_inventories', ['id'], unique=False)
-    op.create_index(op.f('ix_transit_inventories_project'), 'transit_inventories', ['project'], unique=False)
-    op.create_index(op.f('ix_transit_inventories_office_name'), 'transit_inventories', ['office_name'], unique=False)
-
-    op.create_table('user_shift_states',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('project', sa.String(length=100), nullable=True),
-    sa.Column('office_name', sa.String(length=255), nullable=True),
-    sa.Column('shift_date', sa.String(length=50), nullable=False),
-    sa.Column('status', sa.String(length=50), nullable=False, server_default='active'),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name='fk_user_shift_states_user_id'),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_user_shift_states_id'), 'user_shift_states', ['id'], unique=False)
-    op.create_index(op.f('ix_user_shift_states_user_id'), 'user_shift_states', ['user_id'], unique=False)
-    op.create_index(op.f('ix_user_shift_states_shift_date'), 'user_shift_states', ['shift_date'], unique=False)
-
-    op.create_table('audit_logs',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('timestamp', sa.DateTime(), nullable=False),
-    sa.Column('user', sa.String(length=100), nullable=False),
-    sa.Column('action', sa.String(length=100), nullable=False),
-    sa.Column('module', sa.String(length=100), nullable=False),
-    sa.Column('description', sa.String(length=500), nullable=False),
-    sa.Column('status', sa.String(length=50), nullable=False),
-    sa.Column('project', sa.String(length=100), nullable=True),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_audit_logs_id'), 'audit_logs', ['id'], unique=False)
-
-    op.create_table('project_approval_configs',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('project_name', sa.String(length=100), nullable=False),
-    sa.Column('skip_roles', sa.String(length=255), nullable=False),
-    sa.Column('stop_role', sa.String(length=100), nullable=True),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_project_approval_configs_project_name'), 'project_approval_configs', ['project_name'], unique=True)
-    op.create_index(op.f('ix_project_approval_configs_id'), 'project_approval_configs', ['id'], unique=False)
-
-    op.create_table('role_permissions',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('role', sa.String(length=50), nullable=False),
-    sa.Column('page', sa.String(length=50), nullable=False),
-    sa.Column('can_view', sa.Boolean(), nullable=False),
-    sa.Column('can_create', sa.Boolean(), nullable=False),
-    sa.Column('can_update', sa.Boolean(), nullable=False),
-    sa.Column('can_delete', sa.Boolean(), nullable=False),
-    sa.Column('project', sa.String(length=50), nullable=True),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_role_permissions_role'), 'role_permissions', ['role'], unique=False)
-    op.create_index(op.f('ix_role_permissions_project'), 'role_permissions', ['project'], unique=False)
-    op.create_index(op.f('ix_role_permissions_id'), 'role_permissions', ['id'], unique=False)
-
-    op.create_table('shift_rosters',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('project', sa.String(length=100), nullable=False),
-    sa.Column('office_name', sa.String(length=255), nullable=False),
-    sa.Column('employee_code', sa.String(length=50), nullable=False),
-    sa.Column('employee_name', sa.String(length=255), nullable=True),
-    sa.Column('shift_date', sa.Date(), nullable=False),
-    sa.Column('shift_type', sa.String(length=20), nullable=False),
-    sa.Column('start_time', sa.String(length=10), nullable=True),
-    sa.Column('end_time', sa.String(length=10), nullable=True),
-    sa.Column('status', sa.String(length=30), nullable=True),
-    sa.Column('created_by', sa.String(length=50), nullable=False),
-    sa.Column('remarks', sa.String(length=500), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('uq_roster_assignment'), 'shift_rosters', ['employee_code', 'shift_date', 'shift_type', 'project'], unique=True)
-    op.create_index(op.f('ix_shift_rosters_status'), 'shift_rosters', ['status'], unique=False)
-    op.create_index(op.f('ix_shift_rosters_shift_date'), 'shift_rosters', ['shift_date'], unique=False)
-    op.create_index(op.f('ix_shift_rosters_project'), 'shift_rosters', ['project'], unique=False)
-    op.create_index(op.f('ix_shift_rosters_office_name'), 'shift_rosters', ['office_name'], unique=False)
-    op.create_index(op.f('ix_shift_rosters_id'), 'shift_rosters', ['id'], unique=False)
-    op.create_index(op.f('ix_shift_rosters_employee_code'), 'shift_rosters', ['employee_code'], unique=False)
-    op.create_index(op.f('ix_roster_lookup'), 'shift_rosters', ['employee_code', 'shift_date', 'project'], unique=False)
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.drop_index(op.f('ix_roster_lookup'), table_name='shift_rosters')
-    op.drop_index(op.f('ix_shift_rosters_employee_code'), table_name='shift_rosters')
-    op.drop_index(op.f('ix_shift_rosters_id'), table_name='shift_rosters')
-    op.drop_index(op.f('ix_shift_rosters_office_name'), table_name='shift_rosters')
-    op.drop_index(op.f('ix_shift_rosters_project'), table_name='shift_rosters')
-    op.drop_index(op.f('ix_shift_rosters_shift_date'), table_name='shift_rosters')
-    op.drop_index(op.f('ix_shift_rosters_status'), table_name='shift_rosters')
-    op.drop_index(op.f('uq_roster_assignment'), table_name='shift_rosters')
-    op.drop_table('shift_rosters')
-
-    op.drop_index(op.f('ix_role_permissions_id'), table_name='role_permissions')
-    op.drop_index(op.f('ix_role_permissions_project'), table_name='role_permissions')
-    op.drop_index(op.f('ix_role_permissions_role'), table_name='role_permissions')
-    op.drop_table('role_permissions')
-
-    op.drop_index(op.f('ix_project_approval_configs_id'), table_name='project_approval_configs')
-    op.drop_index(op.f('ix_project_approval_configs_project_name'), table_name='project_approval_configs')
-    op.drop_table('project_approval_configs')
-
-    op.drop_index(op.f('ix_audit_logs_id'), table_name='audit_logs')
-    op.drop_table('audit_logs')
-
-    op.drop_index(op.f('ix_user_shift_states_shift_date'), table_name='user_shift_states')
-    op.drop_index(op.f('ix_user_shift_states_user_id'), table_name='user_shift_states')
-    op.drop_index(op.f('ix_user_shift_states_id'), table_name='user_shift_states')
-    op.drop_table('user_shift_states')
-
-    op.drop_index(op.f('ix_transit_inventories_office_name'), table_name='transit_inventories')
-    op.drop_index(op.f('ix_transit_inventories_project'), table_name='transit_inventories')
-    op.drop_index(op.f('ix_transit_inventories_id'), table_name='transit_inventories')
-    op.drop_table('transit_inventories')
-
-    op.drop_index(op.f('ix_office_inventories_office_name'), table_name='office_inventories')
-    op.drop_index(op.f('ix_office_inventories_project'), table_name='office_inventories')
-    op.drop_index(op.f('ix_office_inventories_id'), table_name='office_inventories')
-    op.drop_table('office_inventories')
-
+    # ### commands auto generated by Alembic - please adjust! ###
     op.drop_index(op.f('ix_shift_logs_id'), table_name='shift_logs')
     op.drop_table('shift_logs')
-
     op.drop_index(op.f('ix_indents_id'), table_name='indents')
     op.drop_table('indents')
-
-    op.drop_index(op.f('ix_drug_masters_project'), table_name='drug_masters')
-    op.drop_index(op.f('ix_drug_masters_item_code'), table_name='drug_masters')
-    op.drop_index(op.f('ix_drug_masters_id'), table_name='drug_masters')
-    op.drop_table('drug_masters')
-
     op.drop_index(op.f('ix_vehicles_vehicle_number'), table_name='vehicles')
     op.drop_index(op.f('ix_vehicles_project'), table_name='vehicles')
     op.drop_index(op.f('ix_vehicles_id'), table_name='vehicles')
     op.drop_table('vehicles')
-
     op.drop_index(op.f('ix_users_username'), table_name='users')
     op.drop_index(op.f('ix_users_id'), table_name='users')
     op.drop_index(op.f('ix_users_email'), table_name='users')
     op.drop_table('users')
-
     op.drop_index(op.f('ix_consumables_name'), table_name='consumables')
     op.drop_index(op.f('ix_consumables_id'), table_name='consumables')
     op.drop_table('consumables')
+    # ### end Alembic commands ###

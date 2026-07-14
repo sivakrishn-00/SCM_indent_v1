@@ -74,19 +74,6 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        # Check if the database was already initialized manually without migrations.
-        # If 'alembic_version' is missing but 'consumables' is present, stamp the db to head.
-        import sqlalchemy as sa
-        inspector = sa.inspect(connection)
-        tables = inspector.get_table_names()
-        if "alembic_version" not in tables and "consumables" in tables:
-            print("Database tables already exist. Stamping revision to head (9b1bb8cca5ac)...")
-            with connection.begin():
-                connection.execute(sa.text("CREATE TABLE alembic_version (version_num VARCHAR(32) NOT NULL, PRIMARY KEY (version_num))"))
-                connection.execute(sa.text("INSERT INTO alembic_version (version_num) VALUES ('9b1bb8cca5ac')"))
-            print("Successfully stamped migration revision.")
-            return
-
         context.configure(
             connection=connection, target_metadata=target_metadata
         )
