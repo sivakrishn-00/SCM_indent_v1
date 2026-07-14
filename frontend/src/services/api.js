@@ -183,10 +183,10 @@ export const api = {
     getProposedHandoversPending() {
       return api.request('/transit-inventory/handovers/proposed/pending');
     },
-    proposeHandover(recipientUsername) {
+    proposeHandover(recipientUsername, pin) {
       return api.request('/transit-inventory/handover/start', {
         method: 'POST',
-        body: JSON.stringify({ recipient_username: recipientUsername })
+        body: JSON.stringify({ recipient_username: recipientUsername, pin })
       });
     },
     acceptHandover() {
@@ -394,6 +394,54 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(payload)
       });
+    }
+  },
+
+  // Roster / Shift Management
+  roster: {
+    getRoster(project, officeName, startDate, endDate, search = '') {
+      const params = [
+        `project=${encodeURIComponent(project)}`,
+        `start_date=${encodeURIComponent(startDate)}`,
+        `end_date=${encodeURIComponent(endDate)}`
+      ];
+      if (officeName && officeName !== 'all') params.push(`office_name=${encodeURIComponent(officeName)}`);
+      if (search) params.push(`search=${encodeURIComponent(search)}`);
+      return api.request(`/roster?${params.join('&')}`);
+    },
+    bulkCreate(project, officeName, assignments, remarks = '') {
+      return api.request('/roster/bulk-create', {
+        method: 'POST',
+        body: JSON.stringify({ project, office_name: officeName, assignments, remarks })
+      });
+    },
+    updateEntry(rosterId, payload) {
+      return api.request(`/roster/${rosterId}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+      });
+    },
+    deleteEntry(rosterId) {
+      return api.request(`/roster/${rosterId}`, {
+        method: 'DELETE'
+      });
+    },
+    swapShifts(rosterId1, rosterId2) {
+      return api.request('/roster/swap', {
+        method: 'POST',
+        body: JSON.stringify({ roster_id_1: rosterId1, roster_id_2: rosterId2 })
+      });
+    },
+    getEmployees(project, officeName = '') {
+      const params = [`project=${encodeURIComponent(project)}`];
+      if (officeName && officeName !== 'all') params.push(`office_name=${encodeURIComponent(officeName)}`);
+      return api.request(`/roster/employees?${params.join('&')}`);
+    },
+    getMyShift() {
+      return api.request('/roster/my-shift');
+    },
+    getIncomingOperator(project, officeName, shiftType) {
+      return api.request(`/roster/incoming-operator?project=${encodeURIComponent(project)}&office_name=${encodeURIComponent(officeName)}&shift_type=${encodeURIComponent(shiftType)}`);
     }
   },
 

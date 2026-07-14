@@ -24,9 +24,9 @@ class Settings(BaseSettings):
     MYSQL_DB: str = "bit_indent"
     MYSQL_PORT: int = 3306
     
-    # BAVYA EMS API Settings
-    BAVYA_EMS_API_URL: str = "http://103.174.161.68:8001/api/employees"
-    BAVYA_EMS_API_KEY: str = "sk_109c1f31bee649ac8ced469207cba374"
+    # BAVYA EMS API Settings (loaded from .env)
+    BAVYA_EMS_API_URL: str
+    BAVYA_EMS_API_KEY: str
 
     
     SQLALCHEMY_DATABASE_URI: Optional[str] = None

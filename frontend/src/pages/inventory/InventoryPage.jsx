@@ -65,7 +65,7 @@ export default function InventoryPage() {
     updateBatchRow, addBatchRow, removeBatchRow,
     transitInventory, userRole, userOffice, userProject,
     drugs, projects, selectedProject, setSelectedProject,
-    selectedShiftItems, fetchInitOffices
+    selectedShiftItems, fetchInitOffices, shiftStatus
   } = useApp();
 
   // Local state for layout/display
@@ -371,21 +371,27 @@ export default function InventoryPage() {
                           const val = selectedShiftItems[item.drug_id];
                           let receivedVal = 0;
                           let sentBackVal = 0;
-                          if (typeof val === 'object' && val !== null) {
-                            receivedVal = Math.round(parseFloat(val.received) || 0);
-                            sentBackVal = Math.round(parseFloat(val.sent_back) || 0);
+                          if (shiftStatus === 'active') {
+                            if (typeof val === 'object' && val !== null) {
+                              receivedVal = Math.round(parseFloat(val.received) || 0);
+                              sentBackVal = Math.round(parseFloat(val.sent_back) || 0);
+                            }
                           }
                           
                           const transitItem = transitInventory.find(t => t.drug_id === item.drug_id && t.quantity > 0);
                           const transitQty = transitItem ? Math.round(transitItem.quantity) : 0;
 
                           let isDrawnThisShift = false;
-                          if (transitItem && transitItem.created_at) {
-                            const createdDate = new Date(transitItem.created_at);
-                            const diffMs = new Date() - createdDate;
-                            const diffHours = diffMs / (1000 * 60 * 60);
-                            if (diffHours < 16) {
-                              isDrawnThisShift = true;
+                          if (shiftStatus === 'active' && transitItem) {
+                            if (transitItem.is_drawn_this_shift !== undefined) {
+                              isDrawnThisShift = transitItem.is_drawn_this_shift;
+                            } else if (transitItem.created_at) {
+                              const createdDate = new Date(transitItem.created_at);
+                              const diffMs = new Date() - createdDate;
+                              const diffHours = diffMs / (1000 * 60 * 60);
+                              if (diffHours < 16) {
+                                isDrawnThisShift = true;
+                              }
                             }
                           }
                           

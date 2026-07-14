@@ -15,6 +15,8 @@ import ReportsPage from './pages/reports/ReportsPage';
 import PermissionsPage from './pages/permissions/PermissionsPage';
 import Masters from './pages/masters/Masters';
 import UsersPage from './pages/users/Users';
+import ShiftManagementPage from './pages/roster/ShiftManagementPage';
+import ShiftAuditLogsPage from './pages/roster/ShiftAuditLogsPage';
 import AuditLogs from './pages/audit/AuditLogs';
 import ProfilePage from './pages/profile/ProfilePage';
 
@@ -188,6 +190,8 @@ function App() {
                       <Route path="/masters" element={<Masters user={user} activeSubTab="materials" />} />
                       <Route path="/workflow" element={<Masters user={user} activeSubTab="workflow" />} />
                       <Route path="/users" element={<UsersPage />} />
+                      <Route path="/shift-management" element={<ShiftManagementPage />} />
+                      <Route path="/shift-management/audits" element={<ShiftAuditLogsPage />} />
                       <Route path="/audit" element={<AuditLogs />} />
                       <Route path="/reports" element={<ReportsPage />} />
                       <Route path="/permissions" element={<PermissionsPage />} />

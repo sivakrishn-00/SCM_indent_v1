@@ -17,7 +17,7 @@ export default function Layout({ children }) {
     loadingData, pendingHandover, hasProposedHandover, shiftStatus
   } = useApp();
 
-  const isHandoverInitiated = !!pendingHandover || hasProposedHandover || shiftStatus === 'view_only';
+  const isHandoverInitiated = !!pendingHandover || hasProposedHandover || shiftStatus === 'view_only' || shiftStatus === 'handed_over' || shiftStatus === 'pending_first_shift';
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -85,15 +85,23 @@ export default function Layout({ children }) {
       <header className="dashboard-header">
         <div className="header-left">
           <div className="bavya-header-logo-container">
-            <div className="bavya-header-logo">
-              <div className="petal petal-tl"></div>
-              <div className="petal petal-tr"></div>
-              <div className="petal petal-bl"></div>
-              <div className="petal petal-br"></div>
+            <div style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '9999px',
+              padding: '0 14px',
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.06)',
+              cursor: 'pointer',
+              boxSizing: 'border-box'
+            }} onClick={() => navigate('/dashboard')}>
+              <img src="/BAVYALO.png" alt="BAVYA Logo" style={{ height: '26px', objectFit: 'contain' }} />
             </div>
             <div className="brand-text-wrapper">
-              <span className="bavya-brand-title">BIT-Indent</span>
-              <span className="header-subtitle">Consumption Portal</span>
+              <span className="bavya-brand-title">BIT-IndCom</span>
+              <span className="header-subtitle">Indent & Consumption Portal</span>
             </div>
           </div>
         </div>
@@ -131,8 +139,12 @@ export default function Layout({ children }) {
                   type="button"
                   className={location.pathname === '/consumption/record' ? 'active-dropdown-item' : ''}
                   onClick={() => {
-                    if (shiftStatus === 'view_only') {
+                    if (shiftStatus === 'handed_over') {
                       toast.error("Your shift has been completed/handed over. Only view access is permitted.");
+                    } else if (shiftStatus === 'pending_first_shift') {
+                      toast.error("Please finalize your Shift 1 (Morning) consumption log first.");
+                    } else if (shiftStatus === 'view_only') {
+                      toast.error("Handover activation is pending. Access is view-only.");
                     } else if (isHandoverInitiated) {
                       toast.error("Stock handover has been initiated. Cannot record consumption.");
                     } else {
@@ -141,7 +153,17 @@ export default function Layout({ children }) {
                   }}
                   disabled={isHandoverInitiated}
                   style={isHandoverInitiated ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-                  title={shiftStatus === 'view_only' ? "Your shift has been completed/handed over. Only view access is permitted." : isHandoverInitiated ? "Stock handover has been initiated. Cannot record consumption." : ""}
+                  title={
+                    shiftStatus === 'handed_over' 
+                      ? "Your shift has been completed/handed over. Only view access is permitted."
+                      : shiftStatus === 'pending_first_shift'
+                        ? "Please finalize your Shift 1 (Morning) consumption log first."
+                        : shiftStatus === 'view_only'
+                          ? "Handover activation is pending. Access is view-only."
+                          : isHandoverInitiated 
+                            ? "Stock handover has been initiated. Cannot record consumption." 
+                            : ""
+                  }
                 >
                   Record Consumption
                 </button>
@@ -160,6 +182,7 @@ export default function Layout({ children }) {
               )}
             </button>
           )}
+
 
           {(hasPermission('masters', 'view') || hasPermission('indents', 'view') || userRole === 'admin') && (
             <button
@@ -210,7 +233,7 @@ export default function Layout({ children }) {
             <div className="nav-dropdown">
               <button
                 type="button"
-                className={`nav-link ${(isActive('/users') || isActive('/reports') || isActive('/audit') || isActive('/permissions') || isActive('/analytics')) ? 'active' : ''}`}
+                className={`nav-link ${(isActive('/users') || isActive('/reports') || isActive('/audit') || isActive('/permissions') || isActive('/analytics') || isActive('/shift-management')) ? 'active' : ''}`}
                 style={{ cursor: 'default' }}
               >
                 <Settings size={18} />
@@ -226,6 +249,11 @@ export default function Layout({ children }) {
                 {hasPermission('users', 'view') && (
                   <button type="button" className={isActive('/users') ? 'active-dropdown-item' : ''} onClick={() => navigate('/users')}>
                     Users
+                  </button>
+                )}
+                {(userRole === 'admin' || userRole === 'project_manager' || userRole === 'supervisor') && (
+                  <button type="button" className={isActive('/shift-management') ? 'active-dropdown-item' : ''} onClick={() => navigate('/shift-management')}>
+                    Shift Management
                   </button>
                 )}
                 {hasPermission('reports', 'view') && (
@@ -352,7 +380,7 @@ export default function Layout({ children }) {
       {/* FOOTER */}
       <footer className="dashboard-footer">
         <span className="footer-text">
-          © {new Date().getFullYear()} Bit-Indent SCM. All rights reserved.
+          © {new Date().getFullYear()} Bit-IndCom. All rights reserved.
         </span>
         <span className="footer-divider">•</span>
         <img src="/BAVYALO.png" alt="BAVYA Logo" className="footer-logo" style={{ maxHeight: '35px' }} />

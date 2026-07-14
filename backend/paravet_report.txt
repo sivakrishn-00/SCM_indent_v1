@@ -1,0 +1,358 @@
+﻿Total Paravets: 340
+====================================================================================================
+
+Manager: Ganapathi Naresh Babu (HR-EMP-06934) - Role: OE -- 84 paravet(s)
+  > Seelam Lakshmi Sandeep (HR-EMP-07708) -- Office: AP-1962-MVU-RAPUR
+  > Pothuraju Guru Mounika (HR-EMP-16464) -- Office: AP-1962-MVU-SULLURPET
+  > Duggireddy Venkata Prasad Reddy (HR-EMP-07840) -- Office: AP-1962-MVU-RENUGUNTA
+  > Yalla Saisireesha (HR-EMP-07690) -- Office: AP-1962-MVU-TIRUPATI
+  > Borra Sunil Kumar Reddy (HR-EMP-07838) -- Office: AP-1962-MVU-PICHATUR
+  > Patan Ali Akbar (HR-EMP-16159) -- Office: AP-1962-MVU-VAKADU
+  > K.Gurunath Naik (HR-EMP-07836) -- Office: AP-1962-MVU-PUTTUR
+  > Bonthala Mohanmuralidhar (HR-EMP-07831) -- Office: AP-1962-MVU-CHINNAGOTIGALLU
+  > Borra Ashok Kumar Reddy (HR-EMP-08034) -- Office: AP-1962-MVU-SRIKALAHASTI
+  > T Anand Jyothi (HR-EMP-07698) -- Office: AP-1962-MVU-SATHYAVEDU
+  > Telugu Harish (HR-EMP-07829) -- Office: AP-1962-MVU-TIRUPATI
+  > E Rohith (HR-EMP-07827) -- Office: AP-1962-MVU-CHANDRAGIRI
+  > Mallaravapu Siddarda (HR-EMP-07694) -- Office: AP-1962-MVU-NAIDUPETA
+  > Medikonda Anil Kumar (HR-EMP-07702) -- Office: AP-1962-MVU-GUDURU
+  > Shaik Fasiha Muskhan (HR-EMP-17019) -- Office: AP-1962-MVU-MUTTUKUR
+  > Velagala Manisha (HR-EMP-08024) -- Office: AP-1962-MVU-SANGAM
+  > Vinay Sagar (HR-EMP-07666) -- Office: AP-1962-MVU-VINJAMUR
+  > Chapala Prathyusha (HR-EMP-16983) -- Office: AP-1962-MVU-INDUKURPETA
+  > Shaik Mujahid (HR-EMP-07685) -- Office: AP-1962-MVU-PODALAKUR
+  > Rachugolla Viswanath (HR-EMP-07724) -- Office: AP-1962-MVU-VENKATAGIRI
+  > B Sivaji Naik (HR-EMP-07717) -- Office: AP-1962-MVU-MARRIPADU
+  > Talari Abhishek (HR-EMP-07656) -- Office: AP-1962-MVU-VALETIVARIPALEM
+  > Boyapalli.Naga Nandini (HR-EMP-07660) -- Office: AP-1962-MVU-ALLUR
+  > Kuruva Vamshi (HR-EMP-07716) -- Office: AP-1962-MVU-DUTTALUR
+  > Meeniga Venkata Sai Kiran (HR-EMP-08232) -- Office: AP-1962-MVU-UDAYAGIRI
+  > Thuraka Kusumakar (HR-EMP-07710) -- Office: AP-1962-MVU-SARVEPALLI
+  > Kondareddy Meghana (HR-EMP-07648) -- Office: AP-1962-MVU-NELLORE
+  > Gunji Aparna (HR-EMP-07644) -- Office: AP-1962-MVU-NELLORE
+  > Jagannadham Lokesh (HR-EMP-07651) -- Office: AP-1962-MVU-KANDUKUR
+  > Gangapatnam Keerthana (HR-EMP-07642) -- Office: AP-1962-MVU-KOVUR
+  > Derangula Ashok (HR-EMP-07616) -- Office: AP-1962-MVU-KAVALI
+  > Kothapalle Chaithanya (HR-EMP-07585) -- Office: AP-1962-MVU-KARVETINAGAR
+  > Amuru Yogesh (HR-EMP-07855) -- Office: AP-1962-MVU-PUTHALAPATTU
+  > Arigala Harshavardhan (HR-EMP-07821) -- Office: AP-1962-MVU-PULICHERLA
+  > Y Narendra Reddy (HR-EMP-07816) -- Office: AP-1962-MVU-SANTHIPURAM
+  > G Venkatesh (HR-EMP-07819) -- Office: AP-1962-MVU-VENKATAGIRI┬áKOTA
+  > Jonnaram Mahaboob Basha (HR-EMP-17059) -- Office: AP-1962-MVU-NAGARI
+  > B.Pavan Kumar (HR-EMP-07814) -- Office: AP-1962-MVU-PALAMANER
+  > Kamasani Manjunath Reddy (HR-EMP-07813) -- Office: AP-1962-MVU-BANGARUPALEM
+  > C Harish (HR-EMP-07810) -- Office: AP-1962-MVU-CHITTOOR
+  > Nannagaram Srinivasulu (HR-EMP-07808) -- Office: AP-1962-MVU-G D NELLORE
+  > Muraligari Hari Sankar (HR-EMP-07807) -- Office: AP-1962-MVU-PUNGANUR
+  > K Dhana Sekar (HR-EMP-16305) -- Office: AP-1962-MVU-KUPPAM
+  > Venkata Srinivasulu (HR-EMP-08234) -- Office: AP-1962-MVU-PORUMAMILA
+  > Bukke Suresh Naik (HR-EMP-07675) -- Office: AP-1962-MVU-VEMPALI
+  > Bandi Reddeppagari Venkata Jaya Surya (HR-EMP-07934) -- Office: AP-1962-MVU-B.MATTAM
+  > Alluri Suresh Babu (HR-EMP-07929) -- Office: AP-1962-MVU-YERRAGUNTLA
+  > Rama Sireesha (HR-EMP-07781) -- Office: AP-1962-MVU-PULIVENDULA
+  > Dugganapalli Aswak (HR-EMP-07779) -- Office: AP-1962-MVU-KADAPA
+  > Yerramasu Raj Kumar (HR-EMP-07797) -- Office: AP-1962-MVU-MYDUKUR
+  > Darapuneni Chaithanya (HR-EMP-07776) -- Office: AP-1962-MVU-BADVEL
+  > Mudde Raju Naik (HR-EMP-07790) -- Office: AP-1962-MVU-PRODDUTUR
+  > Bandaru Kalyani (HR-EMP-07786) -- Office: AP-1962-MVU-JAMMALAMADUGU
+  > Kandukuri Venkata Vishnu Vardhan Reddy (HR-EMP-07783) -- Office: AP-1962-MVU-KAMALAPURAM
+  > Indrakanti Hareesh (HR-EMP-07626) -- Office: AP-1962-MVU-VELUGODU
+  > Jonavaram Rizwana (HR-EMP-07614) -- Office: AP-1962-MVU-PANYAM
+  > Attar Mohammad Aslam (HR-EMP-07605) -- Office: AP-1962-MVU-SANJAMALA
+  > Sukanya (HR-EMP-16103) -- Office: AP-1962-MVU-PEAPULLY
+  > Shaik Mahammad Umar Farook (HR-EMP-07600) -- Office: AP-1962-MVU-RUDRAVARAM
+  > Shaik Azad (HR-EMP-07734) -- Office: AP-1962-MVU-GOSPADU
+  > V. Kanithkar (HR-EMP-16642) -- Office: AP-1962-MVU-NANDIKOTKURU
+  > Telugu Srilekha (HR-EMP-07595) -- Office: AP-1962-MVU-JUPADUBUNGALOW
+  > Talari Shiva Kumar (HR-EMP-07593) -- Office: AP-1962-MVU-ATMAKUR
+  > Shaik Mahammad Jubair (HR-EMP-07591) -- Office: AP-1962-MVU-ALLAGADDA
+  > Vadla Hussainvali (HR-EMP-07599) -- Office: AP-1962-MVU-BANAGANAPALLI
+  > Mulla Mahaboob Basha (HR-EMP-07596) -- Office: AP-1962-MVU-NANDYAL
+  > Y Dathathreya (HR-EMP-07606) -- Office: AP-1962-MVU-DHONE
+  > Shaik Dilshad (HR-EMP-07924) -- Office: AP-1962-MVU-GONEGANDLA
+  > Bathula Joshna (HR-EMP-07590) -- Office: AP-1962-MVU-GUDUR
+  > Mangali Gurunath (HR-EMP-07921) -- Office: AP-1962-MVU-KOSIGI
+  > Bytinti Anjali (HR-EMP-07917) -- Office: AP-1962-MVU-MADIRE
+  > Shaik Shanu (HR-EMP-07919) -- Office: AP-1962-MVU-ASPARI
+  > Vatti Narendra (HR-EMP-07992) -- Office: AP-1962-MVU-ADONI
+  > Boya Jayalakshmi (HR-EMP-07910) -- Office: AP-1962-MVU-MANTRALAYAM
+  > Chakali Anitha (HR-EMP-07907) -- Office: AP-1962-MVU-YEMIGANUR
+  > Tatikonda Madhan Kumar (HR-EMP-07897) -- Office: AP-1962-MVU-KURNOOL
+  > Hathibelagal Saraswathi (HR-EMP-07677) -- Office: AP-1962-MVU-ALUR
+  > Sandupalyam Manjula (HR-EMP-07904) -- Office: AP-1962-MVU-KODUMUR
+  > Thappadi Bharathi (HR-EMP-07902) -- Office: AP-1962-MVU-PATTIKONDA
+  > Reddypogu Tharakaram (HR-EMP-07898) -- Office: AP-1962-MVU-ORVAKAL
+  > Mude Harindra Naik (HR-EMP-15721) -- Office: AP-1962-MVU-KRISHNAGIRI
+  > Syed Nazeer Ahmad (HR-EMP-15718) -- Office: AP-1962-MVU-ATMAKUR
+  > Thokala Nandini Krishna (HR-EMP-15716) -- Office: AP-1962-MVU-GUDIPALA
+  > Chilli Hema Mahesh (HR-EMP-15255) -- Office: AP-1962-MVU-PENDLIMARRI
+
+Manager: Shaik Mahaboob Basha (HR-EMP-16267) - Role: OE -- 44 paravet(s)
+  > Mannam  Venkateswarlu (HR-EMP-08231) -- Office: AP-1962-MVU-TANGUTUR
+  > Nali Chinna Alluraiah (HR-EMP-07601) -- Office: AP-1962-MVU-KURICHEDU
+  > Pathan Gayaj (HR-EMP-07607) -- Office: AP-1962-MVU-KOTHAPATNAM
+  > Peerla  Nagalakshmi Devi (HR-EMP-07611) -- Office: AP-1962-MVU-NAGULUPPALAPADU
+  > Vesapogu Amar (HR-EMP-07793) -- Office: AP-1962-MVU-TRIPURANTHAKAM
+  > Shaik Afroz (HR-EMP-07706) -- Office: AP-1962-MVU-CHANDRASEKHARAPURAM
+  > Thallapalli  Manvitha (HR-EMP-07780) -- Office: AP-1962-MVU-HANUMANTHUNIPADU
+  > Sirivella  Sujitha Rani (HR-EMP-07785) -- Office: AP-1962-MVU-CUMBUM
+  > Aluri Abraham (HR-EMP-07789) -- Office: AP-1962-MVU-PODILI
+  > Shaik Shahul Basha (HR-EMP-07778) -- Office: AP-1962-MVU-KANIGIRI
+  > Avula Sneha Sai (HR-EMP-07761) -- Office: AP-1962-MVU-SANTHA NUTHALA PADU
+  > Addanki  Manikanta (HR-EMP-07775) -- Office: AP-1962-MVU-GIDDALUR
+  > Gottam Anvesh (HR-EMP-07770) -- Office: AP-1962-MVU-MARKAPURAM
+  > Prattipati Komali (HR-EMP-07755) -- Office: AP-1962-MVU-DARSI
+  > Somisetty  Nagavasu (HR-EMP-07751) -- Office: AP-1962-MVU-YERRAGONDAPALEM
+  > Daggumati Harshavardhan Rao (HR-EMP-07766) -- Office: AP-1962-MVU-KONDAPI
+  > Gorrepati Prakash Raju (HR-EMP-10553) -- Office: AP-1962-MVU-RAJUPALEM
+  > Shaik Siddamani (HR-EMP-07695) -- Office: AP-1962-MVU-SANTHAGUDIPADU
+  > Shaik Inthiyaz (HR-EMP-14624) -- Office: AP-1962-MVU-AMARAVATHI
+  > Yarraguddi  Esudasu (HR-EMP-10552) -- Office: AP-1962-MVU-IPURU
+  > Devanaboina Sivanagaraju (HR-EMP-07722) -- Office: AP-1962-MVU-EDLAPADU
+  > Kothapalli  Sunny (HR-EMP-07704) -- Office: AP-1962-MVU-KAREMPUDI
+  > Tanneeru  Akash (HR-EMP-08233) -- Office: AP-1962-MVU-CHILAKALURIPET
+  > Lavoori Srinu Naik (HR-EMP-07692) -- Office: AP-1962-MVU-GURAZALA
+  > Sagili Venkata Sainadh Reddy (HR-EMP-07687) -- Office: AP-1962-MVU-NARASARAOPET
+  > Vankudavath Barma Naik (HR-EMP-07686) -- Office: AP-1962-MVU-MACHERLA
+  > Syed  Hekmathiyar (HR-EMP-07689) -- Office: AP-1962-MVU-SATTENAPALLI
+  > Shaik Abdul Gafur (HR-EMP-07683) -- Office: AP-1962-MVU-PEDAKURAPADU
+  > K. Bhargavi (HR-EMP-07693) -- Office: AP-1962-MVU-VINUKONDA
+  > Marri Ramesh (HR-EMP-10664) -- Office: AP-1962-MVU-VETAPALEM
+  > Veeranki Charan Kumar (HR-EMP-07801) -- Office: AP-1962-MVU-AMARTHALURU
+  > Parisa Chandra Babu (HR-EMP-07798) -- Office: AP-1962-MVU-GUDAVALLI
+  > Chandolu Suvarna Raju (HR-EMP-07629) -- Office: AP-1962-MVU-BALLIKURAVA
+  > Eturi Mani Babu (HR-EMP-07624) -- Office: AP-1962-MVU-KARLAPALEM
+  > Morla Disowja (HR-EMP-07849) -- Office: AP-1962-MVU-VEMURU
+  > Ankireddy Umadevi (HR-EMP-07847) -- Office: AP-1962-MVU-CHIRALA
+  > Thulluri veeralankaiah (HR-EMP-16320) -- Office: AP-1962-MVU-REPALLE
+  > Shaik Nowshad (HR-EMP-07846) -- Office: AP-1962-MVU-ADDANKI
+  > Pittu Megha Sai Balaji (HR-EMP-07845) -- Office: AP-1962-MVU-PARCHUR
+  > Regulagadda  Mohit Sri Varma (HR-EMP-07805) -- Office: AP-1962-MVU-BAPATLA
+  > Pullagura Narasimhulu (HR-EMP-07932) -- Office: AP-1962-MVU-RAJUPALEM
+  > Sampathi Lavanya (HR-EMP-15741) -- Office: AP-1962-MVU-ONGOLE
+  > Katteboina Nagarjuna (HR-EMP-15738) -- Office: AP-1962-MVU-MARTUR
+  > Mandla Venkateswarlu (HR-EMP-15239) -- Office: AP-1962-MVU-PIDUGURALA
+
+Manager: Maddepalli Ashok Kumar (HR-EMP-15251) - Role: OE -- 41 paravet(s)
+  > K.Manjulatha (HR-EMP-07691) -- Office: AP-1962-MVU-BATHALAPALLI
+  > Gate Muhammad Anees (HR-EMP-07715) -- Office: AP-1962-MVU-GORANTLA
+  > Sanapa Naresh (HR-EMP-07731) -- Office: AP-1962-MVU-CHENNEKOTHAPALLI
+  > Bukke Vinod Naik (HR-EMP-07719) -- Office: AP-1962-MVU-OBULADEVARACHERUVU
+  > K Ajay Kumar (HR-EMP-07712) -- Office: AP-1962-MVU-LEPAKSHI
+  > Islavath Yaswanth Naik (HR-EMP-07707) -- Office: AP-1962-MVU-TALUPULA
+  > Boya Kavya Sree (HR-EMP-10550) -- Office: AP-1962-MVU-HINDUPUR
+  > L.Sivanna Gari  Rupavathi (HR-EMP-08235) -- Office: AP-1962-MVU-MADAKASIRA
+  > Allisher Mehamood (HR-EMP-07688) -- Office: AP-1962-MVU-RAPTADU
+  > Kayala Nithin (HR-EMP-07705) -- Office: AP-1962-MVU-KADIRI
+  > Gadwala Vamshi Krishna (HR-EMP-07701) -- Office: AP-1962-MVU-DHARMAVARAM
+  > Katta Prasanna Kumari (HR-EMP-08020) -- Office: AP-1962-MVU-PUTTAPARTHY
+  > Karamthoti Pavan Naik (HR-EMP-07736) -- Office: AP-1962-MVU-PENUKONDA
+  > Hathibelagal Anil Kumar (HR-EMP-17238) -- Office: AP-1962-MVU-RAMASAMUDRAM
+  > Sanku Sivamani (HR-EMP-07612) -- Office: AP-1962-MVU-SAMBEPALLI
+  > Peddaboyana  Santhosh (HR-EMP-07799) -- Office: AP-1962-MVU-LAKKIREDDYPALLI
+  > Chanagani Ganesh (HR-EMP-08012) -- Office: AP-1962-MVU-CHITVEL
+  > Gundluru Praveen Kumar (HR-EMP-07594) -- Office: AP-1962-MVU-THAMBALLAPALLE
+  > Paidikalva Lavanya (HR-EMP-07617) -- Office: AP-1962-MVU-T SUNDUPALLI
+  > Nemalladinna Mahaboob Basha (HR-EMP-07592) -- Office: AP-1962-MVU-KAMBAM VARIPALLI
+  > Meesala Yeswanth (HR-EMP-07597) -- Office: AP-1962-MVU-KALIKIRI
+  > Duggaraboina Lakshmi Navya (HR-EMP-07598) -- Office: AP-1962-MVU-MADANAPALLE
+  > Bogem Sathish (HR-EMP-14622) -- Office: AP-1962-MVU-MULAKALACHERUVU
+  > Gurlakunta Navya (HR-EMP-07777) -- Office: AP-1962-MVU-RAYACHOTY
+  > Nemalladinna Mabu Hussain (HR-EMP-07604) -- Office: AP-1962-MVU-KODUR
+  > P SRI HARI GANESH (HR-EMP-10714) -- Office: AP-1962-MVU-RAJAMPETA
+  > Ediga Aravindu (HR-EMP-07610) -- Office: AP-1962-MVU-KUDAIR
+  > Nimpanna Gari Sneha (HR-EMP-07768) -- Office: AP-1962-MVU-KANEKAL
+  > Chimala Uday Kumar (HR-EMP-07969) -- Office: AP-1962-MVU-YADIKI
+  > Jakkala Uma Maheshwari (HR-EMP-07613) -- Office: AP-1962-MVU-SETTUR
+  > Kathi  Vamsi (HR-EMP-07615) -- Office: AP-1962-MVU-PUTLUR
+  > Vumala Koushik (HR-EMP-07603) -- Office: AP-1962-MVU-GOOTY
+  > Kappala Sai Kiran (HR-EMP-10848) -- Office: AP-1962-MVU-ANANTAPUR
+  > Golla Vinod (HR-EMP-07609) -- Office: AP-1962-MVU-KALYANDURG
+  > Kimavath Akash (HR-EMP-07619) -- Office: AP-1962-MVU-ANANTAPUR
+  > Deverakonda Sree Lakshmi (HR-EMP-07966) -- Office: AP-1962-MVU-SINGANAMALA
+  > Shaik Abdul Mannan (HR-EMP-07620) -- Office: AP-1962-MVU-TADPATRI
+  > Shaik Mohammad Afreed (HR-EMP-07623) -- Office: AP-1962-MVU-GUNTAKAL
+  > Bothula Vinod Kumar (HR-EMP-07625) -- Office: AP-1962-MVU-URAVAKONDA
+  > Kuruba Madhu (HR-EMP-07628) -- Office: AP-1962-MVU-RAYADURG
+  > Basava Raju Gari Veeresh (HR-EMP-15733) -- Office: AP-1962-MVU-GUDIBANDLA
+
+Manager: V Ratnaraju (HR-EMP-06936) - Role: OE -- 41 paravet(s)
+  > Chilli.Praveen Kumar (HR-EMP-07873) -- Office: AP-1962-MVU-ATREYAPURAM
+  > Mandapati Durga Prasad (HR-EMP-07871) -- Office: AP-1962-MVU-MALIKIPURAM
+  > Gandham Durga Srujana (HR-EMP-07872) -- Office: AP-1962-MVU-AINAVILLI
+  > Juthuka Ravi Kiran (HR-EMP-07868) -- Office: AP-1962-MVU-CHEYYERU
+  > Rapaka.Jaswanth (HR-EMP-07875) -- Office: AP-1962-MVU-ALLAVARAM
+  > Valluri Joshi (HR-EMP-07877) -- Office: AP-1962-MVU-K GANGAVARAM
+  > Pilli Naga Satya Manikanta (HR-EMP-07869) -- Office: AP-1962-MVU-KAPILESWARAPURAM
+  > Bojanki Manikanta (HR-EMP-07880) -- Office: AP-1962-MVU-DRAKSHARAMAM
+  > Pasala.Tejaswi (HR-EMP-07866) -- Office: AP-1962-MVU-MANDAPETA
+  > Mogali Mohan (HR-EMP-08026) -- Office: AP-1962-MVU-RAZOLE
+  > Kasi Meghana Santhoshi (HR-EMP-08030) -- Office: AP-1962-MVU-MUMMIDIVARAM
+  > Gosangi Suzit (HR-EMP-10542) -- Office: AP-1962-MVU-AMALAPURAM
+  > Chelluboina Mahesh (HR-EMP-07862) -- Office: AP-1962-MVU-P.GANNAVARAM
+  > Borra Kirankumar (HR-EMP-07864) -- Office: AP-1962-MVU-KOTHAPETA
+  > Tetakayala Tejasai (HR-EMP-07984) -- Office: AP-1962-MVU-SANKHAVARAM
+  > Pyla Durga Prasad (HR-EMP-07985) -- Office: AP-1962-MVU-KOTANADURU
+  > Ankamreddy Mahesh (HR-EMP-07981) -- Office: AP-1962-MVU-DIVILI
+  > Mandapalli Vijay (HR-EMP-07980) -- Office: AP-1962-MVU-KARAPA
+  > Pothala Mahesh (HR-EMP-07983) -- Office: AP-1962-MVU-GOLLAPROLU
+  > Nakka Simhachalam (HR-EMP-07657) -- Office: AP-1962-MVU-GANDEPALLI
+  > Kadari Tarun (HR-EMP-07978) -- Office: AP-1962-MVU-JAGGAMPETA
+  > Ankamreddy Hashwanth (HR-EMP-07974) -- Office: AP-1962-MVU-PITHAPURAM
+  > Vinakoti Gowtham Sunil (HR-EMP-07976) -- Office: AP-1962-MVU-SAMALAKOT
+  > Janipalli Rk Mohana Chendra Balayogi (HR-EMP-07977) -- Office: AP-1962-MVU-KAKINADA
+  > Vanapalli Raju (HR-EMP-07975) -- Office: AP-1962-MVU-KAKINADA
+  > Petrum Leela Vara Prasad (HR-EMP-08006) -- Office: AP-1962-MVU-PRATHIPADU
+  > Gaadi Durgaprasad (HR-EMP-07973) -- Office: AP-1962-MVU-TUNI
+  > Medisetty.Parameswararao (HR-EMP-07896) -- Office: AP-1962-MVU-KORUKONDA
+  > Kone Siva Sankara Prasad (HR-EMP-07899) -- Office: AP-1962-MVU-RANGAMPETA
+  > Maraka Srinivas (HR-EMP-07638) -- Office: AP-1962-MVU-CHAGALLU
+  > Mahammad Haneef (HR-EMP-07906) -- Office: AP-1962-MVU-NALLAJERLA
+  > Immandi Lakshmi Sasi (HR-EMP-07894) -- Office: AP-1962-MVU-RAJAVOLU
+  > Pendyala.Satya Venkata Suguna (HR-EMP-07979) -- Office: AP-1962-MVU-ANAPARTHI
+  > Geddam Supravan (HR-EMP-07631) -- Office: AP-1962-MVU-GOPALAPURAM
+  > Pudi Sowmya (HR-EMP-07885) -- Office: AP-1962-MVU-NIDADAVOLE
+  > Mattaparthi Charan Satya Sai (HR-EMP-07876) -- Office: AP-1962-MVU-KOVVUR
+  > Tatapudi Jyothi (HR-EMP-07867) -- Office: AP-1962-MVU-KADIAM
+  > Palla Siva Ramakrishna (HR-EMP-07860) -- Office: AP-1962-MVU-RAJAHMUNDRY
+  > Karri. Sowjanya (HR-EMP-07634) -- Office: AP-1962-MVU-RAJANAGARAM
+  > Gera Usha Rani (HR-EMP-07953) -- Office: AP-1962-MVU-PRATHIPADU
+  > Pambala Yuvaraj (HR-EMP-15357) -- Office: AP-1962-MVU-UNDRAJAVARAM
+
+Manager: P Sivateja (HR-EMP-06938) - Role: OE -- 39 paravet(s)
+  > Sanivarapu Nookaraju (HR-EMP-07944) -- Office: AP-1962-MVU-PATTEMPALEM
+  > Vinjamudi Chandu (HR-EMP-07938) -- Office: AP-1962-MVU-UNDI
+  > Shaik Mahabub Shareef (HR-EMP-17220) -- Office: AP-1962-MVU-MOGALTHURU
+  > Kanapala Sandeep Kiran (HR-EMP-07937) -- Office: AP-1962-MVU-ELAMANCHILI
+  > Tekkum Karthikeya (HR-EMP-07946) -- Office: AP-1962-MVU-ATTILI
+  > Appari Bhavesh (HR-EMP-07909) -- Office: AP-1962-MVU-MARTERU
+  > Goberu Jyothirmai (HR-EMP-16160) -- Office: AP-1962-MVU-PENTAPADU
+  > Kareti Rajesh (HR-EMP-07678) -- Office: AP-1962-MVU-KALLA
+  > Kagitapu Venkata Manikanta Sai (HR-EMP-07774) -- Office: AP-1962-MVU-NARSAPURAM
+  > Iluri Saiviswanadh Hedge (HR-EMP-07772) -- Office: AP-1962-MVU-BHIMAVARAM
+  > Vinukonda Giri Venkat (HR-EMP-07769) -- Office: AP-1962-MVU-PALAKOL
+  > Nalla Bala Markandeya Satya Prasad (HR-EMP-07891) -- Office: AP-1962-MVU-VELPUR
+  > Gurija Pavani (HR-EMP-07887) -- Office: AP-1962-MVU-ACHANTA
+  > Kasani Teja (HR-EMP-07988) -- Office: AP-1962-MVU-GOPUVANIPALEM
+  > Pedavalli Srinivas (HR-EMP-07673) -- Office: AP-1962-MVU-BANTUMILLI
+  > Vallabha Maroshini (HR-EMP-07664) -- Office: AP-1962-MVU-GUDIVADA
+  > Yarrapati Divya Sri (HR-EMP-07892) -- Office: AP-1962-MVU-BAPULAPADU
+  > Parupudi Siva Ramoji Rao (HR-EMP-07667) -- Office: AP-1962-MVU-VUYYURU
+  > Medanki Vamsi Krishna (HR-EMP-07669) -- Office: AP-1962-MVU-CHALLAPALLI
+  > Jonnalagadda Vinishka (HR-EMP-07671) -- Office: AP-1962-MVU-MOVVA
+  > Konda Tarunsai (HR-EMP-07882) -- Office: AP-1962-MVU-MACHILIPATNAM
+  > Gudivada Navaneeth (HR-EMP-07662) -- Office: AP-1962-MVU-PEDANA
+  > Jogi Pavitra (HR-EMP-08025) -- Office: AP-1962-MVU-GUDLAVALLERU
+  > Katti Gopala Krishna (HR-EMP-07884) -- Office: AP-1962-MVU-AVANIGADDA
+  > Gaddam Raja (HR-EMP-07890) -- Office: AP-1962-MVU-GANNAVARAM
+  > Kamatham Chandu Rajeev (HR-EMP-07922) -- Office: AP-1962-MVU-MUDINEPALLI
+  > Kondapavuluri Narendra (HR-EMP-07997) -- Office: AP-1962-MVU-GANDHINAGARAM
+  > Ballarapu Karuna Kumar (HR-EMP-07930) -- Office: AP-1962-MVU-PIPPARA
+  > Manelli Teja (HR-EMP-07925) -- Office: AP-1962-MVU-JEELUGUMILLI
+  > Chavala Siva Krishna (HR-EMP-07927) -- Office: AP-1962-MVU-JANGAREDDYGUDEM
+  > Palli Satish Babu (HR-EMP-07650) -- Office: AP-1962-MVU-MUSUNURU
+  > Gannabathula Siva Sai Mahesh (HR-EMP-07916) -- Office: AP-1962-MVU-KAIKALURU
+  > Gaddala Sowbhagyam (HR-EMP-07649) -- Office: AP-1962-MVU-NUZVID
+  > Modugu Manohar Babu (HR-EMP-07643) -- Office: AP-1962-MVU-CHINTHALAPUDI
+  > Badugu Ravi Kiran (HR-EMP-07647) -- Office: AP-1962-MVU-BUTTAIGUDEM
+  > Naga Kasi Prasad (HR-EMP-07913) -- Office: AP-1962-MVU-ELURU
+  > Medisetti Deepika (HR-EMP-07640) -- Office: AP-1962-MVU-KOVVALI
+  > Banavathu Pandu (HR-EMP-15950) -- Office: AP-1962-MVU-KANKIPADU
+  > Pamarthi Deepthi (HR-EMP-15233) -- Office: AP-1962-MVU-PAMARRU
+
+Manager: K Rajeswara Rao (HR-EMP-06937) - Role: OE -- 37 paravet(s)
+  > Randhi Ramakishna (HR-EMP-08229) -- Office: AP-1962-MVU-GANTAYADA
+  > Mahanthi Chandu (HR-EMP-07765) -- Office: AP-1962-MVU-BHOGAPURAM
+  > Ponganti Divya (HR-EMP-07767) -- Office: AP-1962-MVU-KOTHAVALASA
+  > Gorajana Vasudeva Rao (HR-EMP-07762) -- Office: AP-1962-MVU-GURLA
+  > Rajana Sai (HR-EMP-10678) -- Office: AP-1962-MVU-SANTHAKAVITI
+  > Divakala Jagadeesh (HR-EMP-07759) -- Office: AP-1962-MVU-THERLAM
+  > Kachala.Jayalakshmi (HR-EMP-07757) -- Office: AP-1962-MVU-S KOTA
+  > Nalla Raghu (HR-EMP-07681) -- Office: AP-1962-MVU-VIZIANAGARAM
+  > Kommu Kalavathi (HR-EMP-07753) -- Office: AP-1962-MVU-NELLIMARLA
+  > Duddi Lalitha (HR-EMP-07750) -- Office: AP-1962-MVU-GAJAPATHINAGARAM
+  > Reddi.Priyanka (HR-EMP-07747) -- Office: AP-1962-MVU-CHEEPURIPALLI
+  > Koyyana Dhasmini (HR-EMP-07745) -- Office: AP-1962-MVU-BOBBILI
+  > Sarasanapalli Yogindra (HR-EMP-07743) -- Office: AP-1962-MVU-RAJAM
+  > Kella Likhita (HR-EMP-07784) -- Office: AP-1962-MVU-LAVERU
+  > Phothuraju Vijayalakshmi (HR-EMP-10658) -- Office: AP-1962-MVU-GARA
+  > Devalingam Devi (HR-EMP-07760) -- Office: AP-1962-MVU-PONDURU
+  > Gutla .Rohith Kumar (HR-EMP-07826) -- Office: AP-1962-MVU-KOTABOMMALI
+  > Kornu Vamsikrishna (HR-EMP-07796) -- Office: AP-1962-MVU-JALUMURU
+  > Janni Sandhya Rani (HR-EMP-07823) -- Office: AP-1962-MVU-KOTTURU
+  > Kodiboina Revanth (HR-EMP-07756) -- Office: AP-1962-MVU-NARASANNAPETA
+  > Paidi Swetha (HR-EMP-07752) -- Office: AP-1962-MVU-ETCHERLA
+  > Munjeti Jayaprakash (HR-EMP-07748) -- Office: AP-1962-MVU-AMADALAVALASA
+  > Geddavalasa Pavani (HR-EMP-07744) -- Office: AP-1962-MVU-ARASAVALLI
+  > Bendu Narendra (HR-EMP-07729) -- Office: AP-1962-MVU-TEKKALI
+  > Kotcha Saikumar (HR-EMP-07792) -- Office: AP-1962-MVU-PALASA
+  > Dasari Hemanth Kumar (HR-EMP-14641) -- Office: AP-1962-MVU-KAVITI
+  > Pakki. Mohana Rao (HR-EMP-07738) -- Office: AP-1962-MVU-MAKKUVA
+  > Nagalla Appala Naidu (HR-EMP-07746) -- Office: AP-1962-MVU-SEETHAMPETA
+  > Kandena Sahithi (HR-EMP-10668) -- Office: AP-1962-MVU-GARUGUBILLI
+  > Vakada Gayathri (HR-EMP-07703) -- Office: AP-1962-MVU-SEETHANAGARAM
+  > Vanjarapu.Lahari (HR-EMP-07742) -- Office: AP-1962-MVU-PALAKONDA
+  > Palaka Sankararao (HR-EMP-07697) -- Office: AP-1962-MVU-KURUPAM
+  > Karri Neelima (HR-EMP-07700) -- Office: AP-1962-MVU-SALUR
+  > Sasapu Saichakravarthi (HR-EMP-07727) -- Office: AP-1962-MVU-PARVATHIPURAM
+  > Esampalli Ravi Kumar (HR-EMP-15244) -- Office: AP-1962-MVU-PATHAPATNAM
+  > Thadibudda Dalamma (HR-EMP-15238) -- Office: AP-1962-MVU-PALASA
+  > Eepu Ganesh (HR-EMP-15235) -- Office: AP-1962-MVU-SOMPETA
+
+Manager: Konala Siva Koteswararao (HR-EMP-15249) - Role: OE -- 29 paravet(s)
+  > Makireddy.Sravana Sandhya (HR-EMP-07737) -- Office: AP-1962-MVU-BHIMILI
+  > Pappu Sankararao (HR-EMP-07733) -- Office: AP-1962-MVU-CHANDRAMPALAM
+  > Ponaganti Bharghav (HR-EMP-07740) -- Office: AP-1962-MVU-PEDAGANTYADA
+  > Kola Satya (HR-EMP-07730) -- Office: AP-1962-MVU-NADUPURU
+  > Dogga Hymavathi (HR-EMP-07633) -- Office: AP-1962-MVU-PENDURTHI
+  > Bhupathi Mani Shankar Kumar (HR-EMP-07723) -- Office: AP-1962-MVU-HANUMANTHUVAKA
+  > Makireddi Ammaji (HR-EMP-07725) -- Office: AP-1962-MVU-VIZAG┬áCOROMANDEL
+  > Ruttala Santhi Priya (HR-EMP-07713) -- Office: AP-1962-MVU-JAGADAMBA
+  > Penta. Lakshmana (HR-EMP-07843) -- Office: AP-1962-MVU-ANANDAPURAM
+  > Bathina Shyam Kumra (HR-EMP-07711) -- Office: AP-1962-MVU-HANUMANTHUVAKA
+  > Donka Sai Nandini (HR-EMP-07630) -- Office: AP-1962-MVU-PARAVADA
+  > Noothi Vanajasri (HR-EMP-07655) -- Office: AP-1962-MVU-KASIMKOTA
+  > Rongala Gunasekhar (HR-EMP-07646) -- Office: AP-1962-MVU-CHODAVARAM
+  > Varri Renuka (HR-EMP-07639) -- Office: AP-1962-MVU-SRUNGAVARAM
+  > Marthi Lakshmi (HR-EMP-07636) -- Office: AP-1962-MVU-KOTAURATLA
+  > Gopasina Nookaappala Swami Kishore (HR-EMP-07947) -- Office: AP-1962-MVU-V.MADUGULA
+  > Marri.Saibabu (HR-EMP-07635) -- Office: AP-1962-MVU-ATCHUTAPURAM
+  > Maddu Siva Kumar (HR-EMP-07964) -- Office: AP-1962-MVU-YELAMANCHILI
+  > Gatta. Durgaprasad (HR-EMP-07659) -- Office: AP-1962-MVU-NARSIPATNAM
+  > Duvvi Vamsi Sai Krishna (HR-EMP-07663) -- Office: AP-1962-MVU-NAKKAPALLI
+  > Gorle Mohan (HR-EMP-07668) -- Office: AP-1962-MVU-GANDHINAGAR
+  > Patharapalli. Santhosh (HR-EMP-07672) -- Office: AP-1962-MVU-K KOTAPADU
+  > Molli. Sridevi (HR-EMP-07773) -- Office: AP-1962-MVU-RAVIKAMATHAM
+  > Komma Rathnakumari (HR-EMP-08560) -- Office: AP-1962-MVU-PEDABAYALU
+  > Chukkala Sarath kumar (HR-EMP-14617) -- Office: AP-1962-MVU-CHINTOOR
+  > Chinta Harikiran (HR-EMP-07962) -- Office: AP-1962-MVU-CHINTAPALLI
+  > Kaparapu Kumar Raju (HR-EMP-07956) -- Office: AP-1962-MVU-RAMPACHODAVARAM
+  > Kasula Saiteja (HR-EMP-07951) -- Office: AP-1962-MVU-PADERU
+  > Killo Nagajyothi (HR-EMP-07949) -- Office: AP-1962-MVU-ARAKU VALLEY
+
+Manager: V Raju (HR-EMP-17064) - Role: OE -- 25 paravet(s)
+  > Cheedarla Mohana Priya (HR-EMP-07674) -- Office: AP-1962-MVU-IBRAHIMPATNAM
+  > Bhukya Chandu Prasad (HR-EMP-07670) -- Office: AP-1962-MVU-A.KONDURU
+  > Talluri Malleswari (HR-EMP-07680) -- Office: AP-1962-MVU-PENUGANCHIPROLU
+  > Mogilicharla Varun (HR-EMP-07684) -- Office: AP-1962-MVU-KANCHIKACHARLA
+  > Marsakatla Sindhu (HR-EMP-07661) -- Office: AP-1962-MVU-MYLAVARAM
+  > Palaparthi Sirisha (HR-EMP-07653) -- Office: AP-1962-MVU-MUTHYALAMPADU
+  > Mondithoka Likhitha (HR-EMP-07645) -- Office: AP-1962-MVU-MUTHYALAMPADU
+  > Katta Pravallika (HR-EMP-07641) -- Office: AP-1962-MVU-MUTHYALAMPADU
+  > Gugulothu Santhosh (HR-EMP-07886) -- Office: AP-1962-MVU-TIRUVURU
+  > Rathikinda Sairam (HR-EMP-07665) -- Office: AP-1962-MVU-NANDIGAMA
+  > Sali Gopichand (HR-EMP-07682) -- Office: AP-1962-MVU-JAGGAYAPET
+  > Mandru Danielu Abhishak (HR-EMP-07940) -- Office: AP-1962-MVU-PEDANANDIPADU
+  > Lubna Parveen Manduri Shaikh (HR-EMP-07968) -- Office: AP-1962-MVU-PHIRANGIPURAM
+  > Kasukurthi Naveen (HR-EMP-07971) -- Office: AP-1962-MVU-KOLLIPARA
+  > Karlapudi Swarnalatha (HR-EMP-07654) -- Office: AP-1962-MVU-PEDAKAKANI
+  > Kanaparthi Jayanth Kumar (HR-EMP-07970) -- Office: AP-1962-MVU-DUGGIRALA
+  > Noor Basha Salman (HR-EMP-17057) -- Office: AP-1962-MVU-MANDADAM
+  > Thumma Purna Sai Reddy (HR-EMP-07960) -- Office: AP-1962-MVU-CHEBROLE
+  > Katari Srilatha (HR-EMP-07952) -- Office: AP-1962-MVU-PONNUR
+  > Suragani Mounika (HR-EMP-08009) -- Office: AP-1962-MVU-TENALI
+  > Devarasetti Meghana (HR-EMP-07955) -- Office: AP-1962-MVU-JD┬áOFFICE
+  > Chinta Satish Babu (HR-EMP-07957) -- Office: AP-1962-MVU-JD┬áOFFICE
+  > Gollapalli Mani Kanta (HR-EMP-07941) -- Office: AP-1962-MVU-TADIKONDA
+  > Turaka Akanksha (HR-EMP-16702) -- Office: AP-1962-MVU-MANGALGIRI
+  > Kummari Nissi (HR-EMP-07911) -- Office: AP-1962-MVU-CHEBROLE

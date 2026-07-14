@@ -10,6 +10,121 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
+def check_operator_shift_active(db: Session, user: User, shift_type: Optional[str] = None):
+    # 1. Exempt Admin
+    if user.username == "admin" or str(user.role).lower() == "admin":
+        return
+
+    # 2. Exempt Warehouse roles
+    from app.api.v1.utils import get_hierarchy_maps
+    emp_code_to_details, _, _ = get_hierarchy_maps()
+    user_details = emp_code_to_details.get(user.username)
+    if user_details:
+        office = user_details.get("office_name", "").lower()
+        office_loc = user_details.get("office_location", "").lower()
+        if "central ware house" in office or "central warehouse" in office or "central ware house" in office_loc or "central warehouse" in office_loc:
+            return  # Exempt warehouse users
+
+    # 3. Only apply roster restriction to operators/pilots/paravets
+    role_lower = str(user.role).lower()
+    is_operator = "operator" in role_lower or "pilot" in role_lower or "paravet" in role_lower
+    if not is_operator:
+        return
+        
+    from app.models.roster import ShiftRoster
+    from app.models.shift import UserShiftState
+    from datetime import datetime, timezone, timedelta
+    
+    tz = timezone(timedelta(hours=5, minutes=30))
+    now_dt = datetime.now(tz)
+    today = now_dt.date()
+    today_str = today.strftime("%Y-%m-%d")
+    
+    # 4. Roster validation
+    roster_entry = None
+    if shift_type:
+        roster_entry = db.query(ShiftRoster).filter(
+            ShiftRoster.employee_code == user.username,
+            ShiftRoster.shift_date == today,
+            ShiftRoster.shift_type == shift_type,
+            ShiftRoster.status != "cancelled"
+        ).first()
+
+    if not roster_entry:
+        roster_entries = db.query(ShiftRoster).filter(
+            ShiftRoster.employee_code == user.username,
+            ShiftRoster.shift_date == today,
+            ShiftRoster.status != "cancelled"
+        ).all()
+        
+        roster_entries = [e for e in roster_entries if e.shift_type != "off"]
+        
+        if roster_entries:
+            preferred_type = "shift_1" if now_dt.hour < 14 else "shift_2"
+            roster_entry = next((e for e in roster_entries if e.shift_type == preferred_type), None)
+            if not roster_entry:
+                roster_entry = roster_entries[0]
+    
+    if not roster_entry:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No shift assigned to you in the roster today. Access is view-only."
+        )
+        
+    # Enforce shift type matching
+    if shift_type and roster_entry.shift_type != shift_type:
+        assigned_label = "Shift 1 (Morning)" if roster_entry.shift_type == "shift_1" else "Shift 2 (Evening)"
+        requested_label = "Shift 1 (Morning)" if shift_type == "shift_1" else "Shift 2 (Evening)"
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You are rostered for {assigned_label} today. Access to {requested_label} is forbidden."
+        )
+        
+    # 5. Handover validation and next-shift activation
+    needs_handover_activation = False
+    if roster_entry.shift_type == "shift_2":
+        shift1_rostered = db.query(ShiftRoster).filter(
+            ShiftRoster.shift_date == today,
+            ShiftRoster.shift_type == "shift_1",
+            ShiftRoster.status != "cancelled"
+        ).first()
+        if shift1_rostered:
+            if shift1_rostered.employee_code != user.username:
+                needs_handover_activation = True
+            else:
+                # Same operator doing double shift. Ensure Shift 1 consumption logs are finalized first.
+                from app.models.shift import ShiftLog
+                shift1_finalized = db.query(ShiftLog).filter(
+                    ShiftLog.operator_id == user.id,
+                    ShiftLog.shift_type == "shift_1",
+                    ShiftLog.date >= datetime.combine(today, datetime.min.time()),
+                    ShiftLog.date <= datetime.combine(today, datetime.max.time()),
+                    ShiftLog.is_draft == False
+                ).first()
+                if not shift1_finalized:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Please finalize and submit your Shift 1 (Morning) consumption log first before proceeding to Shift 2."
+                    )
+
+    state = db.query(UserShiftState).filter(
+        UserShiftState.user_id == user.id,
+        UserShiftState.shift_date == today_str
+    ).first()
+    
+    if needs_handover_activation:
+        if not state or state.status != "active":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are rostered for the next shift (Shift 2). Access is view-only until the current shift operator hands over to you."
+            )
+
+    if state and state.status == "handed_over":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Your shift has been completed/handed over. Only view access is permitted."
+        )
+
 # Transit Inventory Schema Definitions
 class TransitDrawItem(BaseModel):
     drug_id: int
@@ -33,6 +148,7 @@ class TransitReturnPayload(BaseModel):
 
 class TransitHandoverRequest(BaseModel):
     recipient_username: str
+    pin: Optional[str] = None
 
 @router.get("/transit-inventory/current")
 def get_current_transit_inventory(
@@ -56,6 +172,8 @@ def get_current_transit_inventory(
             "item_name": h.item_name,
             "batch_number": h.batch_number,
             "quantity": h.quantity,
+            "drawn_qty": h.drawn_qty,
+            "is_drawn_this_shift": h.drawn_qty > 0,
             "expiry_date": str(h.expiry_date) if h.expiry_date else None,
             "status": h.status,
             "created_at": h.created_at.isoformat() if h.created_at else None
@@ -138,25 +256,23 @@ def propose_handover(
     current_user: User = Depends(deps.get_current_user)
 ) -> Any:
     """
-    Propose hand over of remaining transit stock to an incoming user on the same project/location.
+    Propose and immediately complete stock handover of remaining transit stock to an incoming user
+    authorized via a 6-digit Takeover PIN.
     """
     from app.models.user import User as UserModel
     from app.models.shift import UserShiftState
     from datetime import datetime, timezone, timedelta
+    from app.core.cache import cache_service
+    
+    check_operator_shift_active(db, current_user)
     
     tz = timezone(timedelta(hours=5, minutes=30))
     today_str = datetime.now(tz).strftime("%Y-%m-%d")
     
-    # Block if already handed over
     existing_state = db.query(UserShiftState).filter(
         UserShiftState.user_id == current_user.id,
         UserShiftState.shift_date == today_str
     ).first()
-    if existing_state and existing_state.status == "handed_over":
-        raise HTTPException(
-            status_code=400,
-            detail="Your shift has been completed/handed over. Only view access is permitted."
-        )
     
     recipient = db.query(UserModel).filter(UserModel.username == payload.recipient_username).first()
     if not recipient:
@@ -168,10 +284,39 @@ def propose_handover(
         TransitInventory.quantity > 0
     ).all()
     
-    if not my_active_stock:
-        raise HTTPException(status_code=400, detail="You have no active transit medicines to hand over.")
-        
-    # Mark user's shift status as handed_over for today
+
+
+    # Validate Takeover PIN
+    if not payload.pin:
+        raise HTTPException(status_code=400, detail="Takeover verification PIN is required to propose handover.")
+
+    cache_data = cache_service.get_otp(payload.recipient_username)
+    if not cache_data:
+        raise HTTPException(
+            status_code=400,
+            detail="Takeover authorization PIN has expired or is invalid. Please ask the incoming operator to generate a new PIN."
+        )
+
+    stored_pin = cache_data.get("pin")
+    attempts = cache_data.get("attempts", 0)
+
+    if stored_pin != payload.pin:
+        attempts += 1
+        if attempts >= 3:
+            cache_service.delete_otp(payload.recipient_username)
+            raise HTTPException(
+                status_code=400,
+                detail="Too many incorrect PIN attempts. Handover authorization cancelled. Please generate a new PIN."
+            )
+        else:
+            cache_data["attempts"] = attempts
+            cache_service.update_otp(payload.recipient_username, cache_data, ttl=300)
+            raise HTTPException(
+                status_code=400,
+                detail=f"Incorrect takeover PIN. {3 - attempts} attempts remaining."
+            )
+
+    # 1. Update/Create finishing operator (current user) state to "handed_over"
     if existing_state:
         existing_state.status = "handed_over"
     else:
@@ -184,22 +329,45 @@ def propose_handover(
         )
         db.add(new_state)
         
+    # 2. Update/Create incoming operator (recipient) state to "active"
+    recipient_state = db.query(UserShiftState).filter(
+        UserShiftState.user_id == recipient.id,
+        UserShiftState.shift_date == today_str
+    ).first()
+    if recipient_state:
+        recipient_state.status = "active"
+    else:
+        new_recipient_state = UserShiftState(
+            user_id=recipient.id,
+            project=recipient.project,
+            office_name=my_active_stock[0].office_name if my_active_stock else recipient.project,
+            shift_date=today_str,
+            status="active"
+        )
+        db.add(new_recipient_state)
+
+    # 3. Direct transfer of transit items (atomic acceptance)
     for item in my_active_stock:
-        item.status = "pending_handover"
-        item.handed_over_to_id = recipient.id
-        
+        item.operator_id = recipient.id
+        item.handed_over_to_id = None
+        item.status = "active"
+        item.drawn_qty = 0.0
+
+    # Evict key from cache
+    cache_service.delete_otp(payload.recipient_username)
+
     from app.models.audit_log import AuditLog
     audit = AuditLog(
         user=current_user.username,
-        action="PROPOSE_HANDOVER",
+        action="COMPLETE_HANDOVER_WITH_PIN",
         module="TRANSIT_INVENTORY",
-        description=f"Proposed transit inventory handover of {len(my_active_stock)} items to '{payload.recipient_username}'",
+        description=f"Completed transit stock handover of {len(my_active_stock)} items to '{payload.recipient_username}' using Takeover PIN.",
         status="SUCCESS",
         project=current_user.project
     )
     db.add(audit)
     db.commit()
-    return {"message": f"Successfully proposed stock handover to '{payload.recipient_username}'."}
+    return {"message": f"Successfully completed stock handover to '{payload.recipient_username}'."}
 
 
 @router.post("/transit-inventory/handover/accept")
@@ -269,6 +437,7 @@ def accept_handover(
         item.operator_id = current_user.id
         item.handed_over_to_id = None
         item.status = "active"
+        item.drawn_qty = 0.0
         
     db.commit()
     
@@ -295,21 +464,7 @@ def draw_transit_stock(
     """
     Draw stock from local Office/Facility Store into Operator Transit Bag. Enforces FEFO batch picking.
     """
-    from app.models.shift import UserShiftState
-    from datetime import datetime, timezone, timedelta
-    tz = timezone(timedelta(hours=5, minutes=30))
-    today_str = datetime.now(tz).strftime("%Y-%m-%d")
-    
-    # Check if shift has been completed/handed over
-    state = db.query(UserShiftState).filter(
-        UserShiftState.user_id == current_user.id,
-        UserShiftState.shift_date == today_str
-    ).first()
-    if state and state.status == "handed_over":
-        raise HTTPException(
-            status_code=400,
-            detail="Your shift has been completed/handed over. Only view access is permitted."
-        )
+    check_operator_shift_active(db, current_user)
         
     from app.models.audit_log import AuditLog
     
@@ -413,11 +568,13 @@ def draw_transit_stock(
                 batch_number=drug_data.batch_number,
                 expiry_date=drug_data.expiry_date,
                 quantity=item.quantity,
+                drawn_qty=item.quantity,
                 status="active"
             )
             db.add(transit_item)
         else:
             transit_item.quantity += item.quantity
+            transit_item.drawn_qty += item.quantity
             
         drawn_items.append(transit_item)
         
@@ -447,21 +604,7 @@ def return_transit_stock(
     """
     Return active transit stock back to the local Office/Facility Store.
     """
-    from app.models.shift import UserShiftState
-    from datetime import datetime, timezone, timedelta
-    tz = timezone(timedelta(hours=5, minutes=30))
-    today_str = datetime.now(tz).strftime("%Y-%m-%d")
-    
-    # Check if shift has been completed/handed over
-    state = db.query(UserShiftState).filter(
-        UserShiftState.user_id == current_user.id,
-        UserShiftState.shift_date == today_str
-    ).first()
-    if state and state.status == "handed_over":
-        raise HTTPException(
-            status_code=400,
-            detail="Your shift has been completed/handed over. Only view access is permitted."
-        )
+    check_operator_shift_active(db, current_user)
         
     from app.models.audit_log import AuditLog
     

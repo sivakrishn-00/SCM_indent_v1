@@ -46,20 +46,90 @@ def get_bootstrap(
     
     # 5. Check user shift status for today's date
     from app.models.shift import UserShiftState
+    from app.models.roster import ShiftRoster
     from datetime import datetime, timezone, timedelta
     
     tz = timezone(timedelta(hours=5, minutes=30))
-    today_str = datetime.now(tz).strftime("%Y-%m-%d")
-    
-    shift_state = db.query(UserShiftState).filter(
-        UserShiftState.user_id == current_user.id,
-        UserShiftState.shift_date == today_str
-    ).first()
+    today = datetime.now(tz).date()
+    today_str = today.strftime("%Y-%m-%d")
     
     shift_status = "active"
-    if shift_state and shift_state.status == "handed_over":
-        shift_status = "view_only"
     
+    # Check if user is exempt (Admin or Warehouse)
+    is_exempt = False
+    if current_user.username == "admin" or str(current_user.role).lower() == "admin":
+        is_exempt = True
+    else:
+        from app.api.v1.utils import get_hierarchy_maps
+        emp_code_to_details, _, _ = get_hierarchy_maps()
+        user_details = emp_code_to_details.get(current_user.username)
+        if user_details:
+            office = user_details.get("office_name", "").lower()
+            office_loc = user_details.get("office_location", "").lower()
+            if "central ware house" in office or "central warehouse" in office or "central ware house" in office_loc or "central warehouse" in office_loc:
+                is_exempt = True
+
+    if not is_exempt:
+        # Check if they are classified as an operator
+        role_lower = str(current_user.role).lower()
+        is_operator = "operator" in role_lower or "pilot" in role_lower or "paravet" in role_lower
+        
+        if is_operator:
+            # Check if they have active roster entries for today
+            roster_entries = db.query(ShiftRoster).filter(
+                ShiftRoster.employee_code == current_user.username,
+                ShiftRoster.shift_date == today,
+                ShiftRoster.status != "cancelled"
+            ).all()
+            
+            roster_entries = [e for e in roster_entries if e.shift_type != "off"]
+            
+            if not roster_entries:
+                shift_status = "view_only"
+            else:
+                preferred_type = "shift_1" if datetime.now(tz).hour < 14 else "shift_2"
+                roster_entry = next((e for e in roster_entries if e.shift_type == preferred_type), None)
+                if not roster_entry:
+                    roster_entry = roster_entries[0]
+
+                needs_handover_activation = False
+                is_double_shift_pending = False
+                if roster_entry.shift_type == "shift_2":
+                    shift1_rostered = db.query(ShiftRoster).filter(
+                        ShiftRoster.shift_date == today,
+                        ShiftRoster.shift_type == "shift_1",
+                        ShiftRoster.status != "cancelled"
+                    ).first()
+                    if shift1_rostered:
+                        if shift1_rostered.employee_code != current_user.username:
+                            needs_handover_activation = True
+                        else:
+                            # Same operator doing double shift. Ensure Shift 1 consumption logs are finalized first.
+                            from app.models.shift import ShiftLog
+                            shift1_finalized = db.query(ShiftLog).filter(
+                                ShiftLog.operator_id == current_user.id,
+                                ShiftLog.shift_type == "shift_1",
+                                ShiftLog.date >= datetime.combine(today, datetime.min.time()),
+                                ShiftLog.date <= datetime.combine(today, datetime.max.time()),
+                                ShiftLog.is_draft == False
+                            ).first()
+                            if not shift1_finalized:
+                                is_double_shift_pending = True
+
+                # They have an active roster entry. Let's check handover status.
+                shift_state = db.query(UserShiftState).filter(
+                    UserShiftState.user_id == current_user.id,
+                    UserShiftState.shift_date == today_str
+                ).first()
+
+                if shift_state and shift_state.status == "handed_over":
+                    shift_status = "handed_over"
+                elif needs_handover_activation:
+                    if not shift_state or shift_state.status != "active":
+                        shift_status = "view_only"
+                elif is_double_shift_pending:
+                    shift_status = "pending_first_shift"
+            
     return {
         "hierarchy": hierarchy,
         "configs": configs,
@@ -67,4 +137,5 @@ def get_bootstrap(
         "permissions": serialized_permissions,
         "shift_status": shift_status
     }
+
 

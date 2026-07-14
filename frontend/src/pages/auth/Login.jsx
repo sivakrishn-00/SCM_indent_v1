@@ -160,7 +160,7 @@ export default function Login({ onLoginSuccess }) {
                       <div className="petal petal-bl"></div>
                       <div className="petal petal-br"></div>
                     </div>
-                    <span className="bavya-brand-title">BIT-Indent</span>
+                    <span className="bavya-brand-title">BIT-IndCom</span>
                   </div>
                   
                   <h2>Log in</h2>

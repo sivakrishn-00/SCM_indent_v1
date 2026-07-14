@@ -11,6 +11,38 @@ import { useApp } from '../../context/AppContext';
 import CustomSelect from '../../components/CustomSelect';
 import api from '../../services/api';
 
+const formatToLocalTime = (utcString) => {
+  if (!utcString) return '';
+  try {
+    let dateObj;
+    if (utcString.includes('T') || utcString.includes('Z')) {
+      dateObj = new Date(utcString);
+    } else {
+      // Append 'Z' to treat the raw SQL timestamp as UTC
+      const formattedUtc = utcString.replace(' ', 'T') + 'Z';
+      dateObj = new Date(formattedUtc);
+    }
+    if (isNaN(dateObj.getTime())) {
+      dateObj = new Date(utcString);
+    }
+    if (isNaN(dateObj.getTime())) {
+      const parts = utcString.replace('T', ' ').split(':');
+      if (parts.length >= 2) {
+        return parts[0] + ':' + parts[1];
+      }
+      return utcString;
+    }
+    const yyyy = dateObj.getFullYear();
+    const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const dd = String(dateObj.getDate()).padStart(2, '0');
+    const hh = String(dateObj.getHours()).padStart(2, '0');
+    const min = String(dateObj.getMinutes()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+  } catch (err) {
+    return utcString;
+  }
+};
+
 export default function IndentsPage() {
   const {
     user, userRole, isWarehouseUser, canRaiseIndent, hasPermission,
@@ -18,8 +50,11 @@ export default function IndentsPage() {
     indents, setIndents, projects, selectedProject, setSelectedProject,
     projectConfigs, approvalChainRaw, drugs, loadingData,
     loadingIndents, fetchIndents, loadingDrugs, fetchDrugs,
-    fetchDashboardData, addAuditLog
+    fetchDashboardData, addAuditLog,
+    pendingHandover, hasProposedHandover, shiftStatus
   } = useApp();
+
+  const isHandoverInitiated = !!pendingHandover || hasProposedHandover || shiftStatus === 'view_only';
 
   useEffect(() => {
     if (indents.length === 0 && !loadingIndents) {
@@ -41,6 +76,13 @@ export default function IndentsPage() {
   if (location.pathname === '/indents/raise') {
     indentViewMode = 'raise';
   }
+
+  useEffect(() => {
+    if (indentViewMode === 'raise' && isHandoverInitiated) {
+      toast.error('Indent creation is locked because your shift is handed over or in view-only mode.');
+      navigate('/indents');
+    }
+  }, [indentViewMode, isHandoverInitiated, navigate]);
 
   const setIndentViewMode = (mode) => {
     if (mode === 'raise') {
@@ -97,6 +139,12 @@ export default function IndentsPage() {
     try {
       const data = await api.projects.getOffices(projectName);
       setModalOffices(data || []);
+      
+      // Auto-populate user's office if they are a standard operator/user and belong to one
+      const isUserAdmin = user?.role?.toLowerCase() === 'admin' || user?.username?.toLowerCase() === 'admin';
+      if (!isUserAdmin && userOffice?.name && userOffice.name !== 'N/A') {
+        setModalOffice(userOffice.name);
+      }
     } catch (err) {
       console.error("Error fetching offices:", err);
       toast.error("Failed to load project offices.");
@@ -110,6 +158,31 @@ export default function IndentsPage() {
       setModalOffices([]);
     }
   }, [modalProject]);
+
+  useEffect(() => {
+    const defaultProj = userProject || (projects.length > 0 ? projects[0] : '');
+    if (defaultProj && !modalProject) {
+      setModalProject(defaultProj);
+    }
+  }, [userProject, projects, modalProject]);
+
+  const getBatchesForIndentItem = (item, drugsList = drugs) => {
+    if (!item || !item.item_code || item.item_code === 'N/A') return [];
+    
+    // Find all drugs in the provided list matching the item code & project
+    const matches = drugsList.filter(d => 
+      d.item_code === item.item_code && 
+      (d.project || '').toLowerCase() === (item.project || '').toLowerCase() &&
+      d.is_active
+    );
+    
+    // Sort by FEFO (First Expired First Out)
+    return matches.sort((a, b) => {
+      if (!a.expiry_date) return 1;
+      if (!b.expiry_date) return -1;
+      return new Date(a.expiry_date) - new Date(b.expiry_date);
+    });
+  };
 
 // ====================================
 // FUNCTION: handleIndentAction (Lines 1011-1054)
@@ -163,19 +236,47 @@ export default function IndentsPage() {
         toast.error('No approved items to dispatch.');
         return;
       }
+
+      setActionLoading(batchCode);
+      let projectDrugs = [];
+      try {
+        const proj = items[0]?.project;
+        if (proj) {
+          projectDrugs = await api.drugs.getDrugs(proj);
+        }
+      } catch (err) {
+        console.error("Failed to load project drugs:", err);
+      } finally {
+        setActionLoading(null);
+      }
+
+      const drugsListForMatching = projectDrugs.length > 0 ? projectDrugs : drugs;
+
       const initialFormData = {};
-      approvedItems.forEach(it => {
-        const primaryBatch = (it.batches && it.batches.length > 0) ? it.batches[0].batch_number : '';
+      const approvedItemsWithBatches = approvedItems.map(it => {
+        const batches = getBatchesForIndentItem(it, drugsListForMatching);
+        const primaryBatch = (batches && batches.length > 0) ? batches[0].batch_number : '';
         initialFormData[it.id] = {
           dispatched_qty: it.quantity_requested || 0,
           dispatched_batch_no: primaryBatch
         };
+        return {
+          ...it,
+          batches
+        };
       });
+      
+      const allItemsWithBatches = items.map(it => {
+        const match = approvedItemsWithBatches.find(d => d.id === it.id);
+        if (match) return match;
+        return { ...it, batches: getBatchesForIndentItem(it, drugsListForMatching) };
+      });
+
       setGlobalCourier('');
       setGlobalRemarks('');
       setGlobalServiceAreaCode('');
       setDispatchFormData(initialFormData);
-      setDispatchingItems(approvedItems);
+      setDispatchingItems(approvedItemsWithBatches);
       
       // Open details modal directly in dispatch mode
       setSelectedGroupedIndent({
@@ -186,13 +287,13 @@ export default function IndentsPage() {
         project: items[0].project,
         requested_by: items[0].requested_by,
         requested_by_role: items[0].requested_by_role,
-        date: items[0].created_at ? items[0].created_at.split(' ')[0] : (items[0].date || ''),
+        date: formatToLocalTime(items[0].created_at) || items[0].date || '',
         status: items[0].status,
         approval_chain: items[0].approval_chain,
         approval_chain_roles: items[0].approval_chain_roles,
         current_chain_index: items[0].current_chain_index,
         remarks: items[0].remarks,
-        items: items
+        items: allItemsWithBatches
       });
       setShowDetailModal(true);
       setShowDispatchForm(true);
@@ -262,19 +363,53 @@ export default function IndentsPage() {
     
     // For dispatch, show professional dispatch form instead of immediately dispatching
     if (action === 'dispatch') {
+      setActionLoading('modal-batch');
+      let projectDrugs = [];
+      try {
+        const proj = selectedGroupedIndent?.project;
+        if (proj) {
+          projectDrugs = await api.drugs.getDrugs(proj);
+        }
+      } catch (err) {
+        console.error("Failed to load project drugs:", err);
+      } finally {
+        setActionLoading(null);
+      }
+
+      const drugsListForMatching = projectDrugs.length > 0 ? projectDrugs : drugs;
+
       const initialFormData = {};
-      itemsToProcess.forEach(it => {
-        const primaryBatch = (it.batches && it.batches.length > 0) ? it.batches[0].batch_number : '';
+      const itemsWithBatches = itemsToProcess.map(it => {
+        const batches = getBatchesForIndentItem(it, drugsListForMatching);
+        const primaryBatch = (batches && batches.length > 0) ? batches[0].batch_number : '';
         initialFormData[it.id] = {
           dispatched_qty: it.quantity_requested || 0,
           dispatched_batch_no: primaryBatch
         };
+        return {
+          ...it,
+          batches
+        };
       });
+      
       setGlobalCourier('');
       setGlobalRemarks('');
       setGlobalServiceAreaCode('');
       setDispatchFormData(initialFormData);
-      setDispatchingItems(itemsToProcess);
+      setDispatchingItems(itemsWithBatches);
+      
+      // Update selectedGroupedIndent items to contain resolved batches
+      setSelectedGroupedIndent(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          items: prev.items.map(pit => {
+            const match = itemsWithBatches.find(d => d.id === pit.id);
+            return match || { ...pit, batches: getBatchesForIndentItem(pit, drugsListForMatching) };
+          })
+        };
+      });
+      
       setShowDispatchForm(true);
       return;
     }
@@ -332,7 +467,7 @@ export default function IndentsPage() {
               project: ind.project,
               requested_by: ind.requested_by,
               requested_by_role: ind.requested_by_role,
-              date: ind.created_at ? ind.created_at.split(' ')[0] : (ind.date || ''),
+              date: formatToLocalTime(ind.created_at) || ind.date || '',
               status: ind.status,
               current_approver_code: ind.current_approver_code,
               approval_chain: ind.approval_chain,
@@ -430,7 +565,12 @@ export default function IndentsPage() {
   const handleOpenIndentModal = () => {
     const defaultProj = userProject || (projects.length > 0 ? projects[0] : '');
     setModalProject(defaultProj);
-    setModalOffice('');
+    
+    // Auto-populate user's office if they are a standard operator/user and belong to one
+    const isUserAdmin = user?.role?.toLowerCase() === 'admin' || user?.username?.toLowerCase() === 'admin';
+    const defaultOffice = (!isUserAdmin && userOffice?.name && userOffice.name !== 'N/A') ? userOffice.name : '';
+    setModalOffice(defaultOffice);
+    
     setModalSearch('');
     setModalPage(1);
     setSelectedDrugs({});
@@ -720,7 +860,7 @@ export default function IndentsPage() {
           project: ind.project,
           requested_by: ind.requested_by,
           requested_by_role: ind.requested_by_role,
-          date: ind.created_at ? ind.created_at.split(' ')[0] : (ind.date || ''),
+          date: formatToLocalTime(ind.created_at) || ind.date || '',
           status: ind.status,
           current_approver_code: ind.current_approver_code,
           approval_chain: ind.approval_chain,
@@ -780,7 +920,7 @@ export default function IndentsPage() {
                     <h2>Indent Requests</h2>
                     <p>Manage and authorize digital indents submitted by operators and supervisors.</p>
                   </div>
-                  {(hasPermission('indents', 'create') || canRaiseIndent || userRole === 'admin') && (
+                  {(hasPermission('indents', 'create') || canRaiseIndent || userRole === 'admin') && !isHandoverInitiated && (
                     <button 
                       type="button"
                       className="action-btn-primary"
@@ -923,7 +1063,12 @@ export default function IndentsPage() {
                             ? group.items.reduce((sum, it) => sum + it.quantity_requested, 0)
                             : group.items[0].quantity_requested;
                           
-                          const canAcknowledge = group.status?.toUpperCase() === 'DISPATCHED' && (user?.username?.toLowerCase() === group.requested_by?.toLowerCase() || user?.role?.toLowerCase() === 'admin' || user?.username?.toLowerCase() === 'admin');
+                          const canAcknowledge = group.status?.toUpperCase() === 'DISPATCHED' && (
+                            user?.username?.toLowerCase() === group.requested_by?.toLowerCase() || 
+                            (userOffice?.name && group.office_name && userOffice.name.toLowerCase() === group.office_name.toLowerCase()) ||
+                            user?.role?.toLowerCase() === 'admin' || 
+                            user?.username?.toLowerCase() === 'admin'
+                          ) && !isHandoverInitiated;
                            const canApprove = group.items.some(it => 
                             it.status?.toUpperCase() === 'PENDING' && 
                             (user?.username?.toLowerCase() === it.current_approver_code?.toLowerCase() || user?.role?.toLowerCase() === 'admin' || user?.username?.toLowerCase() === 'admin')
@@ -1216,7 +1361,7 @@ export default function IndentsPage() {
                           setModalPage(1);
                         }}
                         placeholder="-- Choose Project --"
-                        disabled={!(user?.role === 'admin' || user?.username === 'admin')}
+                        disabled={!(user?.role?.toLowerCase() === 'admin' || user?.username?.toLowerCase() === 'admin')}
                         options={projects.map(p => ({ value: p, label: p }))}
                       />
                     </div>
@@ -1227,7 +1372,7 @@ export default function IndentsPage() {
                         value={modalOffice}
                         onChange={(e) => setModalOffice(e.target.value)}
                         placeholder="-- Choose Office --"
-                        disabled={!(user?.role === 'admin' || user?.username === 'admin') && userOffice?.name && userOffice.name !== 'N/A'}
+                        disabled={!(user?.role?.toLowerCase() === 'admin' || user?.username?.toLowerCase() === 'admin') && userOffice?.name && userOffice.name !== 'N/A'}
                         options={
                           modalOffices.length > 0 
                             ? modalOffices.map(o => ({ value: o.name, label: `${o.name} (${o.location})` }))
@@ -1697,8 +1842,12 @@ export default function IndentsPage() {
                       (user?.username?.toLowerCase() === it.current_approver_code?.toLowerCase() || user?.role?.toLowerCase() === 'admin' || user?.username?.toLowerCase() === 'admin');
                     const canDispatchItem = it.status?.toUpperCase() === 'APPROVED' && 
                       (user?.role?.toLowerCase() === 'admin' || user?.username?.toLowerCase() === 'admin' || isWarehouseUser);
-                    const canAcknowledgeItem = it.status?.toUpperCase() === 'DISPATCHED' && 
-                      (user?.username?.toLowerCase() === selectedGroupedIndent.requested_by?.toLowerCase() || user?.role?.toLowerCase() === 'admin' || user?.username?.toLowerCase() === 'admin');
+                    const canAcknowledgeItem = it.status?.toUpperCase() === 'DISPATCHED' && (
+                      user?.username?.toLowerCase() === selectedGroupedIndent.requested_by?.toLowerCase() || 
+                      (userOffice?.name && selectedGroupedIndent.office_name && userOffice.name.toLowerCase() === selectedGroupedIndent.office_name.toLowerCase()) ||
+                      user?.role?.toLowerCase() === 'admin' || 
+                      user?.username?.toLowerCase() === 'admin'
+                    ) && !isHandoverInitiated;
                     return canApproveItem || canDispatchItem || canAcknowledgeItem;
                   });
                   const actionableItemIds = actionableItems.map(it => it.id);
@@ -1740,8 +1889,12 @@ export default function IndentsPage() {
                               const canDispatchItem = it.status?.toUpperCase() === 'APPROVED' && 
                                 (user?.role?.toLowerCase() === 'admin' || user?.username?.toLowerCase() === 'admin' || isWarehouseUser);
                               
-                              const canAcknowledgeItem = it.status?.toUpperCase() === 'DISPATCHED' && 
-                                (user?.username?.toLowerCase() === selectedGroupedIndent.requested_by?.toLowerCase() || user?.role?.toLowerCase() === 'admin' || user?.username?.toLowerCase() === 'admin');
+                              const canAcknowledgeItem = it.status?.toUpperCase() === 'DISPATCHED' && (
+                                user?.username?.toLowerCase() === selectedGroupedIndent.requested_by?.toLowerCase() || 
+                                (userOffice?.name && selectedGroupedIndent.office_name && userOffice.name.toLowerCase() === selectedGroupedIndent.office_name.toLowerCase()) ||
+                                user?.role?.toLowerCase() === 'admin' || 
+                                user?.username?.toLowerCase() === 'admin'
+                              ) && !isHandoverInitiated;
                               
                               const isActionable = canApproveItem || canDispatchItem || canAcknowledgeItem;
 

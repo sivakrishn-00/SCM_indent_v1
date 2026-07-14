@@ -1,5 +1,7 @@
 import requests
 import time
+import os
+import json
 from typing import List, Optional
 from threading import Lock
 from fastapi import APIRouter, Depends, HTTPException, status, Query
@@ -22,71 +24,151 @@ class EmployeeCodesRequest(BaseModel):
 _employees_cache = None
 _cache_timestamp = 0.0
 _cache_lock = Lock()
+_bg_fetch_lock = Lock()
+_is_fetching = False
 _perms_sync_lock = Lock()
 CACHE_TTL = 300.0  # 5 minutes in seconds
+
+CACHE_FILE = os.path.join(os.path.dirname(__file__), "employees_persistent_cache.json")
+
+def _perform_ems_api_fetch() -> List[dict]:
+    """Perform the blocking network request to the EMS API."""
+    import requests
+    from concurrent.futures import ThreadPoolExecutor
+    
+    headers = {"X-api-key": settings.BAVYA_EMS_API_KEY}
+    url = settings.BAVYA_EMS_API_URL
+    all_results = []
+    
+    try:
+        response = requests.get(url, headers=headers, params={"page": 1}, timeout=10)
+        if response.status_code != 200:
+            raise Exception(f"External EMS API returned status code {response.status_code}.")
+            
+        data = response.json()
+        all_results = data.get("results", [])
+        total_count = data.get("count", 0)
+        
+        page_size = 10
+        total_pages = (total_count + page_size - 1) // page_size
+        
+        if total_pages > 1:
+            def fetch_page(page_num):
+                try:
+                    res = requests.get(url, headers=headers, params={"page": page_num}, timeout=10)
+                    if res.status_code == 200:
+                        return res.json().get("results", [])
+                except Exception:
+                    pass
+                return []
+
+            # Fetch remaining pages concurrently
+            with ThreadPoolExecutor(max_workers=25) as executor:
+                pages = range(2, total_pages + 1)
+                pages_data = executor.map(fetch_page, pages)
+                for page_list in pages_data:
+                    all_results.extend(page_list)
+        return all_results
+    except Exception as e:
+        raise Exception(f"Failed to connect to external EMS API: {str(e)}")
 
 def fetch_all_employees(force_refresh: bool = False) -> List[dict]:
     """
     Fetch all employees from the paginated external EMS API.
     Uses thread-safe in-memory caching with a 5-minute TTL to ensure O(1) performance.
-    Uses ThreadPoolExecutor for fast concurrent fetching when cache is cold.
+    Uses a background worker (Stale-While-Revalidate pattern) to perform updates
+    asynchronously when cache is expired but available, preventing user request blocking.
+    Falls back to a local JSON persistent cache file if the external API is unreachable or fails.
     """
-    global _employees_cache, _cache_timestamp
+    global _employees_cache, _cache_timestamp, _is_fetching
+    import threading
     
     current_time = time.time()
     
-    # Try reading from cache
+    # 1. Try reading from memory cache first if it's hot (not expired)
     with _cache_lock:
         if not force_refresh and _employees_cache is not None and (current_time - _cache_timestamp) < CACHE_TTL:
             return _employees_cache
 
-    headers = {"X-api-key": settings.BAVYA_EMS_API_KEY}
-    url = settings.BAVYA_EMS_API_URL
+    # 2. Check if we have some cache (either in-memory or on disk)
+    has_cache = False
+    cached_val = None
     
-    # Fetch page 1 to get total count
+    with _cache_lock:
+        if _employees_cache is not None:
+            has_cache = True
+            cached_val = _employees_cache
+            
+    if not has_cache and os.path.exists(CACHE_FILE):
+        try:
+            with open(CACHE_FILE, "r", encoding="utf-8") as f:
+                cached_data = json.load(f)
+            if isinstance(cached_data, list) and len(cached_data) > 0:
+                with _cache_lock:
+                    _employees_cache = cached_data
+                cached_val = cached_data
+                has_cache = True
+        except Exception as e:
+            print(f"Warning: Failed to read persistent cache file: {e}")
+
+    # 3. If we have cache and force_refresh is False, return it immediately and revalidate in background
+    if has_cache and not force_refresh:
+        # Trigger background fetch if not already fetching
+        should_spawn = False
+        with _bg_fetch_lock:
+            if not _is_fetching:
+                _is_fetching = True
+                should_spawn = True
+                
+        if should_spawn:
+            def bg_task():
+                global _is_fetching, _employees_cache, _cache_timestamp
+                try:
+                    fresh_data = _perform_ems_api_fetch()
+                    if fresh_data:
+                        with _cache_lock:
+                            _employees_cache = fresh_data
+                            _cache_timestamp = time.time()
+                        try:
+                            with open(CACHE_FILE, "w", encoding="utf-8") as f:
+                                json.dump(fresh_data, f, ensure_ascii=False, indent=2)
+                        except Exception as file_err:
+                            print(f"Warning: Background save cache failed: {file_err}")
+                except Exception as api_err:
+                    print(f"Background EMS API revalidation failed: {api_err}")
+                    # Expire cache slightly so it attempts recovery shortly
+                    with _cache_lock:
+                        _cache_timestamp = time.time() - (CACHE_TTL - 60.0) # check again in 1 min
+                finally:
+                    with _bg_fetch_lock:
+                        _is_fetching = False
+            
+            # Spawn background thread
+            threading.Thread(target=bg_task, daemon=True).start()
+            
+        return cached_val
+
+    # 4. If we don't have cache, or if force_refresh is True, perform sync/blocking fetch
     try:
-        response = requests.get(url, headers=headers, params={"page": 1}, timeout=10)
-        if response.status_code != 200:
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=f"External EMS API returned status code {response.status_code}."
-            )
-        data = response.json()
-    except Exception as e:
+        fresh_data = _perform_ems_api_fetch()
+        with _cache_lock:
+            _employees_cache = fresh_data
+            _cache_timestamp = current_time
+        try:
+            with open(CACHE_FILE, "w", encoding="utf-8") as f:
+                json.dump(fresh_data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"Warning: Failed to save persistent EMS API cache to file: {e}")
+        return fresh_data
+    except Exception as api_err:
+        # Recover from cache if available on sync failure
+        if cached_val is not None:
+            print(f"Warning: Blocking EMS API fetch failed ({api_err}). Returning cached data.")
+            return cached_val
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Failed to connect to external EMS API: {str(e)}"
+            detail=f"External EMS API is unreachable and no cached data exists. Error: {api_err}"
         )
-
-    all_results = data.get("results", [])
-    total_count = data.get("count", 0)
-    
-    page_size = 10
-    total_pages = (total_count + page_size - 1) // page_size
-    
-    if total_pages > 1:
-        def fetch_page(page_num):
-            try:
-                res = requests.get(url, headers=headers, params={"page": page_num}, timeout=10)
-                if res.status_code == 200:
-                    return res.json().get("results", [])
-            except Exception:
-                pass
-            return []
-
-        # Fetch remaining pages concurrently
-        with ThreadPoolExecutor(max_workers=25) as executor:
-            pages = range(2, total_pages + 1)
-            pages_data = executor.map(fetch_page, pages)
-            for page_list in pages_data:
-                all_results.extend(page_list)
-
-    # Update cache
-    with _cache_lock:
-        _employees_cache = all_results
-        _cache_timestamp = time.time()
-
-    return all_results
 
 @router.get("/employees")
 def get_employees(

@@ -17,6 +17,7 @@ class TransitInventory(Base):
     expiry_date = Column(String(100), nullable=True)
     
     quantity = Column(Float, default=0.0)
+    drawn_qty = Column(Float, default=0.0, nullable=False)
     status = Column(String(50), default="active") # "active", "pending_handover", "handed_over", "returned"
     handed_over_to_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     

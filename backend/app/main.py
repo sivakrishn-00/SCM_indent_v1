@@ -16,6 +16,7 @@ from app.models.project_config import ProjectApprovalConfig
 from app.models.permission import RolePermission
 from app.models.office_inventory import OfficeInventory
 from app.models.transit_inventory import TransitInventory
+from app.models.roster import ShiftRoster
 
 # Create tables if they don't exist
 Base.metadata.create_all(bind=engine)

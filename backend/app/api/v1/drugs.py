@@ -76,7 +76,19 @@ def get_drugs(
     from sqlalchemy import func
     
     is_admin = current_user.username == "admin" or str(current_user.role).lower() == "admin"
-    if not is_admin and current_user.project:
+    
+    # Resolve if warehouse user to allow querying search project masters for dispatching
+    is_warehouse_user = False
+    from app.api.v1.utils import get_hierarchy_maps
+    emp_code_to_details, _, _ = get_hierarchy_maps()
+    user_details = emp_code_to_details.get(current_user.username)
+    if user_details:
+        office = user_details.get("office_name", "").lower()
+        office_loc = user_details.get("office_location", "").lower()
+        if "central ware house" in office or "central warehouse" in office or "central ware house" in office_loc or "central warehouse" in office_loc:
+            is_warehouse_user = True
+            
+    if not is_admin and not is_warehouse_user and current_user.project:
         project = current_user.project
         
     query = db.query(DrugMaster)

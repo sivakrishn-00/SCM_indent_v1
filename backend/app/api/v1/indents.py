@@ -14,6 +14,121 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
+def check_operator_shift_active(db: Session, user: User, shift_type: Optional[str] = None):
+    # 1. Exempt Admin
+    if user.username == "admin" or str(user.role).lower() == "admin":
+        return
+
+    # 2. Exempt Warehouse roles
+    from app.api.v1.utils import get_hierarchy_maps
+    emp_code_to_details, _, _ = get_hierarchy_maps()
+    user_details = emp_code_to_details.get(user.username)
+    if user_details:
+        office = user_details.get("office_name", "").lower()
+        office_loc = user_details.get("office_location", "").lower()
+        if "central ware house" in office or "central warehouse" in office or "central ware house" in office_loc or "central warehouse" in office_loc:
+            return  # Exempt warehouse users
+
+    # 3. Only apply roster restriction to operators/pilots/paravets
+    role_lower = str(user.role).lower()
+    is_operator = "operator" in role_lower or "pilot" in role_lower or "paravet" in role_lower
+    if not is_operator:
+        return
+        
+    from app.models.roster import ShiftRoster
+    from app.models.shift import UserShiftState
+    from datetime import datetime, timezone, timedelta
+    
+    tz = timezone(timedelta(hours=5, minutes=30))
+    now_dt = datetime.now(tz)
+    today = now_dt.date()
+    today_str = today.strftime("%Y-%m-%d")
+    
+    # 4. Roster validation
+    roster_entry = None
+    if shift_type:
+        roster_entry = db.query(ShiftRoster).filter(
+            ShiftRoster.employee_code == user.username,
+            ShiftRoster.shift_date == today,
+            ShiftRoster.shift_type == shift_type,
+            ShiftRoster.status != "cancelled"
+        ).first()
+
+    if not roster_entry:
+        roster_entries = db.query(ShiftRoster).filter(
+            ShiftRoster.employee_code == user.username,
+            ShiftRoster.shift_date == today,
+            ShiftRoster.status != "cancelled"
+        ).all()
+        
+        roster_entries = [e for e in roster_entries if e.shift_type != "off"]
+        
+        if roster_entries:
+            preferred_type = "shift_1" if now_dt.hour < 14 else "shift_2"
+            roster_entry = next((e for e in roster_entries if e.shift_type == preferred_type), None)
+            if not roster_entry:
+                roster_entry = roster_entries[0]
+    
+    if not roster_entry:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No shift assigned to you in the roster today. Access is view-only."
+        )
+        
+    # Enforce shift type matching
+    if shift_type and roster_entry.shift_type != shift_type:
+        assigned_label = "Shift 1 (Morning)" if roster_entry.shift_type == "shift_1" else "Shift 2 (Evening)"
+        requested_label = "Shift 1 (Morning)" if shift_type == "shift_1" else "Shift 2 (Evening)"
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You are rostered for {assigned_label} today. Access to {requested_label} is forbidden."
+        )
+        
+    # 5. Handover validation and next-shift activation
+    needs_handover_activation = False
+    if roster_entry.shift_type == "shift_2":
+        shift1_rostered = db.query(ShiftRoster).filter(
+            ShiftRoster.shift_date == today,
+            ShiftRoster.shift_type == "shift_1",
+            ShiftRoster.status != "cancelled"
+        ).first()
+        if shift1_rostered:
+            if shift1_rostered.employee_code != user.username:
+                needs_handover_activation = True
+            else:
+                # Same operator doing double shift. Ensure Shift 1 consumption logs are finalized first.
+                from app.models.shift import ShiftLog
+                shift1_finalized = db.query(ShiftLog).filter(
+                    ShiftLog.operator_id == user.id,
+                    ShiftLog.shift_type == "shift_1",
+                    ShiftLog.date >= datetime.combine(today, datetime.min.time()),
+                    ShiftLog.date <= datetime.combine(today, datetime.max.time()),
+                    ShiftLog.is_draft == False
+                ).first()
+                if not shift1_finalized:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Please finalize and submit your Shift 1 (Morning) consumption log first before proceeding to Shift 2."
+                    )
+
+    state = db.query(UserShiftState).filter(
+        UserShiftState.user_id == user.id,
+        UserShiftState.shift_date == today_str
+    ).first()
+    
+    if needs_handover_activation:
+        if not state or state.status != "active":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are rostered for the next shift (Shift 2). Access is view-only until the current shift operator hands over to you."
+            )
+
+    if state and state.status == "handed_over":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Your shift has been completed/handed over. Only view access is permitted."
+        )
+
 class IndentCreate(BaseModel):
     vehicle_id: int
     consumable_id: Optional[int] = None
@@ -166,6 +281,7 @@ def create_indent(
     """
     Raise a new indent request. Only leaf-node employees (no subordinates) can call this.
     """
+    check_operator_shift_active(db, current_user)
     emp_code_to_details, parent_map, has_subordinates_set = get_hierarchy_maps()
     
     # 1. Enforce leaf-node validation (Managers cannot raise indents)
@@ -280,6 +396,7 @@ def create_indent_batch(
     Raise a batch of indent requests under a specific project and office.
     Only leaf-node employees (no subordinates) can call this.
     """
+    check_operator_shift_active(db, current_user)
     emp_code_to_details, parent_map, has_subordinates_set = get_hierarchy_maps()
     
     # Enforce leaf-node validation
@@ -577,6 +694,7 @@ def receive_indent(
     Acknowledge/Receive a dispatched indent request.
     Only the user who raised the indent or an admin can perform this action.
     """
+    check_operator_shift_active(db, current_user)
     indent = db.query(Indent).filter(Indent.id == indent_id).first()
     if not indent:
         raise HTTPException(status_code=404, detail="Indent not found")

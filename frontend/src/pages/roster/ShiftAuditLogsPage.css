@@ -1,0 +1,220 @@
+.shift-audits-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+}
+
+.audits-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.back-btn-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.back-btn-circle:hover {
+  background: #f8fafc;
+  color: var(--primary);
+  border-color: var(--primary);
+  transform: translateX(-2px);
+}
+
+.audits-title {
+  font-size: 20px;
+  font-weight: 805;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.audits-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 3px 0 0;
+}
+
+/* Stats Grid */
+.audits-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 1200px) {
+  .audits-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .audits-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.audit-stat-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.audit-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+}
+
+.stat-icon-wrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-text-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-desc {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.stat-num {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1.1;
+}
+
+/* Sunset Palette themes for stats cards */
+.audit-stat-card.sunset-yellow {
+  background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+}
+.audit-stat-card.sunset-yellow .stat-icon-wrapper {
+  background: #fff3c7;
+  color: #fbb03b;
+}
+
+.audit-stat-card.sunset-blue {
+  background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+}
+.audit-stat-card.sunset-blue .stat-icon-wrapper {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.audit-stat-card.sunset-orange {
+  background: linear-gradient(135deg, #ffffff 0%, #fff7ed 100%);
+}
+.audit-stat-card.sunset-orange .stat-icon-wrapper {
+  background: #fffbbd;
+  color: #c2410c;
+}
+
+.audit-stat-card.sunset-red {
+  background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%);
+}
+.audit-stat-card.sunset-red .stat-icon-wrapper {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* Filters wrapper */
+.audits-filter-box {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px 20px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.audits-search-container {
+  position: relative;
+  flex: 1;
+  min-width: 250px;
+}
+
+.search-icon-inside {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.modern-search-input {
+  width: 100%;
+  padding: 10px 14px 10px 40px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  background: #f8fafc;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+.modern-search-input:focus {
+  outline: none;
+  border-color: #cbd5e1;
+  background: #ffffff;
+}
+
+.audits-dropdowns-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.modern-dropdown-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+
+.modern-dropdown-wrapper label {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}

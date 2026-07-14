@@ -23,6 +23,120 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
+def check_operator_shift_active(db: Session, user: User, shift_type: Optional[str] = None):
+    # 1. Exempt Admin
+    if user.username == "admin" or str(user.role).lower() == "admin":
+        return
+
+    # 2. Exempt Warehouse roles
+    from app.api.v1.utils import get_hierarchy_maps
+    emp_code_to_details, _, _ = get_hierarchy_maps()
+    user_details = emp_code_to_details.get(user.username)
+    if user_details:
+        office = user_details.get("office_name", "").lower()
+        office_loc = user_details.get("office_location", "").lower()
+        if "central ware house" in office or "central warehouse" in office or "central ware house" in office_loc or "central warehouse" in office_loc:
+            return  # Exempt warehouse users
+
+    # 3. Only apply roster restriction to operators/pilots/paravets
+    role_lower = str(user.role).lower()
+    is_operator = "operator" in role_lower or "pilot" in role_lower or "paravet" in role_lower
+    if not is_operator:
+        return
+        
+    from app.models.roster import ShiftRoster
+    from app.models.shift import UserShiftState
+    
+    tz = timezone(timedelta(hours=5, minutes=30))
+    now_dt = datetime.now(tz)
+    today = now_dt.date()
+    today_str = today.strftime("%Y-%m-%d")
+    
+    # 4. Roster validation
+    roster_entry = None
+    if shift_type:
+        roster_entry = db.query(ShiftRoster).filter(
+            ShiftRoster.employee_code == user.username,
+            ShiftRoster.shift_date == today,
+            ShiftRoster.shift_type == shift_type,
+            ShiftRoster.status != "cancelled"
+        ).first()
+
+    if not roster_entry:
+        roster_entries = db.query(ShiftRoster).filter(
+            ShiftRoster.employee_code == user.username,
+            ShiftRoster.shift_date == today,
+            ShiftRoster.status != "cancelled"
+        ).all()
+        
+        roster_entries = [e for e in roster_entries if e.shift_type != "off"]
+        
+        if roster_entries:
+            preferred_type = "shift_1" if now_dt.hour < 14 else "shift_2"
+            roster_entry = next((e for e in roster_entries if e.shift_type == preferred_type), None)
+            if not roster_entry:
+                roster_entry = roster_entries[0]
+    
+    if not roster_entry:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No shift assigned to you in the roster today. Access is view-only."
+        )
+        
+    # Enforce shift type matching
+    if shift_type and roster_entry.shift_type != shift_type:
+        assigned_label = "Shift 1 (Morning)" if roster_entry.shift_type == "shift_1" else "Shift 2 (Evening)"
+        requested_label = "Shift 1 (Morning)" if shift_type == "shift_1" else "Shift 2 (Evening)"
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You are rostered for {assigned_label} today. Access to {requested_label} is forbidden."
+        )
+        
+    # 5. Handover validation and next-shift activation
+    needs_handover_activation = False
+    if roster_entry.shift_type == "shift_2":
+        shift1_rostered = db.query(ShiftRoster).filter(
+            ShiftRoster.shift_date == today,
+            ShiftRoster.shift_type == "shift_1",
+            ShiftRoster.status != "cancelled"
+        ).first()
+        if shift1_rostered:
+            if shift1_rostered.employee_code != user.username:
+                needs_handover_activation = True
+            else:
+                # Same operator doing double shift. Ensure Shift 1 consumption logs are finalized first.
+                from app.models.shift import ShiftLog
+                shift1_finalized = db.query(ShiftLog).filter(
+                    ShiftLog.operator_id == user.id,
+                    ShiftLog.shift_type == "shift_1",
+                    ShiftLog.date >= datetime.combine(today, datetime.min.time()),
+                    ShiftLog.date <= datetime.combine(today, datetime.max.time()),
+                    ShiftLog.is_draft == False
+                ).first()
+                if not shift1_finalized:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Please finalize and submit your Shift 1 (Morning) consumption log first before proceeding to Shift 2."
+                    )
+
+    state = db.query(UserShiftState).filter(
+        UserShiftState.user_id == user.id,
+        UserShiftState.shift_date == today_str
+    ).first()
+    
+    if needs_handover_activation:
+        if not state or state.status != "active":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are rostered for the next shift (Shift 2). Access is view-only until the current shift operator hands over to you."
+            )
+
+    if state and state.status == "handed_over":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Your shift has been completed/handed over. Only view access is permitted."
+        )
+
 # Schema for shift log input
 class ShiftLogCreate(BaseModel):
     vehicle_id: int
@@ -57,21 +171,7 @@ def log_shift(
     """
     Create a new shift log entry.
     """
-    from app.models.shift import UserShiftState
-    from datetime import datetime, timezone, timedelta
-    tz = timezone(timedelta(hours=5, minutes=30))
-    today_str = datetime.now(tz).strftime("%Y-%m-%d")
-    
-    # Check if shift has been completed/handed over
-    state = db.query(UserShiftState).filter(
-        UserShiftState.user_id == current_user.id,
-        UserShiftState.shift_date == today_str
-    ).first()
-    if state and state.status == "handed_over":
-        raise HTTPException(
-            status_code=400,
-            detail="Your shift has been completed/handed over. Only view access is permitted."
-        )
+    check_operator_shift_active(db, current_user)
         
     db_shift = ShiftLog(
         vehicle_id=shift_in.vehicle_id,
@@ -102,21 +202,7 @@ def log_shift_batch(
     """
     Create or update batch shift log entries (as draft or final submission) and update drug stocks if finalizing.
     """
-    from app.models.shift import UserShiftState
-    from datetime import datetime, timezone, timedelta
-    tz = timezone(timedelta(hours=5, minutes=30))
-    today_str = datetime.now(tz).strftime("%Y-%m-%d")
-    
-    # Check if shift has been completed/handed over
-    state = db.query(UserShiftState).filter(
-        UserShiftState.user_id == current_user.id,
-        UserShiftState.shift_date == today_str
-    ).first()
-    if state and state.status == "handed_over":
-        raise HTTPException(
-            status_code=400,
-            detail="Your shift has been completed/handed over. Only view access is permitted."
-        )
+    check_operator_shift_active(db, current_user, shift_type=shift_in.shift_type)
         
     from sqlalchemy import func
     
@@ -139,27 +225,39 @@ def log_shift_batch(
         
         # Get active transit stock for this operator and drug:
         from app.models.transit_inventory import TransitInventory
-        transit_stock = db.query(func.sum(TransitInventory.quantity)).filter(
+        transit_item = db.query(TransitInventory).filter(
             TransitInventory.operator_id == current_user.id,
             TransitInventory.drug_id == item.drug_id,
             TransitInventory.status == "active"
-        ).scalar() or 0.0
+        ).first()
+        
+        transit_stock = transit_item.quantity if transit_item else 0.0
+        transit_drawn = transit_item.drawn_qty if transit_item else 0.0
 
-        # Deduct received_qty to get the true starting opening balance
-        # because current_stock already has received_qty added at the time of indent dispatch.
-        # Transit stock is treated as a received quantity from transit bag instead of opening balance.
-        if shift_in.is_draft:
-            opening_balance = max(0.0, current_stock - item.received_qty)
-            received_qty = item.received_qty
-            sent_back_qty = item.sent_back_qty
-            consumed_qty = item.consumed_qty
-            closing_balance = max(0.0, opening_balance + received_qty + transit_stock - sent_back_qty - consumed_qty)
-        else:
-            opening_balance = max(0.0, current_stock - item.received_qty)
-            received_qty = item.received_qty + transit_stock
-            sent_back_qty = item.sent_back_qty
-            consumed_qty = item.consumed_qty
-            closing_balance = max(0.0, opening_balance + received_qty - sent_back_qty - consumed_qty)
+        # ── Office (Store/Room) calculations ──
+        # current_stock already includes indent received_qty at dispatch time
+        # So: office_ob = current_stock - item.received_qty (undo indent receipt to get true OB)
+        office_ob = max(0.0, current_stock - item.received_qty)
+        office_received = item.received_qty   # from indent dispatch
+        office_sent_back = item.sent_back_qty  # returned from bag to office
+        office_drawn = transit_drawn           # drawn from office to transit bag
+        office_closing = max(0.0, office_ob + office_received + office_sent_back - office_drawn)
+
+        # ── Transit Bag calculations ──
+        # bag_ob = what was already in the bag before this shift (carried over)
+        # bag_received = what was drawn from office this shift
+        bag_ob = max(0.0, transit_stock - transit_drawn)
+        bag_received = transit_drawn
+        bag_sent_back = item.sent_back_qty  # sent back from bag to office
+        bag_consumed = item.consumed_qty
+        bag_closing = max(0.0, bag_ob + bag_received - bag_sent_back - bag_consumed)
+
+        # Legacy flat columns (for backward compat with reports)
+        opening_balance = office_ob
+        received_qty = office_received
+        sent_back_qty = item.sent_back_qty
+        consumed_qty = item.consumed_qty
+        closing_balance = office_closing
         
         # Check if an existing draft log exists for this operator/project/office/shift/drug
         existing_draft = db.query(ShiftLog).filter(
@@ -177,6 +275,12 @@ def log_shift_batch(
             existing_draft.sent_back_qty = sent_back_qty
             existing_draft.consumed_qty = consumed_qty
             existing_draft.closing_balance = closing_balance
+            existing_draft.drawn_qty = office_drawn
+            existing_draft.bag_ob = bag_ob
+            existing_draft.bag_received = bag_received
+            existing_draft.bag_sent_back = bag_sent_back
+            existing_draft.bag_consumed = bag_consumed
+            existing_draft.bag_closing = bag_closing
             existing_draft.discrepancy_reason = shift_in.remarks
             existing_draft.is_draft = shift_in.is_draft
             existing_draft.date = now_time
@@ -191,6 +295,12 @@ def log_shift_batch(
                 sent_back_qty=sent_back_qty,
                 consumed_qty=consumed_qty,
                 closing_balance=closing_balance,
+                drawn_qty=office_drawn,
+                bag_ob=bag_ob,
+                bag_received=bag_received,
+                bag_sent_back=bag_sent_back,
+                bag_consumed=bag_consumed,
+                bag_closing=bag_closing,
                 project=shift_in.project,
                 office_name=shift_in.office_name,
                 shift_type=st,
@@ -202,7 +312,7 @@ def log_shift_batch(
             db.add(db_shift)
             
         if not shift_in.is_draft:
-            # Deduct both consumed and sent back
+            # Deduct consumed + sent_back from transit bag first, then office
             remaining_to_deduct = consumed_qty + sent_back_qty
             
             # Try to deduct from active TransitInventory first
@@ -234,6 +344,29 @@ def log_shift_batch(
                     deduct_amount = min(lb.quantity, remaining_to_deduct)
                     lb.quantity = max(0.0, lb.quantity - deduct_amount)
                     remaining_to_deduct -= deduct_amount
+            
+            # Return sent_back_qty to office inventory (bag -> office store)
+            if sent_back_qty > 0:
+                office_stock = db.query(OfficeInventory).filter(
+                    OfficeInventory.project == shift_in.project,
+                    OfficeInventory.office_name == shift_in.office_name,
+                    OfficeInventory.drug_id == item.drug_id
+                ).first()
+                
+                if office_stock:
+                    office_stock.quantity += sent_back_qty
+                else:
+                    # Create new office inventory record for returned stock
+                    new_office = OfficeInventory(
+                        project=shift_in.project,
+                        office_name=shift_in.office_name,
+                        drug_id=item.drug_id,
+                        item_code=drug.item_code,
+                        item_name=drug.item_name,
+                        quantity=sent_back_qty,
+                        opening_stock=0.0
+                    )
+                    db.add(new_office)
                 
             # Log audit entry for local consumption
             from app.models.audit_log import AuditLog
@@ -279,25 +412,76 @@ def get_shift_drafts(
     
     # 2. Compute today's aggregates from dispatched indents
     from app.models.indent import Indent, IndentStatus
-    from datetime import date, time
+    from datetime import date, time, timedelta
     
-    today = date.today()
-    start_of_day = datetime.combine(today, time.min)
-    end_of_day = datetime.combine(today, time.max)
+    tz = timezone(timedelta(hours=5, minutes=30))
+    today_ist = datetime.now(tz).date()
+    start_of_day_ist = datetime.combine(today_ist, time.min)
+    end_of_day_ist = datetime.combine(today_ist, time.max)
+    
+    # Indents updated_at contains UTC timestamps (naive in db)
+    # Subtract 5.5 hours from IST bounds to get the UTC bounds
+    start_of_day = start_of_day_ist - timedelta(hours=5, minutes=30)
+    end_of_day = end_of_day_ist - timedelta(hours=5, minutes=30)
     
     indents = db.query(Indent).filter(
         Indent.project == project,
         Indent.office_name == office_name,
-        Indent.status == IndentStatus.DISPATCHED,
+        Indent.status.in_([IndentStatus.DISPATCHED, IndentStatus.RECEIVED]),
         Indent.updated_at >= start_of_day,
         Indent.updated_at <= end_of_day
     ).all()
     
     aggregates = {}
+    current_time_ist = datetime.now(tz)
+    current_active_shift = "shift_1" if current_time_ist.hour < 14 else "shift_2"
+    
+    # Check if this operator is rostered for general shift today
+    from app.models.roster import ShiftRoster
+    general_roster = db.query(ShiftRoster).filter(
+        ShiftRoster.employee_code == current_user.username,
+        ShiftRoster.shift_date == today_ist,
+        ShiftRoster.shift_type == "general",
+        ShiftRoster.status != "cancelled"
+    ).first()
+    if general_roster:
+        current_active_shift = "general"
+
     for ind in indents:
         if not ind.drug_id:
             continue
+            
+        # Convert indent updated_at to IST
+        ind_utc = ind.updated_at.replace(tzinfo=timezone.utc) if ind.updated_at.tzinfo is None else ind.updated_at
+        ind_ist = ind_utc.astimezone(tz)
+        
+        # Partition based on status
+        if ind.status == IndentStatus.RECEIVED:
+            # Already received. Partition based on the time it was received/acknowledged
+            indent_shift = "shift_1" if ind_ist.hour < 14 else "shift_2"
+        else:
+            # Pending dispatch. Matches the current active shift
+            indent_shift = current_active_shift
+            
+        # Filter based on requested shift_type
+        if shift_type != indent_shift:
+            continue
+
+        # Pivot the drug_id to the specific dispatched batch record ID since the stock is recorded under it.
         d_id = ind.drug_id
+        if ind.dispatched_batch_no:
+            from app.models.drug import DrugMaster
+            drug_item = db.query(DrugMaster).filter(DrugMaster.id == ind.drug_id).first()
+            if drug_item:
+                batch_record = db.query(DrugMaster).filter(
+                    DrugMaster.item_code == drug_item.item_code,
+                    DrugMaster.project == project,
+                    DrugMaster.batch_number == ind.dispatched_batch_no,
+                    DrugMaster.is_active == True
+                ).first()
+                if batch_record:
+                    d_id = batch_record.id
+                    
         if d_id not in aggregates:
             aggregates[d_id] = {"received": 0.0, "sent_back": 0.0}
             
@@ -383,6 +567,9 @@ def get_shift_report(
         except ValueError:
             pass
             
+    from app.api.v1.utils import get_hierarchy_maps
+    emp_code_to_details, _, _ = get_hierarchy_maps()
+    
     logs = query.order_by(ShiftLog.date.desc()).all()
     
     result = []
@@ -390,6 +577,11 @@ def get_shift_report(
         drug = db.query(DrugMaster).filter(DrugMaster.id == log.drug_id).first()
         operator = db.query(User).filter(User.id == log.operator_id).first()
         vehicle = db.query(Vehicle).filter(Vehicle.id == log.vehicle_id).first() if log.vehicle_id else None
+        
+        usr_details = emp_code_to_details.get(operator.username) if operator else None
+        usr_name = usr_details.get("name") if usr_details else None
+        role_title = (operator.role or 'operator').replace('_', ' ').title() if operator else 'Operator'
+        disp_name = f"{usr_name} ({role_title})" if usr_name else (f"{operator.username} ({role_title})" if operator else "N/A")
         
         result.append({
             "id": log.id,
@@ -409,8 +601,15 @@ def get_shift_report(
             "sent_back_qty": log.sent_back_qty,
             "consumed_qty": log.consumed_qty,
             "closing_balance": log.closing_balance,
+            "drawn_qty": log.drawn_qty,
+            "bag_ob": log.bag_ob,
+            "bag_received": log.bag_received,
+            "bag_sent_back": log.bag_sent_back,
+            "bag_consumed": log.bag_consumed,
+            "bag_closing": log.bag_closing,
             "remarks": log.discrepancy_reason or "",
-            "logged_by": f"{operator.username} ({(operator.role or 'operator').replace('_', ' ').title()})" if operator else "N/A",
+            "logged_by": disp_name,
+            "logged_by_username": operator.username if operator else "N/A",
             "unit_mrp": drug.unit_mrp if drug else 0.0
         })
     return result

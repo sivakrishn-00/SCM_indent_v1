@@ -120,29 +120,42 @@ def get_project_offices(
         raise HTTPException(status_code=502, detail=f"Failed to fetch employee/office data: {str(e)}")
         
     offices_set = {}
+    fallback_offices_set = {}
     for item in employees_data:
         if not isinstance(item, dict):
             continue
         proj = item.get("project", {}) or {}
         if proj.get("name") == project_name:
             office = item.get("office", {}) or {}
-            if office.get("level") == "FACILITATE":
-                office_name = office.get("name")
-                if office_name and office_name not in offices_set:
-                    geo = office.get("geo_location", {}) or {}
-                    mandal = geo.get("mandal") or ""
-                    district = geo.get("district") or ""
-                    loc_parts = [p for p in [mandal, district] if p]
-                    location = ", ".join(loc_parts) if loc_parts else "N/A"
+            office_name = office.get("name")
+            if not office_name:
+                continue
+                
+            level = office.get("level", "")
+            geo = office.get("geo_location", {}) or {}
+            mandal = geo.get("mandal") or ""
+            district = geo.get("district") or ""
+            loc_parts = [p for p in [mandal, district] if p]
+            location = ", ".join(loc_parts) if loc_parts else "N/A"
+            
+            office_data = {
+                "id": office.get("id"),
+                "name": office_name,
+                "level": level,
+                "location": location
+            }
+            
+            level_upper = str(level).strip().upper()
+            if level_upper in ("FACILITATE", "BRANCH OFFICE"):
+                if office_name not in offices_set:
+                    offices_set[office_name] = office_data
+            else:
+                if office_name not in fallback_offices_set:
+                    fallback_offices_set[office_name] = office_data
                     
-                    offices_set[office_name] = {
-                        "id": office.get("id"),
-                        "name": office_name,
-                        "level": office.get("level"),
-                        "location": location
-                    }
-                    
-    return sorted(list(offices_set.values()), key=lambda o: o["name"])
+    result_offices = offices_set if offices_set else fallback_offices_set
+    return sorted(list(result_offices.values()), key=lambda o: o["name"])
+
 
 @router.get("/projects/configs")
 def get_project_configs(

@@ -84,7 +84,7 @@ export default function ConsumptionPage() {
     loadingDrugs, fetchDrugs, loadingShifts, fetchShifts
   } = useApp();
 
-  const isHandoverInitiated = !!pendingHandover || hasProposedHandover || shiftStatus === 'view_only';
+  const isHandoverInitiated = !!pendingHandover || hasProposedHandover || shiftStatus === 'view_only' || shiftStatus === 'handed_over' || shiftStatus === 'pending_first_shift';
 
   // Local Logging/Shift States
   const [shiftProject, setShiftProject] = useState('');
@@ -124,6 +124,32 @@ export default function ConsumptionPage() {
     }
   };
 
+  const [assignedShifts, setAssignedShifts] = useState([]);
+
+  // Fetch my active shift automatically from daily roster if operator
+  useEffect(() => {
+    const fetchMyRosterShift = async () => {
+      const role_lower = String(user?.role || '').toLowerCase();
+      const isOperator = role_lower.includes('operator') || role_lower.includes('pilot') || role_lower.includes('paravet');
+      if (!isOperator) return;
+
+      try {
+        const res = await api.roster.getMyShift();
+        if (res && res.assigned) {
+          setShiftSelectedType(res.shift_type);
+          setAssignedShifts(res.assigned_shifts || [res.shift_type]);
+        } else {
+          setShiftSelectedType('');
+          setAssignedShifts([]);
+        }
+      } catch (err) {
+        console.error("Error loaded roster shift:", err);
+      }
+    };
+
+    fetchMyRosterShift();
+  }, [user]);
+
   useEffect(() => {
     if (location.pathname === '/consumption/record') {
       if (isHandoverInitiated) {
@@ -139,7 +165,7 @@ export default function ConsumptionPage() {
     } else if (location.pathname === '/consumption' || location.pathname === '/consumption/') {
       setConsumptionSubView('HISTORY');
     }
-  }, [location.pathname, isHandoverInitiated, userProject, userOffice, projects]);
+  }, [location.pathname, isHandoverInitiated, userProject, userOffice, projects, shiftProject, shiftOffice, shiftSelectedType]);
 
   const [consumptionSubView, setConsumptionSubView] = useState('HISTORY'); // 'HISTORY', 'RECORD', 'READONLY'
   const [selectedHistoryGroup, setSelectedHistoryGroup] = useState(null);
@@ -149,8 +175,15 @@ export default function ConsumptionPage() {
   const [usersList, setUsersList] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [handoverSearch, setHandoverSearch] = useState('');
+  const [takeoverPin, setTakeoverPin] = useState('');
+  const [takeoverPinExpiresIn, setTakeoverPinExpiresIn] = useState(0);
+  const [generatingPin, setGeneratingPin] = useState(false);
+  const [enteredPin, setEnteredPin] = useState('');
+  const [incomingRosterOperator, setIncomingRosterOperator] = useState(null);
+  const [loadingIncomingOperator, setLoadingIncomingOperator] = useState(false);
   const [handoverPage, setHandoverPage] = useState(1);
   const [handoverPageSize, setHandoverPageSize] = useState(5);
+  const [employeeNamesMap, setEmployeeNamesMap] = useState({});
 
   const fetchUsersList = async () => {
     setLoadingUsers(true);
@@ -174,6 +207,30 @@ export default function ConsumptionPage() {
     }
   };
 
+  const fetchIncomingRosterOperator = async (proj, office, shift) => {
+    if (!proj || !office || !shift) {
+      setIncomingRosterOperator(null);
+      return;
+    }
+    setLoadingIncomingOperator(true);
+    try {
+      const res = await api.roster.getIncomingOperator(proj, office, shift);
+      if (res && res.found) {
+        setIncomingRosterOperator(res);
+        setSelectedRecipientUsername(res.employee_code);
+      } else {
+        setIncomingRosterOperator(null);
+        setSelectedRecipientUsername('');
+      }
+    } catch (err) {
+      console.error("Failed to fetch incoming operator:", err);
+      setIncomingRosterOperator(null);
+      setSelectedRecipientUsername('');
+    } finally {
+      setLoadingIncomingOperator(false);
+    }
+  };
+
   useEffect(() => {
     if (showHandoverModal) {
       fetchUsersList();
@@ -181,8 +238,59 @@ export default function ConsumptionPage() {
       setHandoverSearch('');
       setHandoverPage(1);
       setHandoverPageSize(5);
+      fetchIncomingRosterOperator(shiftProject, shiftOffice, shiftSelectedType);
     }
-  }, [showHandoverModal]);
+  }, [showHandoverModal, shiftProject, shiftOffice, shiftSelectedType]);
+
+  const handleGenerateTakeoverPin = async () => {
+    setGeneratingPin(true);
+    try {
+      const res = await api.request('/roster/generate-handover-pin', { method: 'POST' });
+      if (res && res.pin) {
+        setTakeoverPin(res.pin);
+        setTakeoverPinExpiresIn(res.expires_in_seconds || 300);
+        toast.success("Takeover PIN generated successfully!");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || "Failed to generate Takeover PIN. Make sure you are rostered for today or tomorrow.");
+    } finally {
+      setGeneratingPin(false);
+    }
+  };
+
+  useEffect(() => {
+    if (takeoverPinExpiresIn <= 0) {
+      if (takeoverPin) {
+        setTakeoverPin('');
+        toast.error("Takeover PIN has expired. Please generate a new one.");
+      }
+      return;
+    }
+    const timer = setInterval(() => {
+      setTakeoverPinExpiresIn(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [takeoverPinExpiresIn, takeoverPin]);
+
+  useEffect(() => {
+    if (shiftStatus !== 'view_only') return;
+    const interval = setInterval(async () => {
+      try {
+        await fetchDashboardData(true);
+      } catch (err) {
+        console.error("Failed to poll shift status:", err);
+      }
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [shiftStatus, fetchDashboardData]);
+
   const [drawQuantities, setDrawQuantities] = useState({}); // drug_id: quantity
   const [drawScannedBatches, setDrawScannedBatches] = useState({}); // drug_id: batch_number
   const [fefoViolationDetails, setFefoViolationDetails] = useState(null);
@@ -398,15 +506,49 @@ export default function ConsumptionPage() {
       toast.error("Please enter incoming operator username.");
       return;
     }
+    if (!enteredPin || enteredPin.length !== 6) {
+      toast.error("Please enter the 6-digit Takeover PIN.");
+      return;
+    }
+    
+    setLoggingShift(true);
     try {
-      await api.transit.proposeHandover(recipientUsername);
-      toast.success(`Proposed stock handover to ${recipientUsername}.`);
+      // 1. Submit the consumption log first
+      const itemsToSubmit = getSelectedItemsPayload();
+      if (itemsToSubmit.length > 0) {
+        await api.shifts.submitReport(shiftProject, shiftOffice, shiftSelectedType, itemsToSubmit, shiftRemarks, false);
+      }
+      
+      // 2. Complete the secure handover with Takeover PIN verification
+      await api.transit.proposeHandover(recipientUsername, enteredPin);
+      
+      toast.success(`Shift logs submitted and stock handover completed successfully to ${recipientUsername}!`);
+      
       setShowHandoverModal(false);
       setSelectedRecipientUsername('');
-      fetchTransitInventory();
+      setEnteredPin('');
+      setSelectedShiftItems({});
+      setShiftRemarks('');
+      setConsumptionSubView('HISTORY');
+      
+      await Promise.all([
+        fetchTransitInventory(),
+        fetchDashboardData(),
+        fetchShiftSubmissionsHistory()
+      ]);
+      
+      addAuditLog(
+        'CREATE',
+        'ShiftLogs',
+        `Logged shift consumption & completed handover of remnants to ${recipientUsername} with PIN authentication`,
+        'SUCCESS',
+        shiftProject
+      );
     } catch (e) {
       console.error(e);
-      toast.error(e.message || "Error proposing handover.");
+      toast.error(e.message || "Error completing handover.");
+    } finally {
+      setLoggingShift(false);
     }
   };
 
@@ -501,6 +643,24 @@ export default function ConsumptionPage() {
     }
     fetchTransitInventory();
     fetchPendingHandovers();
+
+    const fetchEmployeeNames = async () => {
+      try {
+        const data = await api.users.getEmployees();
+        if (data && Array.isArray(data)) {
+          const mapping = {};
+          data.forEach(emp => {
+            if (emp.employee_code) {
+              mapping[emp.employee_code] = emp.name;
+            }
+          });
+          setEmployeeNamesMap(mapping);
+        }
+      } catch (e) {
+        console.error("Error fetching employee names map:", e);
+      }
+    };
+    fetchEmployeeNames();
   }, []);
 
   useEffect(() => {
@@ -524,6 +684,60 @@ export default function ConsumptionPage() {
       fetchOfficeInventory(shiftProject, shiftOffice);
     }
   }, [shiftProject, shiftOffice]);
+
+  const groupShiftLogsBySubmission = (logs) => {
+    if (!logs || !Array.isArray(logs)) return [];
+    const groups = {};
+    logs.forEach(log => {
+      const key = `${log.project}_${log.office_name}_${log.date}_${log.shift_type}_${log.logged_by}`;
+      if (!groups[key]) {
+        groups[key] = {
+          key: key,
+          id: `CON-${(log.date || '').replace(/\D/g, '').substring(0, 14) || 'LOG'}`,
+          date: log.date,
+          shift_type: log.shift_type,
+          project: log.project,
+          office_name: log.office_name,
+          logged_by: log.logged_by,
+          vehicle_number: log.vehicle_number || 'N/A',
+          remarks: log.remarks || '',
+          items: []
+        };
+      }
+      groups[key].items.push(log);
+      if (log.remarks) {
+        groups[key].remarks = log.remarks;
+      }
+    });
+    return Object.values(groups).sort((a, b) => new Date(b.date) - new Date(a.date));
+  };
+
+  const fullGroupedLogs = React.useMemo(() => {
+    const baseGroups = groupShiftLogsBySubmission(shiftSubmissionsData);
+    if (!historyLogsSearch.trim()) return baseGroups;
+    
+    const term = historyLogsSearch.toLowerCase().trim();
+    return baseGroups.filter(group => {
+      const matchLogId = group.id.toLowerCase().includes(term);
+      const matchOffice = group.office_name && group.office_name.toLowerCase().includes(term);
+      const matchUser = group.logged_by && group.logged_by.toLowerCase().includes(term);
+      const matchDate = group.date && group.date.toLowerCase().includes(term);
+      const matchItems = group.items.some(it => 
+        (it.item_name && it.item_name.toLowerCase().includes(term)) ||
+        (it.item_code && it.item_code.toLowerCase().includes(term))
+      );
+      return matchLogId || matchOffice || matchUser || matchDate || matchItems;
+    });
+  }, [shiftSubmissionsData, historyLogsSearch]);
+
+  const totalHistoryLogsRecords = fullGroupedLogs.length;
+  const historyLogsTotalPages = Math.ceil(totalHistoryLogsRecords / historyLogsPageSize);
+
+  const paginatedGroupedLogs = React.useMemo(() => {
+    const startIdx = (historyLogsPage - 1) * historyLogsPageSize;
+    const endIdx = startIdx + historyLogsPageSize;
+    return fullGroupedLogs.slice(startIdx, endIdx);
+  }, [fullGroupedLogs, historyLogsPage, historyLogsPageSize]);
 
   const filteredShiftDrugs = shiftDrugs.filter(d => {
     if (d.project !== shiftProject || !d.is_active) return false;
@@ -576,7 +790,7 @@ export default function ConsumptionPage() {
   const totalShiftPages = Math.ceil(shiftDrugGroups.length / shiftPageSize);
   const paginatedShiftDrugGroups = shiftDrugGroups.slice((shiftPage - 1) * shiftPageSize, shiftPage * shiftPageSize);
   const currentShiftPageIds = paginatedShiftDrugGroups.flatMap(group => group.batches.map(d => d.id));
-  const isAllCurrentShiftSelected = currentShiftPageIds.length > 0 && currentShiftPageIds.every(id => !!selectedShiftItems[id]);
+  const isAllCurrentShiftSelected = currentShiftPageIds.length > 0 && currentShiftPageIds.every(id => !!selectedShiftItems[id] && selectedShiftItems[id].userSelected);
 
 // ====================================
 // FUNCTION: handleSelectAllCurrentShift (Lines 1439-1453)
@@ -586,11 +800,21 @@ export default function ConsumptionPage() {
       const copy = { ...prev };
       if (checked) {
         currentShiftPageIds.forEach(id => {
-          copy[id] = copy[id] || { consumed: '1', received: '', sent_back: '' };
+          const curr = copy[id] || { consumed: '', received: '', sent_back: '' };
+          copy[id] = { ...curr, userSelected: true, consumed: curr.consumed || '1' };
         });
       } else {
         currentShiftPageIds.forEach(id => {
-          delete copy[id];
+          const curr = copy[id];
+          if (curr) {
+            const updated = { ...curr, userSelected: false, consumed: '' };
+            const hasStock = (parseFloat(updated.received) || 0) > 0 || (parseFloat(updated.sent_back) || 0) > 0;
+            if (hasStock) {
+              copy[id] = updated;
+            } else {
+              delete copy[id];
+            }
+          }
         });
       }
       return copy;
@@ -690,17 +914,27 @@ export default function ConsumptionPage() {
         const parsedItems = {};
         Object.entries(draftItems).forEach(([id, val]) => {
           if (typeof val === 'object' && val !== null) {
-            parsedItems[id] = {
-              consumed: val.consumed_qty !== undefined ? Math.round(val.consumed_qty).toString() : '',
-              received: val.received_qty !== undefined ? Math.round(val.received_qty).toString() : '',
-              sent_back: val.sent_back_qty !== undefined ? Math.round(val.sent_back_qty).toString() : ''
-            };
+            const c = val.consumed_qty !== undefined ? Math.round(val.consumed_qty) : 0;
+            const r = val.received_qty !== undefined ? Math.round(val.received_qty) : 0;
+            const s = val.sent_back_qty !== undefined ? Math.round(val.sent_back_qty) : 0;
+            if (c > 0 || r > 0 || s > 0) {
+              parsedItems[id] = {
+                consumed: c > 0 ? c.toString() : '',
+                received: r > 0 ? r.toString() : '',
+                sent_back: s > 0 ? s.toString() : '',
+                userSelected: c > 0
+              };
+            }
           } else {
-            parsedItems[id] = {
-              consumed: val !== undefined ? Math.round(parseFloat(val)).toString() : '',
-              received: '',
-              sent_back: ''
-            };
+            const c = val !== undefined ? Math.round(parseFloat(val)) : 0;
+            if (c > 0) {
+              parsedItems[id] = {
+                consumed: c.toString(),
+                received: '',
+                sent_back: '',
+                userSelected: true
+              };
+            }
           }
         });
         
@@ -752,12 +986,16 @@ export default function ConsumptionPage() {
       const transitQty = transitItem ? Math.round(transitItem.quantity) : 0;
       
       let isDrawnThisShift = false;
-      if (transitItem && transitItem.created_at) {
-        const createdDate = new Date(transitItem.created_at);
-        const diffMs = new Date() - createdDate;
-        const diffHours = diffMs / (1000 * 60 * 60);
-        if (diffHours < 16) {
-          isDrawnThisShift = true;
+      if (transitItem) {
+        if (transitItem.is_drawn_this_shift !== undefined) {
+          isDrawnThisShift = transitItem.is_drawn_this_shift;
+        } else if (transitItem.created_at) {
+          const createdDate = new Date(transitItem.created_at);
+          const diffMs = new Date() - createdDate;
+          const diffHours = diffMs / (1000 * 60 * 60);
+          if (diffHours < 16) {
+            isDrawnThisShift = true;
+          }
         }
       }
       
@@ -811,8 +1049,24 @@ export default function ConsumptionPage() {
       await api.shifts.submitReport(shiftProject, shiftOffice, shiftSelectedType, itemsToSubmit, shiftRemarks, false);
       toast.success(`Successfully logged consumption for ${itemsToSubmit.length} items!`);
       setShowShiftSubmitPreview(false);
-      fetchDashboardData();
-      fetchShiftDrugsAndDrafts(shiftProject, shiftOffice, shiftSelectedType);
+      
+      // Fetch current transit inventory to determine if handover is required
+      const activeTransit = await api.transit.getTransitInventory();
+      const hasLeftovers = activeTransit && activeTransit.length > 0;
+      
+      if (hasLeftovers) {
+        // Retain selection and show handover modal for remaining stock
+        setShowHandoverModal(true);
+        toast.success("Shift log submitted. Leftover stock detected in transit. Handover reconciliation is required to complete shift.");
+      } else {
+        // No leftovers, skip handover step and complete shift log directly
+        setSelectedShiftItems({});
+        setShiftRemarks('');
+        setConsumptionSubView('HISTORY');
+        fetchShiftSubmissionsHistory();
+        fetchDashboardData();
+      }
+      
       addAuditLog(
         'CREATE',
         'ShiftLogs',
@@ -820,10 +1074,6 @@ export default function ConsumptionPage() {
         'SUCCESS',
         shiftProject
       );
-      setSelectedShiftItems({});
-      setShiftRemarks('');
-      setConsumptionSubView('HISTORY');
-      fetchShiftSubmissionsHistory();
     } catch (err) {
       console.error(err);
       setShiftFormMessage({ type: 'error', text: err.message || 'Failed to log shift consumption.' });
@@ -870,12 +1120,16 @@ export default function ConsumptionPage() {
       const transitQty = transitItem ? Math.round(transitItem.quantity) : 0;
       
       let isDrawnThisShift = false;
-      if (transitItem && transitItem.created_at) {
-        const createdDate = new Date(transitItem.created_at);
-        const diffMs = new Date() - createdDate;
-        const diffHours = diffMs / (1000 * 60 * 60);
-        if (diffHours < 16) {
-          isDrawnThisShift = true;
+      if (transitItem) {
+        if (transitItem.is_drawn_this_shift !== undefined) {
+          isDrawnThisShift = transitItem.is_drawn_this_shift;
+        } else if (transitItem.created_at) {
+          const createdDate = new Date(transitItem.created_at);
+          const diffMs = new Date() - createdDate;
+          const diffHours = diffMs / (1000 * 60 * 60);
+          if (diffHours < 16) {
+            isDrawnThisShift = true;
+          }
         }
       }
       
@@ -931,7 +1185,7 @@ export default function ConsumptionPage() {
   return (
     <>
       <div className="tab-pane" style={{ animation: 'fadeIn 0.25s ease-out', width: '100%', padding: '24px' }}>
-        {shiftStatus === 'view_only' && (
+        {shiftStatus === 'handed_over' && (
           <div style={{
             backgroundColor: '#fef2f2',
             border: '1px solid #fee2e2',
@@ -951,6 +1205,127 @@ export default function ConsumptionPage() {
               <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#b91c1c' }}>
                 You have handed over today's stock to the incoming operator. All transactions (Draw Stock, Handover Bag, Record Consumption) are restricted.
               </p>
+            </div>
+          </div>
+        )}
+        {shiftStatus === 'pending_first_shift' && (
+          <div style={{
+            backgroundColor: '#fffbeb',
+            border: '1px solid #fef3c7',
+            borderRadius: '12px',
+            padding: '16px 20px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            boxShadow: '0 1px 3px rgba(245, 158, 11, 0.05)'
+          }}>
+            <span style={{ fontSize: '24px' }}>⚠️</span>
+            <div>
+              <h4 style={{ margin: 0, fontSize: '14.5px', fontWeight: '750', color: '#b45309' }}>
+                Pending Shift 1 Submission
+              </h4>
+              <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#ea580c' }}>
+                You are rostered for a double shift today. Please finalize and submit your Shift 1 (Morning) consumption log first to unlock active access for Shift 2.
+              </p>
+            </div>
+          </div>
+        )}
+        {shiftStatus === 'view_only' && (
+          <div style={{
+            backgroundColor: '#ffffff',
+            border: '1px dashed #cbd5e1',
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '20px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', flex: '1 1 300px' }}>
+              <div style={{ 
+                padding: '12px', 
+                backgroundColor: 'rgba(234, 88, 12, 0.08)', 
+                borderRadius: '12px', 
+                color: '#ea580c', 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center',
+                marginTop: '2px'
+              }}>
+                <QrCode size={24} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '15.5px', fontWeight: '700', color: 'var(--primary-dark)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  🔑 Scheduled Takeover Authentication
+                  <span style={{ fontSize: '11px', padding: '2px 8px', backgroundColor: '#e2e8f0', color: '#475569', borderRadius: '20px', fontWeight: '600' }}>
+                    Pending Takeover
+                  </span>
+                </h3>
+                <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b', lineHeight: '1.5' }}>
+                  You are the scheduled incoming operator. Generate a 6-digit Takeover PIN below and provide it to the current operator to finalize the stock handover and activate your shift.
+                </p>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              {takeoverPin ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '24px', fontWeight: '850', letterSpacing: '4px', color: '#ea580c', fontFamily: 'monospace', backgroundColor: '#fff7ed', border: '1px solid #ffedd5', padding: '6px 14px', borderRadius: '10px' }}>
+                      {takeoverPin}
+                    </span>
+                    <button
+                      type="button"
+                      className="action-btn-secondary"
+                      style={{ padding: '6px', minWidth: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                      onClick={() => {
+                        if (navigator.clipboard) {
+                          navigator.clipboard.writeText(takeoverPin);
+                          toast.success("PIN copied to clipboard!");
+                        }
+                      }}
+                      title="Copy Code"
+                    >
+                      <Share2 size={14} />
+                    </button>
+                  </div>
+                  <span style={{ fontSize: '12px', color: '#be123c', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Clock size={12} /> Expires in: {Math.floor(takeoverPinExpiresIn / 60)}:{(takeoverPinExpiresIn % 60).toString().padStart(2, '0')}
+                  </span>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="action-btn-primary"
+                  onClick={handleGenerateTakeoverPin}
+                  disabled={generatingPin}
+                  style={{
+                    padding: '10px 20px',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    gap: '6px',
+                    backgroundColor: '#ea580c',
+                    borderColor: '#ea580c',
+                    borderRadius: '10px',
+                    cursor: generatingPin ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {generatingPin ? (
+                    <>
+                      <RefreshCw className="animate-spin" size={16} />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <span>⚡</span> Generate Takeover PIN
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -2182,59 +2557,6 @@ export default function ConsumptionPage() {
               </div>
             );
           } else {
-            const groupShiftLogsBySubmission = (logs) => {
-              const groups = {};
-              logs.forEach(log => {
-                const key = `${log.project}_${log.office_name}_${log.date}_${log.shift_type}_${log.logged_by}`;
-                if (!groups[key]) {
-                  groups[key] = {
-                    key: key,
-                    id: `CON-${(log.date || '').replace(/\D/g, '').substring(0, 14) || 'LOG'}`,
-                    date: log.date,
-                    shift_type: log.shift_type,
-                    project: log.project,
-                    office_name: log.office_name,
-                    logged_by: log.logged_by,
-                    vehicle_number: log.vehicle_number || 'N/A',
-                    remarks: log.remarks || '',
-                    items: []
-                  };
-                }
-                groups[key].items.push(log);
-                if (log.remarks) {
-                  groups[key].remarks = log.remarks;
-                }
-              });
-              return Object.values(groups).sort((a, b) => new Date(b.date) - new Date(a.date));
-            };
-
-            const fullGroupedLogs = React.useMemo(() => {
-              const baseGroups = groupShiftLogsBySubmission(shiftSubmissionsData);
-              if (!historyLogsSearch.trim()) return baseGroups;
-              
-              const term = historyLogsSearch.toLowerCase().trim();
-              return baseGroups.filter(group => {
-                const matchLogId = group.id.toLowerCase().includes(term);
-                const matchOffice = group.office_name && group.office_name.toLowerCase().includes(term);
-                const matchUser = group.logged_by && group.logged_by.toLowerCase().includes(term);
-                const matchDate = group.date && group.date.toLowerCase().includes(term);
-                const matchItems = group.items.some(it => 
-                  (it.item_name && it.item_name.toLowerCase().includes(term)) ||
-                  (it.item_code && it.item_code.toLowerCase().includes(term))
-                );
-                return matchLogId || matchOffice || matchUser || matchDate || matchItems;
-              });
-            }, [shiftSubmissionsData, historyLogsSearch]);
-
-            const totalHistoryLogsRecords = fullGroupedLogs.length;
-            const historyLogsTotalPages = Math.ceil(totalHistoryLogsRecords / historyLogsPageSize);
-
-            const paginatedGroupedLogs = React.useMemo(() => {
-              const startIdx = (historyLogsPage - 1) * historyLogsPageSize;
-              const endIdx = startIdx + historyLogsPageSize;
-              return fullGroupedLogs.slice(startIdx, endIdx);
-            }, [fullGroupedLogs, historyLogsPage, historyLogsPageSize]);
-
             if (consumptionSubView === 'HISTORY') {
               return (
                 <div className="tab-pane" style={{ animation: 'fadeIn 0.2s ease-out', width: '100%' }}>
@@ -2551,11 +2873,25 @@ export default function ConsumptionPage() {
 
             if (consumptionSubView === 'READONLY' && selectedHistoryGroup) {
               // Extract Handover Sender & Recipient from auditLogsData
+              const getLocalDateStr = (dtStr, isUtc) => {
+                if (!dtStr) return '';
+                try {
+                  const cleaned = dtStr.replace(' ', 'T');
+                  const d = new Date(cleaned + (isUtc ? 'Z' : ''));
+                  return d.toLocaleDateString();
+                } catch (e) {
+                  return '';
+                }
+              };
+
+              const shiftDay = getLocalDateStr(selectedHistoryGroup.date, false);
+              const loggedByCode = selectedHistoryGroup.logged_by_username || (selectedHistoryGroup.logged_by ? selectedHistoryGroup.logged_by.split(' ')[0] : '');
+
               const acceptedLog = auditLogsData.find(log => 
-                log.user === selectedHistoryGroup.logged_by && 
+                log.user === loggedByCode && 
                 log.action === 'ACCEPT_HANDOVER' && 
                 log.timestamp && 
-                log.timestamp.substring(0, 10) === selectedHistoryGroup.date.substring(0, 10)
+                getLocalDateStr(log.timestamp, true) === shiftDay
               );
               let receivedFromUser = 'N/A';
               if (acceptedLog) {
@@ -2566,10 +2902,10 @@ export default function ConsumptionPage() {
               }
 
               const proposedLog = auditLogsData.find(log => 
-                log.user === selectedHistoryGroup.logged_by && 
-                log.action === 'PROPOSE_HANDOVER' && 
+                log.user === loggedByCode && 
+                (log.action === 'PROPOSE_HANDOVER' || log.action === 'COMPLETE_HANDOVER_WITH_PIN') && 
                 log.timestamp && 
-                log.timestamp.substring(0, 10) === selectedHistoryGroup.date.substring(0, 10)
+                getLocalDateStr(log.timestamp, true) === shiftDay
               );
               let handedOverToUser = 'N/A';
               if (proposedLog) {
@@ -2684,45 +3020,59 @@ export default function ConsumptionPage() {
                       <div>
                         <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Received Bag From</span>
                         <div style={{ marginTop: '3px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <div style={{
-                            width: '20px',
-                            height: '20px',
-                            borderRadius: '50%',
-                            backgroundColor: receivedFromUser !== 'N/A' ? '#e0f2fe' : '#f1f5f9',
-                            color: receivedFromUser !== 'N/A' ? '#0369a1' : '#64748b',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '10px',
-                            fontWeight: '700'
-                          }}>
-                            {receivedFromUser.charAt(0).toUpperCase()}
-                          </div>
-                          <span style={{ fontSize: '13px', fontWeight: '700', color: receivedFromUser !== 'N/A' ? '#0369a1' : '#64748b' }}>
-                            {receivedFromUser}
-                          </span>
+                          {(() => {
+                            const receivedFromName = receivedFromUser !== 'N/A' ? (employeeNamesMap[receivedFromUser] || receivedFromUser) : 'N/A';
+                            return (
+                              <>
+                                <div style={{
+                                  width: '20px',
+                                  height: '20px',
+                                  borderRadius: '50%',
+                                  backgroundColor: receivedFromUser !== 'N/A' ? '#e0f2fe' : '#f1f5f9',
+                                  color: receivedFromUser !== 'N/A' ? '#0369a1' : '#64748b',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '10px',
+                                  fontWeight: '700'
+                                }}>
+                                  {receivedFromName.charAt(0).toUpperCase()}
+                                </div>
+                                <span style={{ fontSize: '13px', fontWeight: '700', color: receivedFromUser !== 'N/A' ? '#0369a1' : '#64748b' }} title={receivedFromUser !== 'N/A' ? receivedFromUser : undefined}>
+                                  {receivedFromName}
+                                </span>
+                              </>
+                            );
+                          })()}
                         </div>
                       </div>
                       <div>
                         <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Handed Over Bag To</span>
                         <div style={{ marginTop: '3px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <div style={{
-                            width: '20px',
-                            height: '20px',
-                            borderRadius: '50%',
-                            backgroundColor: handedOverToUser !== 'N/A' ? '#f0fdf4' : '#f1f5f9',
-                            color: handedOverToUser !== 'N/A' ? '#15803d' : '#64748b',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '10px',
-                            fontWeight: '700'
-                          }}>
-                            {handedOverToUser.charAt(0).toUpperCase()}
-                          </div>
-                          <span style={{ fontSize: '13px', fontWeight: '700', color: handedOverToUser !== 'N/A' ? '#15803d' : '#64748b' }}>
-                            {handedOverToUser}
-                          </span>
+                          {(() => {
+                            const handedOverToName = handedOverToUser !== 'N/A' ? (employeeNamesMap[handedOverToUser] || handedOverToUser) : 'N/A';
+                            return (
+                              <>
+                                <div style={{
+                                  width: '20px',
+                                  height: '20px',
+                                  borderRadius: '50%',
+                                  backgroundColor: handedOverToUser !== 'N/A' ? '#f0fdf4' : '#f1f5f9',
+                                  color: handedOverToUser !== 'N/A' ? '#15803d' : '#64748b',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '10px',
+                                  fontWeight: '700'
+                                }}>
+                                  {handedOverToName.charAt(0).toUpperCase()}
+                                </div>
+                                <span style={{ fontSize: '13px', fontWeight: '700', color: handedOverToUser !== 'N/A' ? '#15803d' : '#64748b' }} title={handedOverToUser !== 'N/A' ? handedOverToUser : undefined}>
+                                  {handedOverToName}
+                                </span>
+                              </>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -2777,36 +3127,36 @@ export default function ConsumptionPage() {
                               localItemSpanTracker[itemKey] = true;
                             }
 
-                            // Reconstruct the exact quantities using our unified logic:
+                            // Use explicit bag columns from backend (new records)
+                            // For old records without bag columns, fall back to legacy heuristic
+                            const hasBagData = item.bag_ob !== undefined && item.bag_ob !== null;
+                            
                             const officeOB = Math.round(item.opening_balance || 0);
+                            const officeReceived = Math.round(item.received_qty || 0);
                             const officeSentBack = Math.round(item.sent_back_qty || 0);
-                            const officeConsumed = Math.round(item.consumed_qty || 0);
+                            const officeDrawn = Math.round(item.drawn_qty || 0);
+                            const officeClosing = Math.round(item.closing_balance || 0);
 
-                            let officeReceived = 0;
-                            let officeClosing = 0;
                             let bagOB = 0;
                             let bagReceived = 0;
+                            let bagSentBack = 0;
                             let bagConsumed = 0;
                             let bagClosing = 0;
 
-                            if (officeConsumed > 0 || officeSentBack > 0) {
-                              // Active shift activity
-                              officeReceived = Math.round(item.received_qty || 0);
-                              officeClosing = Math.round(item.closing_balance || 0);
-                              
-                              bagOB = 0;
-                              bagReceived = officeConsumed;
-                              bagConsumed = officeConsumed;
-                              bagClosing = 0;
+                            if (hasBagData) {
+                              // New records: read directly from stored bag columns
+                              bagOB = Math.round(item.bag_ob || 0);
+                              bagReceived = Math.round(item.bag_received || 0);
+                              bagSentBack = Math.round(item.bag_sent_back || 0);
+                              bagConsumed = Math.round(item.bag_consumed || 0);
+                              bagClosing = Math.round(item.bag_closing || 0);
                             } else {
-                              // No shift activity (Stock Held)
-                              officeReceived = 0;
-                              officeClosing = officeOB;
-                              
-                              bagOB = Math.round(item.received_qty || 0);
-                              bagReceived = 0;
-                              bagConsumed = 0;
-                              bagClosing = bagOB;
+                              // Legacy fallback for old records
+                              const officeConsumed = Math.round(item.consumed_qty || 0);
+                              if (officeConsumed > 0) {
+                                bagReceived = officeConsumed;
+                                bagConsumed = officeConsumed;
+                              }
                             }
 
                             return (
@@ -2869,8 +3219,8 @@ export default function ConsumptionPage() {
                                 <td style={{ padding: '10px 8px', textAlign: 'center', borderRight: '1px solid #ffe8cc', color: officeSentBack > 0 ? '#dc2626' : '#78716c', fontWeight: officeSentBack > 0 ? '700' : '400' }}>
                                   {officeSentBack > 0 ? `-${officeSentBack}` : '0'}
                                 </td>
-                                <td style={{ padding: '10px 8px', textAlign: 'center', borderRight: '1px solid #ffe8cc', color: officeConsumed > 0 ? '#ea580c' : '#78716c', fontWeight: officeConsumed > 0 ? '700' : '400' }}>
-                                  {officeConsumed > 0 ? `-${officeConsumed}` : '0'}
+                                <td style={{ padding: '10px 8px', textAlign: 'center', borderRight: '1px solid #ffe8cc', color: officeDrawn > 0 ? '#ea580c' : '#78716c', fontWeight: officeDrawn > 0 ? '700' : '400' }}>
+                                  {officeDrawn > 0 ? `-${officeDrawn}` : '0'}
                                 </td>
                                 <td style={{ padding: '10px 8px', textAlign: 'center', borderRight: '1px solid #ffd8a8', color: '#9a3412', fontWeight: '700', backgroundColor: '#fff7ed' }}>
                                   {officeClosing}
@@ -2881,8 +3231,8 @@ export default function ConsumptionPage() {
                                 <td style={{ padding: '10px 8px', textAlign: 'center', borderRight: '1px solid #e0f2fe', color: bagReceived > 0 ? '#16a34a' : '#64748b', fontWeight: bagReceived > 0 ? '700' : '400', backgroundColor: '#f0f9ff' }}>
                                   {bagReceived > 0 ? `+${bagReceived}` : '0'}
                                 </td>
-                                <td style={{ padding: '10px 8px', textAlign: 'center', borderRight: '1px solid #e0f2fe', color: '#78716c', fontWeight: '400', backgroundColor: '#f0f9ff' }}>
-                                  {'-'}
+                                <td style={{ padding: '10px 8px', textAlign: 'center', borderRight: '1px solid #e0f2fe', color: bagSentBack > 0 ? '#dc2626' : '#78716c', fontWeight: bagSentBack > 0 ? '700' : '400', backgroundColor: '#f0f9ff' }}>
+                                  {bagSentBack > 0 ? `-${bagSentBack}` : '-'}
                                 </td>
                                 <td style={{ padding: '10px 8px', textAlign: 'center', borderRight: '1px solid #e0f2fe', color: bagConsumed > 0 ? '#ea580c' : '#64748b', fontWeight: bagConsumed > 0 ? '700' : '400', backgroundColor: '#f0f9ff' }}>
                                   {bagConsumed}
@@ -3039,8 +3389,12 @@ export default function ConsumptionPage() {
                       opacity: isHandoverInitiated ? 0.7 : 1
                     }}
                     onClick={() => {
-                      if (shiftStatus === 'view_only') {
+                      if (shiftStatus === 'handed_over') {
                         toast.error("Your shift has been completed/handed over. Only view access is permitted.");
+                      } else if (shiftStatus === 'pending_first_shift') {
+                        toast.error("Please finalize your Shift 1 (Morning) consumption log first.");
+                      } else if (shiftStatus === 'view_only') {
+                        toast.error("Handover activation is pending. Access is view-only.");
                       } else if (pendingHandover || hasProposedHandover) {
                         toast.error("Stock handover has been initiated. Cannot draw stock.");
                       } else {
@@ -3052,34 +3406,19 @@ export default function ConsumptionPage() {
                       }
                     }}
                     disabled={isHandoverInitiated}
-                    title={shiftStatus === 'view_only' ? "Your shift has been completed/handed over. Only view access is permitted." : isHandoverInitiated ? "Stock handover has been initiated. Cannot draw stock." : ""}
+                    title={
+                      shiftStatus === 'handed_over' 
+                        ? "Your shift has been completed/handed over. Only view access is permitted."
+                        : shiftStatus === 'pending_first_shift'
+                          ? "Please finalize your Shift 1 (Morning) consumption log first."
+                          : shiftStatus === 'view_only'
+                            ? "Handover activation is pending. Access is view-only."
+                            : isHandoverInitiated 
+                              ? "Stock handover has been initiated. Cannot draw stock." 
+                              : ""
+                    }
                   >
                     <QrCode size={16} /> Draw Stock (FEFO Scan)
-                  </button>
-                  <button 
-                    type="button" 
-                    className="action-btn-outline" 
-                    style={{
-                      gap: '6px',
-                      fontSize: '12.5px',
-                      padding: '8px 14px',
-                      borderColor: '#cbd5e1',
-                      cursor: (transitInventory.length === 0 || isHandoverInitiated) ? 'not-allowed' : 'pointer',
-                      opacity: (transitInventory.length === 0 || isHandoverInitiated) ? 0.5 : 1
-                    }}
-                    onClick={() => {
-                      if (shiftStatus === 'view_only') {
-                        toast.error("Your shift has been completed/handed over. Only view access is permitted.");
-                      } else if (pendingHandover || hasProposedHandover) {
-                        toast.error("Stock handover has been initiated.");
-                      } else {
-                        setShowHandoverModal(true);
-                      }
-                    }}
-                    disabled={transitInventory.length === 0 || isHandoverInitiated}
-                    title={shiftStatus === 'view_only' ? "Your shift has been completed/handed over. Only view access is permitted." : isHandoverInitiated ? "Stock handover has been initiated." : ""}
-                  >
-                    <Share2 size={16} /> Handover Bag
                   </button>
                   {/* Return Leftover button removed per operator request */}
                 </div>
@@ -3156,6 +3495,8 @@ export default function ConsumptionPage() {
               )}
             </div>
 
+
+
             <div className="form-container-card" style={{ width: '100%' }}>
               <form onSubmit={handleShiftBatchSubmit}>
                 {shiftFormMessage.text && (
@@ -3202,10 +3543,31 @@ export default function ConsumptionPage() {
                     <CustomSelect 
                       value={shiftSelectedType}
                       onChange={(e) => setShiftSelectedType(e.target.value)}
-                      options={[
-                        { value: 'shift_1', label: 'Shift 1 (Morning)' },
-                        { value: 'shift_2', label: 'Shift 2 (Evening)' }
-                      ]}
+                      disabled={(() => {
+                        const role_lower = String(user?.role || '').toLowerCase();
+                        const isOperator = role_lower.includes('operator') || role_lower.includes('pilot') || role_lower.includes('paravet');
+                        return isOperator && assignedShifts.length <= 1;
+                      })()}
+                      options={(() => {
+                        const role_lower = String(user?.role || '').toLowerCase();
+                        const isOperator = role_lower.includes('operator') || role_lower.includes('pilot') || role_lower.includes('paravet');
+                        if (isOperator) {
+                          if (assignedShifts.length === 0) {
+                            return [{ value: '', label: 'Shift Not Assigned (View Only)' }];
+                          }
+                          return assignedShifts.map(st => {
+                            let label = 'Shift 2 (Evening)';
+                            if (st === 'shift_1') label = 'Shift 1 (Morning)';
+                            else if (st === 'general') label = 'General Shift';
+                            return { value: st, label: label };
+                          });
+                        }
+                        return [
+                          { value: 'shift_1', label: 'Shift 1 (Morning)' },
+                          { value: 'shift_2', label: 'Shift 2 (Evening)' },
+                          { value: 'general', label: 'General Shift' }
+                        ];
+                      })()}
                     />
                   </div>
                 </div>
@@ -3214,11 +3576,14 @@ export default function ConsumptionPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '16px', flexWrap: 'wrap', width: '100%' }}>
                   <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
                     Select Consumed Materials {shiftProject && `(${filteredShiftDrugs.length} available)`}
-                    {Object.keys(selectedShiftItems).length > 0 && (
-                      <span className="nav-badge" style={{ backgroundColor: 'var(--primary)', color: '#ffffff', marginLeft: '8px', position: 'static', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>
-                        {Object.keys(selectedShiftItems).length} Selected
-                      </span>
-                    )}
+                    {(() => {
+                      const selectedCount = Object.values(selectedShiftItems).filter(item => item && (item.userSelected || (parseFloat(item.consumed) > 0))).length;
+                      return selectedCount > 0 && (
+                        <span className="nav-badge" style={{ backgroundColor: 'var(--primary)', color: '#ffffff', marginLeft: '8px', position: 'static', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>
+                          {selectedCount} Selected
+                        </span>
+                      );
+                    })()}
                   </span>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     {/* Page Size Selector */}
@@ -3303,7 +3668,7 @@ export default function ConsumptionPage() {
                           let totalClosing = 0;
 
                           const batchRows = group.batches.map(d => {
-                            const isSelected = !!selectedShiftItems[d.id];
+                            const isSelected = !!selectedShiftItems[d.id] && !!selectedShiftItems[d.id].userSelected;
                             const itemState = selectedShiftItems[d.id] || { consumed: '', received: '', sent_back: '' };
                             
                             const stock = Math.round(d.quantity || 0);
@@ -3315,12 +3680,16 @@ export default function ConsumptionPage() {
                             const transitQty = transitItem ? Math.round(transitItem.quantity) : 0;
 
                             let isDrawnThisShift = false;
-                            if (transitItem && transitItem.created_at) {
-                              const createdDate = new Date(transitItem.created_at);
-                              const diffMs = new Date() - createdDate;
-                              const diffHours = diffMs / (1000 * 60 * 60);
-                              if (diffHours < 16) {
-                                isDrawnThisShift = true;
+                            if (transitItem) {
+                              if (transitItem.is_drawn_this_shift !== undefined) {
+                                isDrawnThisShift = transitItem.is_drawn_this_shift;
+                              } else if (transitItem.created_at) {
+                                const createdDate = new Date(transitItem.created_at);
+                                const diffMs = new Date() - createdDate;
+                                const diffHours = diffMs / (1000 * 60 * 60);
+                                if (diffHours < 16) {
+                                  isDrawnThisShift = true;
+                                }
                               }
                             }
 
@@ -3446,7 +3815,10 @@ export default function ConsumptionPage() {
                                     const curr = prev[d.id] || { consumed: '', received: '', sent_back: '' };
                                     const updated = { ...curr, [field]: val };
                                     
-                                    const isEmpty = !updated.consumed && !updated.received && !updated.sent_back;
+                                    const isEmpty = 
+                                      (!updated.consumed || parseFloat(updated.consumed) === 0) &&
+                                      (!updated.received || parseFloat(updated.received) === 0) &&
+                                      (!updated.sent_back || parseFloat(updated.sent_back) === 0);
                                     const copy = { ...prev };
                                     if (isEmpty) {
                                       delete copy[d.id];
@@ -3471,14 +3843,25 @@ export default function ConsumptionPage() {
                                         disabled={isConsumptionLocked}
                                         onChange={e => {
                                           if (e.target.checked) {
-                                            setSelectedShiftItems(prev => ({ 
-                                              ...prev, 
-                                              [d.id]: { consumed: '1', received: receivedVal.toString() || '', sent_back: sentBackVal.toString() || '' } 
-                                            }));
+                                            setSelectedShiftItems(prev => {
+                                              const curr = prev[d.id] || { consumed: '', received: receivedVal.toString() || '', sent_back: sentBackVal.toString() || '' };
+                                              return {
+                                                ...prev,
+                                                [d.id]: { ...curr, userSelected: true, consumed: curr.consumed || '1' }
+                                              };
+                                            });
                                           } else {
                                             setSelectedShiftItems(prev => {
+                                              const curr = prev[d.id];
+                                              if (!curr) return prev;
+                                              const updated = { ...curr, userSelected: false, consumed: '' };
+                                              const hasStock = (parseFloat(updated.received) || 0) > 0 || (parseFloat(updated.sent_back) || 0) > 0;
                                               const copy = { ...prev };
-                                              delete copy[d.id];
+                                              if (hasStock) {
+                                                copy[d.id] = updated;
+                                              } else {
+                                                delete copy[d.id];
+                                              }
                                               return copy;
                                             });
                                           }
@@ -3695,7 +4078,7 @@ export default function ConsumptionPage() {
                     disabled={loggingShift}
                     style={{ padding: '10px 24px', borderRadius: '8px' }}
                   >
-                    {loggingShift ? 'Submitting Batch...' : `Submit Consumption Log (${Object.keys(selectedShiftItems).length} Selected)`}
+                    {loggingShift ? 'Submitting Batch...' : `Submit Consumption Log (${Object.values(selectedShiftItems).filter(item => item && (item.userSelected || (parseFloat(item.consumed) > 0))).length} Selected)`}
                   </button>
                 </div>
               </form>
@@ -3960,12 +4343,16 @@ export default function ConsumptionPage() {
                           const transitQty = transitItem ? Math.round(transitItem.quantity) : 0;
                           
                           let isDrawnThisShift = false;
-                          if (transitItem && transitItem.created_at) {
-                            const createdDate = new Date(transitItem.created_at);
-                            const diffMs = new Date() - createdDate;
-                            const diffHours = diffMs / (1000 * 60 * 60);
-                            if (diffHours < 16) {
-                              isDrawnThisShift = true;
+                          if (transitItem) {
+                            if (transitItem.is_drawn_this_shift !== undefined) {
+                              isDrawnThisShift = transitItem.is_drawn_this_shift;
+                            } else if (transitItem.created_at) {
+                              const createdDate = new Date(transitItem.created_at);
+                              const diffMs = new Date() - createdDate;
+                              const diffHours = diffMs / (1000 * 60 * 60);
+                              if (diffHours < 16) {
+                                isDrawnThisShift = true;
+                              }
                             }
                           }
                           
@@ -4130,7 +4517,10 @@ export default function ConsumptionPage() {
                 <button
                   type="button"
                   className="action-btn-primary"
-                  onClick={submitShiftBatch}
+                  onClick={() => {
+                    setShowShiftSubmitPreview(false);
+                    setShowHandoverModal(true);
+                  }}
                   disabled={loggingShift}
                   style={{ padding: '8px 16px', fontSize: '12.5px', fontWeight: '600' }}
                 >
@@ -4219,17 +4609,59 @@ export default function ConsumptionPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
+              {loadingIncomingOperator ? (
+                <div style={{ padding: '12.5px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '13px', color: '#64748b' }}>
+                  Verifying daily shift roster for incoming operator schedule...
+                </div>
+              ) : incomingRosterOperator ? (
+                <div style={{
+                  padding: '12px 16px',
+                  backgroundColor: '#f0fdf4',
+                  border: '1px solid #bbf7d0',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  color: '#166534',
+                  fontSize: '13px',
+                  fontWeight: '600'
+                }}>
+                  <span style={{ fontSize: '16px' }}>✅</span>
+                  <div>
+                    Roster Verified: Incoming Operator <strong>{incomingRosterOperator.employee_name} ({incomingRosterOperator.employee_code})</strong> is scheduled for the next shift.
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  padding: '12px 16px',
+                  backgroundColor: '#fff1f2',
+                  border: '1px solid #fecdd3',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  color: '#9f1239',
+                  fontSize: '13px',
+                  fontWeight: '600'
+                }}>
+                  <span style={{ fontSize: '16px' }}>⚠️</span>
+                  <div>
+                    Roster Schedule Gap: No operator scheduled for the next shift on the roster. Handover is locked.
+                  </div>
+                </div>
+              )}
+
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', alignItems: 'end' }}>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label style={{ fontSize: '12px', fontWeight: '750', color: 'var(--text-primary)', display: 'block', marginBottom: '6px' }}>
-                    Select Target Incoming Operator: *
+                    Select Target Incoming Operator: [ReadOnly - Roster Enforced]
                   </label>
                   <CustomSelect
                     value={selectedRecipientUsername}
                     onChange={(e) => setSelectedRecipientUsername(e.target.value)}
-                    options={usersList.map(u => ({ value: u.username, label: u.username }))}
-                    placeholder={loadingUsers ? "Loading operators..." : "-- Choose Operator --"}
-                    disabled={loadingUsers}
+                    options={incomingRosterOperator ? [{ value: incomingRosterOperator.employee_code, label: `${incomingRosterOperator.employee_name} (${incomingRosterOperator.employee_code})` }] : []}
+                    placeholder={loadingIncomingOperator ? "Loading roster operator..." : "-- No Operator Rostered --"}
+                    disabled={true}
                   />
                 </div>
 
@@ -4379,7 +4811,7 @@ export default function ConsumptionPage() {
                                 <th colSpan={5} style={{ padding: '6px 10px', textAlign: 'center', fontWeight: '850', color: '#c2410c', backgroundColor: '#fff7ed', borderRight: '1px solid #ffd8a8', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
                                   Store / Room Stock (Local Facility)
                                 </th>
-                                <th colSpan={5} style={{ padding: '6px 10px', textAlign: 'center', fontWeight: '850', color: '#0369a1', backgroundColor: '#f0f9ff', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
+                                <th colSpan={5} style={{ padding: '6px 10px', textAlign: 'center', fontWeight: '850', color: '#0369a1', backgroundColor: '#f0f9ff', borderRight: '1px solid #e0f2fe', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
                                   Transit Bag (Operator Bag)
                                 </th>
                               </tr>
@@ -4593,7 +5025,62 @@ export default function ConsumptionPage() {
                 })()}
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
+              {/* Takeover Verification PIN Input */}
+              {incomingRosterOperator && (
+                <div style={{
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  marginTop: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '12px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 300px' }}>
+                    <span style={{ fontSize: '18px' }}>🔐</span>
+                    <div>
+                      <span style={{ fontSize: '13px', fontWeight: '750', color: '#0f172a', display: 'block' }}>
+                        Takeover Verification PIN Required
+                      </span>
+                      <span style={{ fontSize: '11.5px', color: '#64748b' }}>
+                        Enter the 6-digit PIN generated by the incoming operator (<strong>{selectedRecipientUsername || 'No operator chosen'}</strong>).
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={enteredPin}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, ''); // Allow only digits
+                      setEnteredPin(val);
+                    }}
+                    placeholder="------"
+                    style={{
+                      width: '115px',
+                      height: '40px',
+                      fontSize: '18px',
+                      fontWeight: '800',
+                      textAlign: 'center',
+                      letterSpacing: '3px',
+                      borderRadius: '8px',
+                      border: '2px solid #cbd5e1',
+                      outline: 'none',
+                      fontFamily: 'monospace',
+                      transition: 'border-color 0.15s ease',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#ea580c'}
+                    onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
+                  />
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
                 <button
                   type="button"
                   className="filter-btn"
@@ -4605,8 +5092,13 @@ export default function ConsumptionPage() {
                 <button
                   type="button"
                   className="action-btn-primary"
-                  style={{ fontSize: '13px' }}
+                  style={{ 
+                    fontSize: '13px',
+                    backgroundColor: (!selectedRecipientUsername || enteredPin.length !== 6 || !incomingRosterOperator) ? '#cbd5e1' : undefined,
+                    cursor: (!selectedRecipientUsername || enteredPin.length !== 6 || !incomingRosterOperator) ? 'not-allowed' : 'pointer'
+                  }}
                   onClick={() => handleProposeHandover(selectedRecipientUsername)}
+                  disabled={!selectedRecipientUsername || enteredPin.length !== 6 || !incomingRosterOperator}
                 >
                   Propose Handover
                 </button>

@@ -124,6 +124,52 @@ export function AppProvider({ user, onLogout, children }) {
       setOfficeInventory(data);
       if (proj && off) {
         fetchShiftDrugsRaw(proj, off);
+        try {
+          let activeShift = 'shift_1';
+          try {
+            const rosterRes = await api.roster.getMyShift();
+            if (rosterRes && rosterRes.assigned && rosterRes.shift_type) {
+              activeShift = rosterRes.shift_type;
+            }
+          } catch (rosterErr) {
+            console.error("Error fetching roster shift in inventory context:", rosterErr);
+          }
+
+          const draftData = await api.shifts.getDrafts(proj, off, activeShift);
+          const mergedItems = {};
+          const processDraft = (dData) => {
+            const draftItems = dData.items || {};
+            Object.entries(draftItems).forEach(([id, val]) => {
+              if (typeof val === 'object' && val !== null) {
+                const c = val.consumed_qty !== undefined ? Math.round(val.consumed_qty) : 0;
+                const r = val.received_qty !== undefined ? Math.round(val.received_qty) : 0;
+                const s = val.sent_back_qty !== undefined ? Math.round(val.sent_back_qty) : 0;
+                if (c > 0 || r > 0 || s > 0) {
+                  mergedItems[id] = {
+                    consumed: c > 0 ? c.toString() : '',
+                    received: r > 0 ? r.toString() : '',
+                    sent_back: s > 0 ? s.toString() : '',
+                    isSelected: true
+                  };
+                }
+              } else {
+                const c = val !== undefined ? Math.round(parseFloat(val)) : 0;
+                if (c > 0) {
+                  mergedItems[id] = {
+                    consumed: c.toString(),
+                    received: '',
+                    sent_back: '',
+                    isSelected: true
+                  };
+                }
+              }
+            });
+          };
+          processDraft(draftData);
+          setSelectedShiftItems(mergedItems);
+        } catch (draftErr) {
+          console.error("Error loading shift drafts in inventory page context:", draftErr);
+        }
       }
     } catch (err) {
       console.error("Error loading office inventory:", err);
@@ -260,8 +306,8 @@ export function AppProvider({ user, onLogout, children }) {
     }
   };
 
-  const fetchDashboardData = async () => {
-    setLoadingData(true);
+  const fetchDashboardData = async (isSilent = false) => {
+    if (!isSilent) setLoadingData(true);
     try {
       const bootstrapData = await api.bootstrap();
       
@@ -310,7 +356,7 @@ export function AppProvider({ user, onLogout, children }) {
         onLogout();
       }
     } finally {
-      setLoadingData(false);
+      if (!isSilent) setLoadingData(false);
     }
   };
 

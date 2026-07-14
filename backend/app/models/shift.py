@@ -24,6 +24,14 @@ class ShiftLog(Base):
     sent_back_qty = Column(Float, nullable=False, default=0.0)
     consumed_qty = Column(Float, nullable=False, default=0.0)
     closing_balance = Column(Float, nullable=False, default=0.0)  # opening + received - sent_back - consumed
+    drawn_qty = Column(Float, nullable=False, default=0.0)  # qty drawn from office to transit bag
+    
+    # Transit Bag columns (explicit, no guessing)
+    bag_ob = Column(Float, nullable=False, default=0.0)
+    bag_received = Column(Float, nullable=False, default=0.0)
+    bag_sent_back = Column(Float, nullable=False, default=0.0)
+    bag_consumed = Column(Float, nullable=False, default=0.0)
+    bag_closing = Column(Float, nullable=False, default=0.0)
     
     project = Column(String(100), nullable=True)
     office_name = Column(String(255), nullable=True)

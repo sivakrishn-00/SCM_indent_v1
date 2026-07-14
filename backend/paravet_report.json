@@ -1,0 +1,1769 @@
+{
+  "total_paravets": 340,
+  "managers": [
+    {
+      "manager_code": "HR-EMP-06934",
+      "manager_name": "Ganapathi Naresh Babu",
+      "manager_role": "OE",
+      "paravet_count": 84,
+      "paravets": [
+        {
+          "code": "HR-EMP-07708",
+          "name": "Seelam Lakshmi Sandeep",
+          "office": "AP-1962-MVU-RAPUR"
+        },
+        {
+          "code": "HR-EMP-16464",
+          "name": "Pothuraju Guru Mounika",
+          "office": "AP-1962-MVU-SULLURPET"
+        },
+        {
+          "code": "HR-EMP-07840",
+          "name": "Duggireddy Venkata Prasad Reddy",
+          "office": "AP-1962-MVU-RENUGUNTA"
+        },
+        {
+          "code": "HR-EMP-07690",
+          "name": "Yalla Saisireesha",
+          "office": "AP-1962-MVU-TIRUPATI"
+        },
+        {
+          "code": "HR-EMP-07838",
+          "name": "Borra Sunil Kumar Reddy",
+          "office": "AP-1962-MVU-PICHATUR"
+        },
+        {
+          "code": "HR-EMP-16159",
+          "name": "Patan Ali Akbar",
+          "office": "AP-1962-MVU-VAKADU"
+        },
+        {
+          "code": "HR-EMP-07836",
+          "name": "K.Gurunath Naik",
+          "office": "AP-1962-MVU-PUTTUR"
+        },
+        {
+          "code": "HR-EMP-07831",
+          "name": "Bonthala Mohanmuralidhar",
+          "office": "AP-1962-MVU-CHINNAGOTIGALLU"
+        },
+        {
+          "code": "HR-EMP-08034",
+          "name": "Borra Ashok Kumar Reddy",
+          "office": "AP-1962-MVU-SRIKALAHASTI"
+        },
+        {
+          "code": "HR-EMP-07698",
+          "name": "T Anand Jyothi",
+          "office": "AP-1962-MVU-SATHYAVEDU"
+        },
+        {
+          "code": "HR-EMP-07829",
+          "name": "Telugu Harish",
+          "office": "AP-1962-MVU-TIRUPATI"
+        },
+        {
+          "code": "HR-EMP-07827",
+          "name": "E Rohith",
+          "office": "AP-1962-MVU-CHANDRAGIRI"
+        },
+        {
+          "code": "HR-EMP-07694",
+          "name": "Mallaravapu Siddarda",
+          "office": "AP-1962-MVU-NAIDUPETA"
+        },
+        {
+          "code": "HR-EMP-07702",
+          "name": "Medikonda Anil Kumar",
+          "office": "AP-1962-MVU-GUDURU"
+        },
+        {
+          "code": "HR-EMP-17019",
+          "name": "Shaik Fasiha Muskhan",
+          "office": "AP-1962-MVU-MUTTUKUR"
+        },
+        {
+          "code": "HR-EMP-08024",
+          "name": "Velagala Manisha",
+          "office": "AP-1962-MVU-SANGAM"
+        },
+        {
+          "code": "HR-EMP-07666",
+          "name": "Vinay Sagar",
+          "office": "AP-1962-MVU-VINJAMUR"
+        },
+        {
+          "code": "HR-EMP-16983",
+          "name": "Chapala Prathyusha",
+          "office": "AP-1962-MVU-INDUKURPETA"
+        },
+        {
+          "code": "HR-EMP-07685",
+          "name": "Shaik Mujahid",
+          "office": "AP-1962-MVU-PODALAKUR"
+        },
+        {
+          "code": "HR-EMP-07724",
+          "name": "Rachugolla Viswanath",
+          "office": "AP-1962-MVU-VENKATAGIRI"
+        },
+        {
+          "code": "HR-EMP-07717",
+          "name": "B Sivaji Naik",
+          "office": "AP-1962-MVU-MARRIPADU"
+        },
+        {
+          "code": "HR-EMP-07656",
+          "name": "Talari Abhishek",
+          "office": "AP-1962-MVU-VALETIVARIPALEM"
+        },
+        {
+          "code": "HR-EMP-07660",
+          "name": "Boyapalli.Naga Nandini",
+          "office": "AP-1962-MVU-ALLUR"
+        },
+        {
+          "code": "HR-EMP-07716",
+          "name": "Kuruva Vamshi",
+          "office": "AP-1962-MVU-DUTTALUR"
+        },
+        {
+          "code": "HR-EMP-08232",
+          "name": "Meeniga Venkata Sai Kiran",
+          "office": "AP-1962-MVU-UDAYAGIRI"
+        },
+        {
+          "code": "HR-EMP-07710",
+          "name": "Thuraka Kusumakar",
+          "office": "AP-1962-MVU-SARVEPALLI"
+        },
+        {
+          "code": "HR-EMP-07648",
+          "name": "Kondareddy Meghana",
+          "office": "AP-1962-MVU-NELLORE"
+        },
+        {
+          "code": "HR-EMP-07644",
+          "name": "Gunji Aparna",
+          "office": "AP-1962-MVU-NELLORE"
+        },
+        {
+          "code": "HR-EMP-07651",
+          "name": "Jagannadham Lokesh",
+          "office": "AP-1962-MVU-KANDUKUR"
+        },
+        {
+          "code": "HR-EMP-07642",
+          "name": "Gangapatnam Keerthana",
+          "office": "AP-1962-MVU-KOVUR"
+        },
+        {
+          "code": "HR-EMP-07616",
+          "name": "Derangula Ashok",
+          "office": "AP-1962-MVU-KAVALI"
+        },
+        {
+          "code": "HR-EMP-07585",
+          "name": "Kothapalle Chaithanya",
+          "office": "AP-1962-MVU-KARVETINAGAR"
+        },
+        {
+          "code": "HR-EMP-07855",
+          "name": "Amuru Yogesh",
+          "office": "AP-1962-MVU-PUTHALAPATTU"
+        },
+        {
+          "code": "HR-EMP-07821",
+          "name": "Arigala Harshavardhan",
+          "office": "AP-1962-MVU-PULICHERLA"
+        },
+        {
+          "code": "HR-EMP-07816",
+          "name": "Y Narendra Reddy",
+          "office": "AP-1962-MVU-SANTHIPURAM"
+        },
+        {
+          "code": "HR-EMP-07819",
+          "name": "G Venkatesh",
+          "office": "AP-1962-MVU-VENKATAGIRI KOTA"
+        },
+        {
+          "code": "HR-EMP-17059",
+          "name": "Jonnaram Mahaboob Basha",
+          "office": "AP-1962-MVU-NAGARI"
+        },
+        {
+          "code": "HR-EMP-07814",
+          "name": "B.Pavan Kumar",
+          "office": "AP-1962-MVU-PALAMANER"
+        },
+        {
+          "code": "HR-EMP-07813",
+          "name": "Kamasani Manjunath Reddy",
+          "office": "AP-1962-MVU-BANGARUPALEM"
+        },
+        {
+          "code": "HR-EMP-07810",
+          "name": "C Harish",
+          "office": "AP-1962-MVU-CHITTOOR"
+        },
+        {
+          "code": "HR-EMP-07808",
+          "name": "Nannagaram Srinivasulu",
+          "office": "AP-1962-MVU-G D NELLORE"
+        },
+        {
+          "code": "HR-EMP-07807",
+          "name": "Muraligari Hari Sankar",
+          "office": "AP-1962-MVU-PUNGANUR"
+        },
+        {
+          "code": "HR-EMP-16305",
+          "name": "K Dhana Sekar",
+          "office": "AP-1962-MVU-KUPPAM"
+        },
+        {
+          "code": "HR-EMP-08234",
+          "name": "Venkata Srinivasulu",
+          "office": "AP-1962-MVU-PORUMAMILA"
+        },
+        {
+          "code": "HR-EMP-07675",
+          "name": "Bukke Suresh Naik",
+          "office": "AP-1962-MVU-VEMPALI"
+        },
+        {
+          "code": "HR-EMP-07934",
+          "name": "Bandi Reddeppagari Venkata Jaya Surya",
+          "office": "AP-1962-MVU-B.MATTAM"
+        },
+        {
+          "code": "HR-EMP-07929",
+          "name": "Alluri Suresh Babu",
+          "office": "AP-1962-MVU-YERRAGUNTLA"
+        },
+        {
+          "code": "HR-EMP-07781",
+          "name": "Rama Sireesha",
+          "office": "AP-1962-MVU-PULIVENDULA"
+        },
+        {
+          "code": "HR-EMP-07779",
+          "name": "Dugganapalli Aswak",
+          "office": "AP-1962-MVU-KADAPA"
+        },
+        {
+          "code": "HR-EMP-07797",
+          "name": "Yerramasu Raj Kumar",
+          "office": "AP-1962-MVU-MYDUKUR"
+        },
+        {
+          "code": "HR-EMP-07776",
+          "name": "Darapuneni Chaithanya",
+          "office": "AP-1962-MVU-BADVEL"
+        },
+        {
+          "code": "HR-EMP-07790",
+          "name": "Mudde Raju Naik",
+          "office": "AP-1962-MVU-PRODDUTUR"
+        },
+        {
+          "code": "HR-EMP-07786",
+          "name": "Bandaru Kalyani",
+          "office": "AP-1962-MVU-JAMMALAMADUGU"
+        },
+        {
+          "code": "HR-EMP-07783",
+          "name": "Kandukuri Venkata Vishnu Vardhan Reddy",
+          "office": "AP-1962-MVU-KAMALAPURAM"
+        },
+        {
+          "code": "HR-EMP-07626",
+          "name": "Indrakanti Hareesh",
+          "office": "AP-1962-MVU-VELUGODU"
+        },
+        {
+          "code": "HR-EMP-07614",
+          "name": "Jonavaram Rizwana",
+          "office": "AP-1962-MVU-PANYAM"
+        },
+        {
+          "code": "HR-EMP-07605",
+          "name": "Attar Mohammad Aslam",
+          "office": "AP-1962-MVU-SANJAMALA"
+        },
+        {
+          "code": "HR-EMP-16103",
+          "name": "Sukanya",
+          "office": "AP-1962-MVU-PEAPULLY"
+        },
+        {
+          "code": "HR-EMP-07600",
+          "name": "Shaik Mahammad Umar Farook",
+          "office": "AP-1962-MVU-RUDRAVARAM"
+        },
+        {
+          "code": "HR-EMP-07734",
+          "name": "Shaik Azad",
+          "office": "AP-1962-MVU-GOSPADU"
+        },
+        {
+          "code": "HR-EMP-16642",
+          "name": "V. Kanithkar",
+          "office": "AP-1962-MVU-NANDIKOTKURU"
+        },
+        {
+          "code": "HR-EMP-07595",
+          "name": "Telugu Srilekha",
+          "office": "AP-1962-MVU-JUPADUBUNGALOW"
+        },
+        {
+          "code": "HR-EMP-07593",
+          "name": "Talari Shiva Kumar",
+          "office": "AP-1962-MVU-ATMAKUR"
+        },
+        {
+          "code": "HR-EMP-07591",
+          "name": "Shaik Mahammad Jubair",
+          "office": "AP-1962-MVU-ALLAGADDA"
+        },
+        {
+          "code": "HR-EMP-07599",
+          "name": "Vadla Hussainvali",
+          "office": "AP-1962-MVU-BANAGANAPALLI"
+        },
+        {
+          "code": "HR-EMP-07596",
+          "name": "Mulla Mahaboob Basha",
+          "office": "AP-1962-MVU-NANDYAL"
+        },
+        {
+          "code": "HR-EMP-07606",
+          "name": "Y Dathathreya",
+          "office": "AP-1962-MVU-DHONE"
+        },
+        {
+          "code": "HR-EMP-07924",
+          "name": "Shaik Dilshad",
+          "office": "AP-1962-MVU-GONEGANDLA"
+        },
+        {
+          "code": "HR-EMP-07590",
+          "name": "Bathula Joshna",
+          "office": "AP-1962-MVU-GUDUR"
+        },
+        {
+          "code": "HR-EMP-07921",
+          "name": "Mangali Gurunath",
+          "office": "AP-1962-MVU-KOSIGI"
+        },
+        {
+          "code": "HR-EMP-07917",
+          "name": "Bytinti Anjali",
+          "office": "AP-1962-MVU-MADIRE"
+        },
+        {
+          "code": "HR-EMP-07919",
+          "name": "Shaik Shanu",
+          "office": "AP-1962-MVU-ASPARI"
+        },
+        {
+          "code": "HR-EMP-07992",
+          "name": "Vatti Narendra",
+          "office": "AP-1962-MVU-ADONI"
+        },
+        {
+          "code": "HR-EMP-07910",
+          "name": "Boya Jayalakshmi",
+          "office": "AP-1962-MVU-MANTRALAYAM"
+        },
+        {
+          "code": "HR-EMP-07907",
+          "name": "Chakali Anitha",
+          "office": "AP-1962-MVU-YEMIGANUR"
+        },
+        {
+          "code": "HR-EMP-07897",
+          "name": "Tatikonda Madhan Kumar",
+          "office": "AP-1962-MVU-KURNOOL"
+        },
+        {
+          "code": "HR-EMP-07677",
+          "name": "Hathibelagal Saraswathi",
+          "office": "AP-1962-MVU-ALUR"
+        },
+        {
+          "code": "HR-EMP-07904",
+          "name": "Sandupalyam Manjula",
+          "office": "AP-1962-MVU-KODUMUR"
+        },
+        {
+          "code": "HR-EMP-07902",
+          "name": "Thappadi Bharathi",
+          "office": "AP-1962-MVU-PATTIKONDA"
+        },
+        {
+          "code": "HR-EMP-07898",
+          "name": "Reddypogu Tharakaram",
+          "office": "AP-1962-MVU-ORVAKAL"
+        },
+        {
+          "code": "HR-EMP-15721",
+          "name": "Mude Harindra Naik",
+          "office": "AP-1962-MVU-KRISHNAGIRI"
+        },
+        {
+          "code": "HR-EMP-15718",
+          "name": "Syed Nazeer Ahmad",
+          "office": "AP-1962-MVU-ATMAKUR"
+        },
+        {
+          "code": "HR-EMP-15716",
+          "name": "Thokala Nandini Krishna",
+          "office": "AP-1962-MVU-GUDIPALA"
+        },
+        {
+          "code": "HR-EMP-15255",
+          "name": "Chilli Hema Mahesh",
+          "office": "AP-1962-MVU-PENDLIMARRI"
+        }
+      ]
+    },
+    {
+      "manager_code": "HR-EMP-16267",
+      "manager_name": "Shaik Mahaboob Basha",
+      "manager_role": "OE",
+      "paravet_count": 44,
+      "paravets": [
+        {
+          "code": "HR-EMP-08231",
+          "name": "Mannam  Venkateswarlu",
+          "office": "AP-1962-MVU-TANGUTUR"
+        },
+        {
+          "code": "HR-EMP-07601",
+          "name": "Nali Chinna Alluraiah",
+          "office": "AP-1962-MVU-KURICHEDU"
+        },
+        {
+          "code": "HR-EMP-07607",
+          "name": "Pathan Gayaj",
+          "office": "AP-1962-MVU-KOTHAPATNAM"
+        },
+        {
+          "code": "HR-EMP-07611",
+          "name": "Peerla  Nagalakshmi Devi",
+          "office": "AP-1962-MVU-NAGULUPPALAPADU"
+        },
+        {
+          "code": "HR-EMP-07793",
+          "name": "Vesapogu Amar",
+          "office": "AP-1962-MVU-TRIPURANTHAKAM"
+        },
+        {
+          "code": "HR-EMP-07706",
+          "name": "Shaik Afroz",
+          "office": "AP-1962-MVU-CHANDRASEKHARAPURAM"
+        },
+        {
+          "code": "HR-EMP-07780",
+          "name": "Thallapalli  Manvitha",
+          "office": "AP-1962-MVU-HANUMANTHUNIPADU"
+        },
+        {
+          "code": "HR-EMP-07785",
+          "name": "Sirivella  Sujitha Rani",
+          "office": "AP-1962-MVU-CUMBUM"
+        },
+        {
+          "code": "HR-EMP-07789",
+          "name": "Aluri Abraham",
+          "office": "AP-1962-MVU-PODILI"
+        },
+        {
+          "code": "HR-EMP-07778",
+          "name": "Shaik Shahul Basha",
+          "office": "AP-1962-MVU-KANIGIRI"
+        },
+        {
+          "code": "HR-EMP-07761",
+          "name": "Avula Sneha Sai",
+          "office": "AP-1962-MVU-SANTHA NUTHALA PADU"
+        },
+        {
+          "code": "HR-EMP-07775",
+          "name": "Addanki  Manikanta",
+          "office": "AP-1962-MVU-GIDDALUR"
+        },
+        {
+          "code": "HR-EMP-07770",
+          "name": "Gottam Anvesh",
+          "office": "AP-1962-MVU-MARKAPURAM"
+        },
+        {
+          "code": "HR-EMP-07755",
+          "name": "Prattipati Komali",
+          "office": "AP-1962-MVU-DARSI"
+        },
+        {
+          "code": "HR-EMP-07751",
+          "name": "Somisetty  Nagavasu",
+          "office": "AP-1962-MVU-YERRAGONDAPALEM"
+        },
+        {
+          "code": "HR-EMP-07766",
+          "name": "Daggumati Harshavardhan Rao",
+          "office": "AP-1962-MVU-KONDAPI"
+        },
+        {
+          "code": "HR-EMP-10553",
+          "name": "Gorrepati Prakash Raju",
+          "office": "AP-1962-MVU-RAJUPALEM"
+        },
+        {
+          "code": "HR-EMP-07695",
+          "name": "Shaik Siddamani",
+          "office": "AP-1962-MVU-SANTHAGUDIPADU"
+        },
+        {
+          "code": "HR-EMP-14624",
+          "name": "Shaik Inthiyaz",
+          "office": "AP-1962-MVU-AMARAVATHI"
+        },
+        {
+          "code": "HR-EMP-10552",
+          "name": "Yarraguddi  Esudasu",
+          "office": "AP-1962-MVU-IPURU"
+        },
+        {
+          "code": "HR-EMP-07722",
+          "name": "Devanaboina Sivanagaraju",
+          "office": "AP-1962-MVU-EDLAPADU"
+        },
+        {
+          "code": "HR-EMP-07704",
+          "name": "Kothapalli  Sunny",
+          "office": "AP-1962-MVU-KAREMPUDI"
+        },
+        {
+          "code": "HR-EMP-08233",
+          "name": "Tanneeru  Akash",
+          "office": "AP-1962-MVU-CHILAKALURIPET"
+        },
+        {
+          "code": "HR-EMP-07692",
+          "name": "Lavoori Srinu Naik",
+          "office": "AP-1962-MVU-GURAZALA"
+        },
+        {
+          "code": "HR-EMP-07687",
+          "name": "Sagili Venkata Sainadh Reddy",
+          "office": "AP-1962-MVU-NARASARAOPET"
+        },
+        {
+          "code": "HR-EMP-07686",
+          "name": "Vankudavath Barma Naik",
+          "office": "AP-1962-MVU-MACHERLA"
+        },
+        {
+          "code": "HR-EMP-07689",
+          "name": "Syed  Hekmathiyar",
+          "office": "AP-1962-MVU-SATTENAPALLI"
+        },
+        {
+          "code": "HR-EMP-07683",
+          "name": "Shaik Abdul Gafur",
+          "office": "AP-1962-MVU-PEDAKURAPADU"
+        },
+        {
+          "code": "HR-EMP-07693",
+          "name": "K. Bhargavi",
+          "office": "AP-1962-MVU-VINUKONDA"
+        },
+        {
+          "code": "HR-EMP-10664",
+          "name": "Marri Ramesh",
+          "office": "AP-1962-MVU-VETAPALEM"
+        },
+        {
+          "code": "HR-EMP-07801",
+          "name": "Veeranki Charan Kumar",
+          "office": "AP-1962-MVU-AMARTHALURU"
+        },
+        {
+          "code": "HR-EMP-07798",
+          "name": "Parisa Chandra Babu",
+          "office": "AP-1962-MVU-GUDAVALLI"
+        },
+        {
+          "code": "HR-EMP-07629",
+          "name": "Chandolu Suvarna Raju",
+          "office": "AP-1962-MVU-BALLIKURAVA"
+        },
+        {
+          "code": "HR-EMP-07624",
+          "name": "Eturi Mani Babu",
+          "office": "AP-1962-MVU-KARLAPALEM"
+        },
+        {
+          "code": "HR-EMP-07849",
+          "name": "Morla Disowja",
+          "office": "AP-1962-MVU-VEMURU"
+        },
+        {
+          "code": "HR-EMP-07847",
+          "name": "Ankireddy Umadevi",
+          "office": "AP-1962-MVU-CHIRALA"
+        },
+        {
+          "code": "HR-EMP-16320",
+          "name": "Thulluri veeralankaiah",
+          "office": "AP-1962-MVU-REPALLE"
+        },
+        {
+          "code": "HR-EMP-07846",
+          "name": "Shaik Nowshad",
+          "office": "AP-1962-MVU-ADDANKI"
+        },
+        {
+          "code": "HR-EMP-07845",
+          "name": "Pittu Megha Sai Balaji",
+          "office": "AP-1962-MVU-PARCHUR"
+        },
+        {
+          "code": "HR-EMP-07805",
+          "name": "Regulagadda  Mohit Sri Varma",
+          "office": "AP-1962-MVU-BAPATLA"
+        },
+        {
+          "code": "HR-EMP-07932",
+          "name": "Pullagura Narasimhulu",
+          "office": "AP-1962-MVU-RAJUPALEM"
+        },
+        {
+          "code": "HR-EMP-15741",
+          "name": "Sampathi Lavanya",
+          "office": "AP-1962-MVU-ONGOLE"
+        },
+        {
+          "code": "HR-EMP-15738",
+          "name": "Katteboina Nagarjuna",
+          "office": "AP-1962-MVU-MARTUR"
+        },
+        {
+          "code": "HR-EMP-15239",
+          "name": "Mandla Venkateswarlu",
+          "office": "AP-1962-MVU-PIDUGURALA"
+        }
+      ]
+    },
+    {
+      "manager_code": "HR-EMP-15251",
+      "manager_name": "Maddepalli Ashok Kumar",
+      "manager_role": "OE",
+      "paravet_count": 41,
+      "paravets": [
+        {
+          "code": "HR-EMP-07691",
+          "name": "K.Manjulatha",
+          "office": "AP-1962-MVU-BATHALAPALLI"
+        },
+        {
+          "code": "HR-EMP-07715",
+          "name": "Gate Muhammad Anees",
+          "office": "AP-1962-MVU-GORANTLA"
+        },
+        {
+          "code": "HR-EMP-07731",
+          "name": "Sanapa Naresh",
+          "office": "AP-1962-MVU-CHENNEKOTHAPALLI"
+        },
+        {
+          "code": "HR-EMP-07719",
+          "name": "Bukke Vinod Naik",
+          "office": "AP-1962-MVU-OBULADEVARACHERUVU"
+        },
+        {
+          "code": "HR-EMP-07712",
+          "name": "K Ajay Kumar",
+          "office": "AP-1962-MVU-LEPAKSHI"
+        },
+        {
+          "code": "HR-EMP-07707",
+          "name": "Islavath Yaswanth Naik",
+          "office": "AP-1962-MVU-TALUPULA"
+        },
+        {
+          "code": "HR-EMP-10550",
+          "name": "Boya Kavya Sree",
+          "office": "AP-1962-MVU-HINDUPUR"
+        },
+        {
+          "code": "HR-EMP-08235",
+          "name": "L.Sivanna Gari  Rupavathi",
+          "office": "AP-1962-MVU-MADAKASIRA"
+        },
+        {
+          "code": "HR-EMP-07688",
+          "name": "Allisher Mehamood",
+          "office": "AP-1962-MVU-RAPTADU"
+        },
+        {
+          "code": "HR-EMP-07705",
+          "name": "Kayala Nithin",
+          "office": "AP-1962-MVU-KADIRI"
+        },
+        {
+          "code": "HR-EMP-07701",
+          "name": "Gadwala Vamshi Krishna",
+          "office": "AP-1962-MVU-DHARMAVARAM"
+        },
+        {
+          "code": "HR-EMP-08020",
+          "name": "Katta Prasanna Kumari",
+          "office": "AP-1962-MVU-PUTTAPARTHY"
+        },
+        {
+          "code": "HR-EMP-07736",
+          "name": "Karamthoti Pavan Naik",
+          "office": "AP-1962-MVU-PENUKONDA"
+        },
+        {
+          "code": "HR-EMP-17238",
+          "name": "Hathibelagal Anil Kumar",
+          "office": "AP-1962-MVU-RAMASAMUDRAM"
+        },
+        {
+          "code": "HR-EMP-07612",
+          "name": "Sanku Sivamani",
+          "office": "AP-1962-MVU-SAMBEPALLI"
+        },
+        {
+          "code": "HR-EMP-07799",
+          "name": "Peddaboyana  Santhosh",
+          "office": "AP-1962-MVU-LAKKIREDDYPALLI"
+        },
+        {
+          "code": "HR-EMP-08012",
+          "name": "Chanagani Ganesh",
+          "office": "AP-1962-MVU-CHITVEL"
+        },
+        {
+          "code": "HR-EMP-07594",
+          "name": "Gundluru Praveen Kumar",
+          "office": "AP-1962-MVU-THAMBALLAPALLE"
+        },
+        {
+          "code": "HR-EMP-07617",
+          "name": "Paidikalva Lavanya",
+          "office": "AP-1962-MVU-T SUNDUPALLI"
+        },
+        {
+          "code": "HR-EMP-07592",
+          "name": "Nemalladinna Mahaboob Basha",
+          "office": "AP-1962-MVU-KAMBAM VARIPALLI"
+        },
+        {
+          "code": "HR-EMP-07597",
+          "name": "Meesala Yeswanth",
+          "office": "AP-1962-MVU-KALIKIRI"
+        },
+        {
+          "code": "HR-EMP-07598",
+          "name": "Duggaraboina Lakshmi Navya",
+          "office": "AP-1962-MVU-MADANAPALLE"
+        },
+        {
+          "code": "HR-EMP-14622",
+          "name": "Bogem Sathish",
+          "office": "AP-1962-MVU-MULAKALACHERUVU"
+        },
+        {
+          "code": "HR-EMP-07777",
+          "name": "Gurlakunta Navya",
+          "office": "AP-1962-MVU-RAYACHOTY"
+        },
+        {
+          "code": "HR-EMP-07604",
+          "name": "Nemalladinna Mabu Hussain",
+          "office": "AP-1962-MVU-KODUR"
+        },
+        {
+          "code": "HR-EMP-10714",
+          "name": "P SRI HARI GANESH",
+          "office": "AP-1962-MVU-RAJAMPETA"
+        },
+        {
+          "code": "HR-EMP-07610",
+          "name": "Ediga Aravindu",
+          "office": "AP-1962-MVU-KUDAIR"
+        },
+        {
+          "code": "HR-EMP-07768",
+          "name": "Nimpanna Gari Sneha",
+          "office": "AP-1962-MVU-KANEKAL"
+        },
+        {
+          "code": "HR-EMP-07969",
+          "name": "Chimala Uday Kumar",
+          "office": "AP-1962-MVU-YADIKI"
+        },
+        {
+          "code": "HR-EMP-07613",
+          "name": "Jakkala Uma Maheshwari",
+          "office": "AP-1962-MVU-SETTUR"
+        },
+        {
+          "code": "HR-EMP-07615",
+          "name": "Kathi  Vamsi",
+          "office": "AP-1962-MVU-PUTLUR"
+        },
+        {
+          "code": "HR-EMP-07603",
+          "name": "Vumala Koushik",
+          "office": "AP-1962-MVU-GOOTY"
+        },
+        {
+          "code": "HR-EMP-10848",
+          "name": "Kappala Sai Kiran",
+          "office": "AP-1962-MVU-ANANTAPUR"
+        },
+        {
+          "code": "HR-EMP-07609",
+          "name": "Golla Vinod",
+          "office": "AP-1962-MVU-KALYANDURG"
+        },
+        {
+          "code": "HR-EMP-07619",
+          "name": "Kimavath Akash",
+          "office": "AP-1962-MVU-ANANTAPUR"
+        },
+        {
+          "code": "HR-EMP-07966",
+          "name": "Deverakonda Sree Lakshmi",
+          "office": "AP-1962-MVU-SINGANAMALA"
+        },
+        {
+          "code": "HR-EMP-07620",
+          "name": "Shaik Abdul Mannan",
+          "office": "AP-1962-MVU-TADPATRI"
+        },
+        {
+          "code": "HR-EMP-07623",
+          "name": "Shaik Mohammad Afreed",
+          "office": "AP-1962-MVU-GUNTAKAL"
+        },
+        {
+          "code": "HR-EMP-07625",
+          "name": "Bothula Vinod Kumar",
+          "office": "AP-1962-MVU-URAVAKONDA"
+        },
+        {
+          "code": "HR-EMP-07628",
+          "name": "Kuruba Madhu",
+          "office": "AP-1962-MVU-RAYADURG"
+        },
+        {
+          "code": "HR-EMP-15733",
+          "name": "Basava Raju Gari Veeresh",
+          "office": "AP-1962-MVU-GUDIBANDLA"
+        }
+      ]
+    },
+    {
+      "manager_code": "HR-EMP-06936",
+      "manager_name": "V Ratnaraju",
+      "manager_role": "OE",
+      "paravet_count": 41,
+      "paravets": [
+        {
+          "code": "HR-EMP-07873",
+          "name": "Chilli.Praveen Kumar",
+          "office": "AP-1962-MVU-ATREYAPURAM"
+        },
+        {
+          "code": "HR-EMP-07871",
+          "name": "Mandapati Durga Prasad",
+          "office": "AP-1962-MVU-MALIKIPURAM"
+        },
+        {
+          "code": "HR-EMP-07872",
+          "name": "Gandham Durga Srujana",
+          "office": "AP-1962-MVU-AINAVILLI"
+        },
+        {
+          "code": "HR-EMP-07868",
+          "name": "Juthuka Ravi Kiran",
+          "office": "AP-1962-MVU-CHEYYERU"
+        },
+        {
+          "code": "HR-EMP-07875",
+          "name": "Rapaka.Jaswanth",
+          "office": "AP-1962-MVU-ALLAVARAM"
+        },
+        {
+          "code": "HR-EMP-07877",
+          "name": "Valluri Joshi",
+          "office": "AP-1962-MVU-K GANGAVARAM"
+        },
+        {
+          "code": "HR-EMP-07869",
+          "name": "Pilli Naga Satya Manikanta",
+          "office": "AP-1962-MVU-KAPILESWARAPURAM"
+        },
+        {
+          "code": "HR-EMP-07880",
+          "name": "Bojanki Manikanta",
+          "office": "AP-1962-MVU-DRAKSHARAMAM"
+        },
+        {
+          "code": "HR-EMP-07866",
+          "name": "Pasala.Tejaswi",
+          "office": "AP-1962-MVU-MANDAPETA"
+        },
+        {
+          "code": "HR-EMP-08026",
+          "name": "Mogali Mohan",
+          "office": "AP-1962-MVU-RAZOLE"
+        },
+        {
+          "code": "HR-EMP-08030",
+          "name": "Kasi Meghana Santhoshi",
+          "office": "AP-1962-MVU-MUMMIDIVARAM"
+        },
+        {
+          "code": "HR-EMP-10542",
+          "name": "Gosangi Suzit",
+          "office": "AP-1962-MVU-AMALAPURAM"
+        },
+        {
+          "code": "HR-EMP-07862",
+          "name": "Chelluboina Mahesh",
+          "office": "AP-1962-MVU-P.GANNAVARAM"
+        },
+        {
+          "code": "HR-EMP-07864",
+          "name": "Borra Kirankumar",
+          "office": "AP-1962-MVU-KOTHAPETA"
+        },
+        {
+          "code": "HR-EMP-07984",
+          "name": "Tetakayala Tejasai",
+          "office": "AP-1962-MVU-SANKHAVARAM"
+        },
+        {
+          "code": "HR-EMP-07985",
+          "name": "Pyla Durga Prasad",
+          "office": "AP-1962-MVU-KOTANADURU"
+        },
+        {
+          "code": "HR-EMP-07981",
+          "name": "Ankamreddy Mahesh",
+          "office": "AP-1962-MVU-DIVILI"
+        },
+        {
+          "code": "HR-EMP-07980",
+          "name": "Mandapalli Vijay",
+          "office": "AP-1962-MVU-KARAPA"
+        },
+        {
+          "code": "HR-EMP-07983",
+          "name": "Pothala Mahesh",
+          "office": "AP-1962-MVU-GOLLAPROLU"
+        },
+        {
+          "code": "HR-EMP-07657",
+          "name": "Nakka Simhachalam",
+          "office": "AP-1962-MVU-GANDEPALLI"
+        },
+        {
+          "code": "HR-EMP-07978",
+          "name": "Kadari Tarun",
+          "office": "AP-1962-MVU-JAGGAMPETA"
+        },
+        {
+          "code": "HR-EMP-07974",
+          "name": "Ankamreddy Hashwanth",
+          "office": "AP-1962-MVU-PITHAPURAM"
+        },
+        {
+          "code": "HR-EMP-07976",
+          "name": "Vinakoti Gowtham Sunil",
+          "office": "AP-1962-MVU-SAMALAKOT"
+        },
+        {
+          "code": "HR-EMP-07977",
+          "name": "Janipalli Rk Mohana Chendra Balayogi",
+          "office": "AP-1962-MVU-KAKINADA"
+        },
+        {
+          "code": "HR-EMP-07975",
+          "name": "Vanapalli Raju",
+          "office": "AP-1962-MVU-KAKINADA"
+        },
+        {
+          "code": "HR-EMP-08006",
+          "name": "Petrum Leela Vara Prasad",
+          "office": "AP-1962-MVU-PRATHIPADU"
+        },
+        {
+          "code": "HR-EMP-07973",
+          "name": "Gaadi Durgaprasad",
+          "office": "AP-1962-MVU-TUNI"
+        },
+        {
+          "code": "HR-EMP-07896",
+          "name": "Medisetty.Parameswararao",
+          "office": "AP-1962-MVU-KORUKONDA"
+        },
+        {
+          "code": "HR-EMP-07899",
+          "name": "Kone Siva Sankara Prasad",
+          "office": "AP-1962-MVU-RANGAMPETA"
+        },
+        {
+          "code": "HR-EMP-07638",
+          "name": "Maraka Srinivas",
+          "office": "AP-1962-MVU-CHAGALLU"
+        },
+        {
+          "code": "HR-EMP-07906",
+          "name": "Mahammad Haneef",
+          "office": "AP-1962-MVU-NALLAJERLA"
+        },
+        {
+          "code": "HR-EMP-07894",
+          "name": "Immandi Lakshmi Sasi",
+          "office": "AP-1962-MVU-RAJAVOLU"
+        },
+        {
+          "code": "HR-EMP-07979",
+          "name": "Pendyala.Satya Venkata Suguna",
+          "office": "AP-1962-MVU-ANAPARTHI"
+        },
+        {
+          "code": "HR-EMP-07631",
+          "name": "Geddam Supravan",
+          "office": "AP-1962-MVU-GOPALAPURAM"
+        },
+        {
+          "code": "HR-EMP-07885",
+          "name": "Pudi Sowmya",
+          "office": "AP-1962-MVU-NIDADAVOLE"
+        },
+        {
+          "code": "HR-EMP-07876",
+          "name": "Mattaparthi Charan Satya Sai",
+          "office": "AP-1962-MVU-KOVVUR"
+        },
+        {
+          "code": "HR-EMP-07867",
+          "name": "Tatapudi Jyothi",
+          "office": "AP-1962-MVU-KADIAM"
+        },
+        {
+          "code": "HR-EMP-07860",
+          "name": "Palla Siva Ramakrishna",
+          "office": "AP-1962-MVU-RAJAHMUNDRY"
+        },
+        {
+          "code": "HR-EMP-07634",
+          "name": "Karri. Sowjanya",
+          "office": "AP-1962-MVU-RAJANAGARAM"
+        },
+        {
+          "code": "HR-EMP-07953",
+          "name": "Gera Usha Rani",
+          "office": "AP-1962-MVU-PRATHIPADU"
+        },
+        {
+          "code": "HR-EMP-15357",
+          "name": "Pambala Yuvaraj",
+          "office": "AP-1962-MVU-UNDRAJAVARAM"
+        }
+      ]
+    },
+    {
+      "manager_code": "HR-EMP-06938",
+      "manager_name": "P Sivateja",
+      "manager_role": "OE",
+      "paravet_count": 39,
+      "paravets": [
+        {
+          "code": "HR-EMP-07944",
+          "name": "Sanivarapu Nookaraju",
+          "office": "AP-1962-MVU-PATTEMPALEM"
+        },
+        {
+          "code": "HR-EMP-07938",
+          "name": "Vinjamudi Chandu",
+          "office": "AP-1962-MVU-UNDI"
+        },
+        {
+          "code": "HR-EMP-17220",
+          "name": "Shaik Mahabub Shareef",
+          "office": "AP-1962-MVU-MOGALTHURU"
+        },
+        {
+          "code": "HR-EMP-07937",
+          "name": "Kanapala Sandeep Kiran",
+          "office": "AP-1962-MVU-ELAMANCHILI"
+        },
+        {
+          "code": "HR-EMP-07946",
+          "name": "Tekkum Karthikeya",
+          "office": "AP-1962-MVU-ATTILI"
+        },
+        {
+          "code": "HR-EMP-07909",
+          "name": "Appari Bhavesh",
+          "office": "AP-1962-MVU-MARTERU"
+        },
+        {
+          "code": "HR-EMP-16160",
+          "name": "Goberu Jyothirmai",
+          "office": "AP-1962-MVU-PENTAPADU"
+        },
+        {
+          "code": "HR-EMP-07678",
+          "name": "Kareti Rajesh",
+          "office": "AP-1962-MVU-KALLA"
+        },
+        {
+          "code": "HR-EMP-07774",
+          "name": "Kagitapu Venkata Manikanta Sai",
+          "office": "AP-1962-MVU-NARSAPURAM"
+        },
+        {
+          "code": "HR-EMP-07772",
+          "name": "Iluri Saiviswanadh Hedge",
+          "office": "AP-1962-MVU-BHIMAVARAM"
+        },
+        {
+          "code": "HR-EMP-07769",
+          "name": "Vinukonda Giri Venkat",
+          "office": "AP-1962-MVU-PALAKOL"
+        },
+        {
+          "code": "HR-EMP-07891",
+          "name": "Nalla Bala Markandeya Satya Prasad",
+          "office": "AP-1962-MVU-VELPUR"
+        },
+        {
+          "code": "HR-EMP-07887",
+          "name": "Gurija Pavani",
+          "office": "AP-1962-MVU-ACHANTA"
+        },
+        {
+          "code": "HR-EMP-07988",
+          "name": "Kasani Teja",
+          "office": "AP-1962-MVU-GOPUVANIPALEM"
+        },
+        {
+          "code": "HR-EMP-07673",
+          "name": "Pedavalli Srinivas",
+          "office": "AP-1962-MVU-BANTUMILLI"
+        },
+        {
+          "code": "HR-EMP-07664",
+          "name": "Vallabha Maroshini",
+          "office": "AP-1962-MVU-GUDIVADA"
+        },
+        {
+          "code": "HR-EMP-07892",
+          "name": "Yarrapati Divya Sri",
+          "office": "AP-1962-MVU-BAPULAPADU"
+        },
+        {
+          "code": "HR-EMP-07667",
+          "name": "Parupudi Siva Ramoji Rao",
+          "office": "AP-1962-MVU-VUYYURU"
+        },
+        {
+          "code": "HR-EMP-07669",
+          "name": "Medanki Vamsi Krishna",
+          "office": "AP-1962-MVU-CHALLAPALLI"
+        },
+        {
+          "code": "HR-EMP-07671",
+          "name": "Jonnalagadda Vinishka",
+          "office": "AP-1962-MVU-MOVVA"
+        },
+        {
+          "code": "HR-EMP-07882",
+          "name": "Konda Tarunsai",
+          "office": "AP-1962-MVU-MACHILIPATNAM"
+        },
+        {
+          "code": "HR-EMP-07662",
+          "name": "Gudivada Navaneeth",
+          "office": "AP-1962-MVU-PEDANA"
+        },
+        {
+          "code": "HR-EMP-08025",
+          "name": "Jogi Pavitra",
+          "office": "AP-1962-MVU-GUDLAVALLERU"
+        },
+        {
+          "code": "HR-EMP-07884",
+          "name": "Katti Gopala Krishna",
+          "office": "AP-1962-MVU-AVANIGADDA"
+        },
+        {
+          "code": "HR-EMP-07890",
+          "name": "Gaddam Raja",
+          "office": "AP-1962-MVU-GANNAVARAM"
+        },
+        {
+          "code": "HR-EMP-07922",
+          "name": "Kamatham Chandu Rajeev",
+          "office": "AP-1962-MVU-MUDINEPALLI"
+        },
+        {
+          "code": "HR-EMP-07997",
+          "name": "Kondapavuluri Narendra",
+          "office": "AP-1962-MVU-GANDHINAGARAM"
+        },
+        {
+          "code": "HR-EMP-07930",
+          "name": "Ballarapu Karuna Kumar",
+          "office": "AP-1962-MVU-PIPPARA"
+        },
+        {
+          "code": "HR-EMP-07925",
+          "name": "Manelli Teja",
+          "office": "AP-1962-MVU-JEELUGUMILLI"
+        },
+        {
+          "code": "HR-EMP-07927",
+          "name": "Chavala Siva Krishna",
+          "office": "AP-1962-MVU-JANGAREDDYGUDEM"
+        },
+        {
+          "code": "HR-EMP-07650",
+          "name": "Palli Satish Babu",
+          "office": "AP-1962-MVU-MUSUNURU"
+        },
+        {
+          "code": "HR-EMP-07916",
+          "name": "Gannabathula Siva Sai Mahesh",
+          "office": "AP-1962-MVU-KAIKALURU"
+        },
+        {
+          "code": "HR-EMP-07649",
+          "name": "Gaddala Sowbhagyam",
+          "office": "AP-1962-MVU-NUZVID"
+        },
+        {
+          "code": "HR-EMP-07643",
+          "name": "Modugu Manohar Babu",
+          "office": "AP-1962-MVU-CHINTHALAPUDI"
+        },
+        {
+          "code": "HR-EMP-07647",
+          "name": "Badugu Ravi Kiran",
+          "office": "AP-1962-MVU-BUTTAIGUDEM"
+        },
+        {
+          "code": "HR-EMP-07913",
+          "name": "Naga Kasi Prasad",
+          "office": "AP-1962-MVU-ELURU"
+        },
+        {
+          "code": "HR-EMP-07640",
+          "name": "Medisetti Deepika",
+          "office": "AP-1962-MVU-KOVVALI"
+        },
+        {
+          "code": "HR-EMP-15950",
+          "name": "Banavathu Pandu",
+          "office": "AP-1962-MVU-KANKIPADU"
+        },
+        {
+          "code": "HR-EMP-15233",
+          "name": "Pamarthi Deepthi",
+          "office": "AP-1962-MVU-PAMARRU"
+        }
+      ]
+    },
+    {
+      "manager_code": "HR-EMP-06937",
+      "manager_name": "K Rajeswara Rao",
+      "manager_role": "OE",
+      "paravet_count": 37,
+      "paravets": [
+        {
+          "code": "HR-EMP-08229",
+          "name": "Randhi Ramakishna",
+          "office": "AP-1962-MVU-GANTAYADA"
+        },
+        {
+          "code": "HR-EMP-07765",
+          "name": "Mahanthi Chandu",
+          "office": "AP-1962-MVU-BHOGAPURAM"
+        },
+        {
+          "code": "HR-EMP-07767",
+          "name": "Ponganti Divya",
+          "office": "AP-1962-MVU-KOTHAVALASA"
+        },
+        {
+          "code": "HR-EMP-07762",
+          "name": "Gorajana Vasudeva Rao",
+          "office": "AP-1962-MVU-GURLA"
+        },
+        {
+          "code": "HR-EMP-10678",
+          "name": "Rajana Sai",
+          "office": "AP-1962-MVU-SANTHAKAVITI"
+        },
+        {
+          "code": "HR-EMP-07759",
+          "name": "Divakala Jagadeesh",
+          "office": "AP-1962-MVU-THERLAM"
+        },
+        {
+          "code": "HR-EMP-07757",
+          "name": "Kachala.Jayalakshmi",
+          "office": "AP-1962-MVU-S KOTA"
+        },
+        {
+          "code": "HR-EMP-07681",
+          "name": "Nalla Raghu",
+          "office": "AP-1962-MVU-VIZIANAGARAM"
+        },
+        {
+          "code": "HR-EMP-07753",
+          "name": "Kommu Kalavathi",
+          "office": "AP-1962-MVU-NELLIMARLA"
+        },
+        {
+          "code": "HR-EMP-07750",
+          "name": "Duddi Lalitha",
+          "office": "AP-1962-MVU-GAJAPATHINAGARAM"
+        },
+        {
+          "code": "HR-EMP-07747",
+          "name": "Reddi.Priyanka",
+          "office": "AP-1962-MVU-CHEEPURIPALLI"
+        },
+        {
+          "code": "HR-EMP-07745",
+          "name": "Koyyana Dhasmini",
+          "office": "AP-1962-MVU-BOBBILI"
+        },
+        {
+          "code": "HR-EMP-07743",
+          "name": "Sarasanapalli Yogindra",
+          "office": "AP-1962-MVU-RAJAM"
+        },
+        {
+          "code": "HR-EMP-07784",
+          "name": "Kella Likhita",
+          "office": "AP-1962-MVU-LAVERU"
+        },
+        {
+          "code": "HR-EMP-10658",
+          "name": "Phothuraju Vijayalakshmi",
+          "office": "AP-1962-MVU-GARA"
+        },
+        {
+          "code": "HR-EMP-07760",
+          "name": "Devalingam Devi",
+          "office": "AP-1962-MVU-PONDURU"
+        },
+        {
+          "code": "HR-EMP-07826",
+          "name": "Gutla .Rohith Kumar",
+          "office": "AP-1962-MVU-KOTABOMMALI"
+        },
+        {
+          "code": "HR-EMP-07796",
+          "name": "Kornu Vamsikrishna",
+          "office": "AP-1962-MVU-JALUMURU"
+        },
+        {
+          "code": "HR-EMP-07823",
+          "name": "Janni Sandhya Rani",
+          "office": "AP-1962-MVU-KOTTURU"
+        },
+        {
+          "code": "HR-EMP-07756",
+          "name": "Kodiboina Revanth",
+          "office": "AP-1962-MVU-NARASANNAPETA"
+        },
+        {
+          "code": "HR-EMP-07752",
+          "name": "Paidi Swetha",
+          "office": "AP-1962-MVU-ETCHERLA"
+        },
+        {
+          "code": "HR-EMP-07748",
+          "name": "Munjeti Jayaprakash",
+          "office": "AP-1962-MVU-AMADALAVALASA"
+        },
+        {
+          "code": "HR-EMP-07744",
+          "name": "Geddavalasa Pavani",
+          "office": "AP-1962-MVU-ARASAVALLI"
+        },
+        {
+          "code": "HR-EMP-07729",
+          "name": "Bendu Narendra",
+          "office": "AP-1962-MVU-TEKKALI"
+        },
+        {
+          "code": "HR-EMP-07792",
+          "name": "Kotcha Saikumar",
+          "office": "AP-1962-MVU-PALASA"
+        },
+        {
+          "code": "HR-EMP-14641",
+          "name": "Dasari Hemanth Kumar",
+          "office": "AP-1962-MVU-KAVITI"
+        },
+        {
+          "code": "HR-EMP-07738",
+          "name": "Pakki. Mohana Rao",
+          "office": "AP-1962-MVU-MAKKUVA"
+        },
+        {
+          "code": "HR-EMP-07746",
+          "name": "Nagalla Appala Naidu",
+          "office": "AP-1962-MVU-SEETHAMPETA"
+        },
+        {
+          "code": "HR-EMP-10668",
+          "name": "Kandena Sahithi",
+          "office": "AP-1962-MVU-GARUGUBILLI"
+        },
+        {
+          "code": "HR-EMP-07703",
+          "name": "Vakada Gayathri",
+          "office": "AP-1962-MVU-SEETHANAGARAM"
+        },
+        {
+          "code": "HR-EMP-07742",
+          "name": "Vanjarapu.Lahari",
+          "office": "AP-1962-MVU-PALAKONDA"
+        },
+        {
+          "code": "HR-EMP-07697",
+          "name": "Palaka Sankararao",
+          "office": "AP-1962-MVU-KURUPAM"
+        },
+        {
+          "code": "HR-EMP-07700",
+          "name": "Karri Neelima",
+          "office": "AP-1962-MVU-SALUR"
+        },
+        {
+          "code": "HR-EMP-07727",
+          "name": "Sasapu Saichakravarthi",
+          "office": "AP-1962-MVU-PARVATHIPURAM"
+        },
+        {
+          "code": "HR-EMP-15244",
+          "name": "Esampalli Ravi Kumar",
+          "office": "AP-1962-MVU-PATHAPATNAM"
+        },
+        {
+          "code": "HR-EMP-15238",
+          "name": "Thadibudda Dalamma",
+          "office": "AP-1962-MVU-PALASA"
+        },
+        {
+          "code": "HR-EMP-15235",
+          "name": "Eepu Ganesh",
+          "office": "AP-1962-MVU-SOMPETA"
+        }
+      ]
+    },
+    {
+      "manager_code": "HR-EMP-15249",
+      "manager_name": "Konala Siva Koteswararao",
+      "manager_role": "OE",
+      "paravet_count": 29,
+      "paravets": [
+        {
+          "code": "HR-EMP-07737",
+          "name": "Makireddy.Sravana Sandhya",
+          "office": "AP-1962-MVU-BHIMILI"
+        },
+        {
+          "code": "HR-EMP-07733",
+          "name": "Pappu Sankararao",
+          "office": "AP-1962-MVU-CHANDRAMPALAM"
+        },
+        {
+          "code": "HR-EMP-07740",
+          "name": "Ponaganti Bharghav",
+          "office": "AP-1962-MVU-PEDAGANTYADA"
+        },
+        {
+          "code": "HR-EMP-07730",
+          "name": "Kola Satya",
+          "office": "AP-1962-MVU-NADUPURU"
+        },
+        {
+          "code": "HR-EMP-07633",
+          "name": "Dogga Hymavathi",
+          "office": "AP-1962-MVU-PENDURTHI"
+        },
+        {
+          "code": "HR-EMP-07723",
+          "name": "Bhupathi Mani Shankar Kumar",
+          "office": "AP-1962-MVU-HANUMANTHUVAKA"
+        },
+        {
+          "code": "HR-EMP-07725",
+          "name": "Makireddi Ammaji",
+          "office": "AP-1962-MVU-VIZAG COROMANDEL"
+        },
+        {
+          "code": "HR-EMP-07713",
+          "name": "Ruttala Santhi Priya",
+          "office": "AP-1962-MVU-JAGADAMBA"
+        },
+        {
+          "code": "HR-EMP-07843",
+          "name": "Penta. Lakshmana",
+          "office": "AP-1962-MVU-ANANDAPURAM"
+        },
+        {
+          "code": "HR-EMP-07711",
+          "name": "Bathina Shyam Kumra",
+          "office": "AP-1962-MVU-HANUMANTHUVAKA"
+        },
+        {
+          "code": "HR-EMP-07630",
+          "name": "Donka Sai Nandini",
+          "office": "AP-1962-MVU-PARAVADA"
+        },
+        {
+          "code": "HR-EMP-07655",
+          "name": "Noothi Vanajasri",
+          "office": "AP-1962-MVU-KASIMKOTA"
+        },
+        {
+          "code": "HR-EMP-07646",
+          "name": "Rongala Gunasekhar",
+          "office": "AP-1962-MVU-CHODAVARAM"
+        },
+        {
+          "code": "HR-EMP-07639",
+          "name": "Varri Renuka",
+          "office": "AP-1962-MVU-SRUNGAVARAM"
+        },
+        {
+          "code": "HR-EMP-07636",
+          "name": "Marthi Lakshmi",
+          "office": "AP-1962-MVU-KOTAURATLA"
+        },
+        {
+          "code": "HR-EMP-07947",
+          "name": "Gopasina Nookaappala Swami Kishore",
+          "office": "AP-1962-MVU-V.MADUGULA"
+        },
+        {
+          "code": "HR-EMP-07635",
+          "name": "Marri.Saibabu",
+          "office": "AP-1962-MVU-ATCHUTAPURAM"
+        },
+        {
+          "code": "HR-EMP-07964",
+          "name": "Maddu Siva Kumar",
+          "office": "AP-1962-MVU-YELAMANCHILI"
+        },
+        {
+          "code": "HR-EMP-07659",
+          "name": "Gatta. Durgaprasad",
+          "office": "AP-1962-MVU-NARSIPATNAM"
+        },
+        {
+          "code": "HR-EMP-07663",
+          "name": "Duvvi Vamsi Sai Krishna",
+          "office": "AP-1962-MVU-NAKKAPALLI"
+        },
+        {
+          "code": "HR-EMP-07668",
+          "name": "Gorle Mohan",
+          "office": "AP-1962-MVU-GANDHINAGAR"
+        },
+        {
+          "code": "HR-EMP-07672",
+          "name": "Patharapalli. Santhosh",
+          "office": "AP-1962-MVU-K KOTAPADU"
+        },
+        {
+          "code": "HR-EMP-07773",
+          "name": "Molli. Sridevi",
+          "office": "AP-1962-MVU-RAVIKAMATHAM"
+        },
+        {
+          "code": "HR-EMP-08560",
+          "name": "Komma Rathnakumari",
+          "office": "AP-1962-MVU-PEDABAYALU"
+        },
+        {
+          "code": "HR-EMP-14617",
+          "name": "Chukkala Sarath kumar",
+          "office": "AP-1962-MVU-CHINTOOR"
+        },
+        {
+          "code": "HR-EMP-07962",
+          "name": "Chinta Harikiran",
+          "office": "AP-1962-MVU-CHINTAPALLI"
+        },
+        {
+          "code": "HR-EMP-07956",
+          "name": "Kaparapu Kumar Raju",
+          "office": "AP-1962-MVU-RAMPACHODAVARAM"
+        },
+        {
+          "code": "HR-EMP-07951",
+          "name": "Kasula Saiteja",
+          "office": "AP-1962-MVU-PADERU"
+        },
+        {
+          "code": "HR-EMP-07949",
+          "name": "Killo Nagajyothi",
+          "office": "AP-1962-MVU-ARAKU VALLEY"
+        }
+      ]
+    },
+    {
+      "manager_code": "HR-EMP-17064",
+      "manager_name": "V Raju",
+      "manager_role": "OE",
+      "paravet_count": 25,
+      "paravets": [
+        {
+          "code": "HR-EMP-07674",
+          "name": "Cheedarla Mohana Priya",
+          "office": "AP-1962-MVU-IBRAHIMPATNAM"
+        },
+        {
+          "code": "HR-EMP-07670",
+          "name": "Bhukya Chandu Prasad",
+          "office": "AP-1962-MVU-A.KONDURU"
+        },
+        {
+          "code": "HR-EMP-07680",
+          "name": "Talluri Malleswari",
+          "office": "AP-1962-MVU-PENUGANCHIPROLU"
+        },
+        {
+          "code": "HR-EMP-07684",
+          "name": "Mogilicharla Varun",
+          "office": "AP-1962-MVU-KANCHIKACHARLA"
+        },
+        {
+          "code": "HR-EMP-07661",
+          "name": "Marsakatla Sindhu",
+          "office": "AP-1962-MVU-MYLAVARAM"
+        },
+        {
+          "code": "HR-EMP-07653",
+          "name": "Palaparthi Sirisha",
+          "office": "AP-1962-MVU-MUTHYALAMPADU"
+        },
+        {
+          "code": "HR-EMP-07645",
+          "name": "Mondithoka Likhitha",
+          "office": "AP-1962-MVU-MUTHYALAMPADU"
+        },
+        {
+          "code": "HR-EMP-07641",
+          "name": "Katta Pravallika",
+          "office": "AP-1962-MVU-MUTHYALAMPADU"
+        },
+        {
+          "code": "HR-EMP-07886",
+          "name": "Gugulothu Santhosh",
+          "office": "AP-1962-MVU-TIRUVURU"
+        },
+        {
+          "code": "HR-EMP-07665",
+          "name": "Rathikinda Sairam",
+          "office": "AP-1962-MVU-NANDIGAMA"
+        },
+        {
+          "code": "HR-EMP-07682",
+          "name": "Sali Gopichand",
+          "office": "AP-1962-MVU-JAGGAYAPET"
+        },
+        {
+          "code": "HR-EMP-07940",
+          "name": "Mandru Danielu Abhishak",
+          "office": "AP-1962-MVU-PEDANANDIPADU"
+        },
+        {
+          "code": "HR-EMP-07968",
+          "name": "Lubna Parveen Manduri Shaikh",
+          "office": "AP-1962-MVU-PHIRANGIPURAM"
+        },
+        {
+          "code": "HR-EMP-07971",
+          "name": "Kasukurthi Naveen",
+          "office": "AP-1962-MVU-KOLLIPARA"
+        },
+        {
+          "code": "HR-EMP-07654",
+          "name": "Karlapudi Swarnalatha",
+          "office": "AP-1962-MVU-PEDAKAKANI"
+        },
+        {
+          "code": "HR-EMP-07970",
+          "name": "Kanaparthi Jayanth Kumar",
+          "office": "AP-1962-MVU-DUGGIRALA"
+        },
+        {
+          "code": "HR-EMP-17057",
+          "name": "Noor Basha Salman",
+          "office": "AP-1962-MVU-MANDADAM"
+        },
+        {
+          "code": "HR-EMP-07960",
+          "name": "Thumma Purna Sai Reddy",
+          "office": "AP-1962-MVU-CHEBROLE"
+        },
+        {
+          "code": "HR-EMP-07952",
+          "name": "Katari Srilatha",
+          "office": "AP-1962-MVU-PONNUR"
+        },
+        {
+          "code": "HR-EMP-08009",
+          "name": "Suragani Mounika",
+          "office": "AP-1962-MVU-TENALI"
+        },
+        {
+          "code": "HR-EMP-07955",
+          "name": "Devarasetti Meghana",
+          "office": "AP-1962-MVU-JD OFFICE"
+        },
+        {
+          "code": "HR-EMP-07957",
+          "name": "Chinta Satish Babu",
+          "office": "AP-1962-MVU-JD OFFICE"
+        },
+        {
+          "code": "HR-EMP-07941",
+          "name": "Gollapalli Mani Kanta",
+          "office": "AP-1962-MVU-TADIKONDA"
+        },
+        {
+          "code": "HR-EMP-16702",
+          "name": "Turaka Akanksha",
+          "office": "AP-1962-MVU-MANGALGIRI"
+        },
+        {
+          "code": "HR-EMP-07911",
+          "name": "Kummari Nissi",
+          "office": "AP-1962-MVU-CHEBROLE"
+        }
+      ]
+    }
+  ]
+}
