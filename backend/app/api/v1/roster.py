@@ -471,14 +471,32 @@ def get_incoming_operator(
     tz = timezone(timedelta(hours=5, minutes=30))
     today = datetime.now(tz).date()
     
+    c_roster = db.query(ShiftRoster).filter(
+        ShiftRoster.employee_code == current_user.username,
+        ShiftRoster.shift_date == today,
+        ShiftRoster.status != "cancelled"
+    ).first()
+    if not c_roster:
+        yesterday = today - timedelta(days=1)
+        c_roster = db.query(ShiftRoster).filter(
+            ShiftRoster.employee_code == current_user.username,
+            ShiftRoster.shift_date == yesterday,
+            ShiftRoster.status != "cancelled"
+        ).first()
+
+    base_date = c_roster.shift_date if c_roster else today
+
     if shift_type == "shift_1":
-        next_date = today
+        next_date = base_date
         next_shift = "shift_2"
     elif shift_type == "shift_2":
-        next_date = today + timedelta(days=1)
+        next_date = base_date + timedelta(days=1)
         next_shift = "shift_1"
+    elif shift_type == "general":
+        next_date = base_date + timedelta(days=1)
+        next_shift = "general"
     else:
-        next_date = today
+        next_date = base_date
         next_shift = "shift_2"
         
     entry = db.query(ShiftRoster).filter(

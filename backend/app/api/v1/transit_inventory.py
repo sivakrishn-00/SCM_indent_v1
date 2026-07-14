@@ -38,10 +38,10 @@ def check_operator_shift_active(db: Session, user: User, shift_type: Optional[st
     tz = timezone(timedelta(hours=5, minutes=30))
     now_dt = datetime.now(tz)
     today = now_dt.date()
-    today_str = today.strftime("%Y-%m-%d")
     
     # 4. Roster validation
     roster_entry = None
+    roster_date = today
     if shift_type:
         roster_entry = db.query(ShiftRoster).filter(
             ShiftRoster.employee_code == user.username,
@@ -49,6 +49,24 @@ def check_operator_shift_active(db: Session, user: User, shift_type: Optional[st
             ShiftRoster.shift_type == shift_type,
             ShiftRoster.status != "cancelled"
         ).first()
+        
+        # Fallback to yesterday
+        if not roster_entry:
+            yesterday = today - timedelta(days=1)
+            yesterday_entry = db.query(ShiftRoster).filter(
+                ShiftRoster.employee_code == user.username,
+                ShiftRoster.shift_date == yesterday,
+                ShiftRoster.shift_type == shift_type,
+                ShiftRoster.status != "cancelled"
+            ).first()
+            if yesterday_entry:
+                yesterday_state = db.query(UserShiftState).filter(
+                    UserShiftState.user_id == user.id,
+                    UserShiftState.shift_date == yesterday.strftime("%Y-%m-%d")
+                ).first()
+                if not yesterday_state or yesterday_state.status != "handed_over":
+                    roster_entry = yesterday_entry
+                    roster_date = yesterday
 
     if not roster_entry:
         roster_entries = db.query(ShiftRoster).filter(
@@ -56,7 +74,6 @@ def check_operator_shift_active(db: Session, user: User, shift_type: Optional[st
             ShiftRoster.shift_date == today,
             ShiftRoster.status != "cancelled"
         ).all()
-        
         roster_entries = [e for e in roster_entries if e.shift_type != "off"]
         
         if roster_entries:
@@ -64,6 +81,24 @@ def check_operator_shift_active(db: Session, user: User, shift_type: Optional[st
             roster_entry = next((e for e in roster_entries if e.shift_type == preferred_type), None)
             if not roster_entry:
                 roster_entry = roster_entries[0]
+            roster_date = today
+        else:
+            # Fallback to yesterday
+            yesterday = today - timedelta(days=1)
+            yesterday_entries = db.query(ShiftRoster).filter(
+                ShiftRoster.employee_code == user.username,
+                ShiftRoster.shift_date == yesterday,
+                ShiftRoster.status != "cancelled"
+            ).all()
+            yesterday_entries = [e for e in yesterday_entries if e.shift_type != "off"]
+            if yesterday_entries:
+                yesterday_state = db.query(UserShiftState).filter(
+                    UserShiftState.user_id == user.id,
+                    UserShiftState.shift_date == yesterday.strftime("%Y-%m-%d")
+                ).first()
+                if not yesterday_state or yesterday_state.status != "handed_over":
+                    roster_entry = yesterday_entries[0]
+                    roster_date = yesterday
     
     if not roster_entry:
         raise HTTPException(
@@ -77,14 +112,16 @@ def check_operator_shift_active(db: Session, user: User, shift_type: Optional[st
         requested_label = "Shift 1 (Morning)" if shift_type == "shift_1" else "Shift 2 (Evening)"
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"You are rostered for {assigned_label} today. Access to {requested_label} is forbidden."
+            detail=f"You are rostered for {assigned_label} on {roster_date.strftime('%Y-%m-%d')}. Access to {requested_label} is forbidden."
         )
         
     # 5. Handover validation and next-shift activation
+    roster_date_str = roster_date.strftime("%Y-%m-%d")
     needs_handover_activation = False
+    
     if roster_entry.shift_type == "shift_2":
         shift1_rostered = db.query(ShiftRoster).filter(
-            ShiftRoster.shift_date == today,
+            ShiftRoster.shift_date == roster_date,
             ShiftRoster.shift_type == "shift_1",
             ShiftRoster.status != "cancelled"
         ).first()
@@ -97,8 +134,8 @@ def check_operator_shift_active(db: Session, user: User, shift_type: Optional[st
                 shift1_finalized = db.query(ShiftLog).filter(
                     ShiftLog.operator_id == user.id,
                     ShiftLog.shift_type == "shift_1",
-                    ShiftLog.date >= datetime.combine(today, datetime.min.time()),
-                    ShiftLog.date <= datetime.combine(today, datetime.max.time()),
+                    ShiftLog.date >= datetime.combine(roster_date, datetime.min.time()),
+                    ShiftLog.date <= datetime.combine(roster_date, datetime.max.time()),
                     ShiftLog.is_draft == False
                 ).first()
                 if not shift1_finalized:
@@ -106,23 +143,35 @@ def check_operator_shift_active(db: Session, user: User, shift_type: Optional[st
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="Please finalize and submit your Shift 1 (Morning) consumption log first before proceeding to Shift 2."
                     )
+    elif roster_entry.shift_type == "general":
+        # Check if there was a general shift rostered yesterday with a different employee
+        yesterday_roster_date = roster_date - timedelta(days=1)
+        prev_rostered = db.query(ShiftRoster).filter(
+            ShiftRoster.project == roster_entry.project,
+            ShiftRoster.office_name == roster_entry.office_name,
+            ShiftRoster.shift_date == yesterday_roster_date,
+            ShiftRoster.shift_type == "general",
+            ShiftRoster.status != "cancelled"
+        ).first()
+        if prev_rostered and prev_rostered.employee_code != user.username:
+            needs_handover_activation = True
 
     state = db.query(UserShiftState).filter(
         UserShiftState.user_id == user.id,
-        UserShiftState.shift_date == today_str
+        UserShiftState.shift_date == roster_date_str
     ).first()
     
     if needs_handover_activation:
         if not state or state.status != "active":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="You are rostered for the next shift (Shift 2). Access is view-only until the current shift operator hands over to you."
+                detail=f"You are rostered for the next shift ({roster_entry.shift_type}). Access is view-only until the current shift operator hands over to you."
             )
 
     if state and state.status == "handed_over":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Your shift has been completed/handed over. Only view access is permitted."
+            detail=f"Your shift on {roster_date_str} has been completed/handed over. Only view access is permitted."
         )
 
 # Transit Inventory Schema Definitions
@@ -267,11 +316,30 @@ def propose_handover(
     check_operator_shift_active(db, current_user)
     
     tz = timezone(timedelta(hours=5, minutes=30))
-    today_str = datetime.now(tz).strftime("%Y-%m-%d")
+    today = datetime.now(tz).date()
+    today_str = today.strftime("%Y-%m-%d")
     
+    # Determine current user's roster date using the same fallback logic
+    from app.models.roster import ShiftRoster
+    c_roster = db.query(ShiftRoster).filter(
+        ShiftRoster.employee_code == current_user.username,
+        ShiftRoster.shift_date == today,
+        ShiftRoster.status != "cancelled"
+    ).first()
+    if not c_roster:
+        yesterday = today - timedelta(days=1)
+        c_roster = db.query(ShiftRoster).filter(
+            ShiftRoster.employee_code == current_user.username,
+            ShiftRoster.shift_date == yesterday,
+            ShiftRoster.status != "cancelled"
+        ).first()
+
+    c_roster_date = c_roster.shift_date if c_roster else today
+    c_roster_date_str = c_roster_date.strftime("%Y-%m-%d")
+
     existing_state = db.query(UserShiftState).filter(
         UserShiftState.user_id == current_user.id,
-        UserShiftState.shift_date == today_str
+        UserShiftState.shift_date == c_roster_date_str
     ).first()
     
     recipient = db.query(UserModel).filter(UserModel.username == payload.recipient_username).first()
@@ -324,15 +392,24 @@ def propose_handover(
             user_id=current_user.id,
             project=current_user.project,
             office_name=my_active_stock[0].office_name if my_active_stock else current_user.project,
-            shift_date=today_str,
+            shift_date=c_roster_date_str,
             status="handed_over"
         )
         db.add(new_state)
         
     # 2. Update/Create incoming operator (recipient) state to "active"
+    # Find recipient's roster date (either today or tomorrow)
+    recipient_roster = db.query(ShiftRoster).filter(
+        ShiftRoster.employee_code == recipient.username,
+        ShiftRoster.shift_date.in_([today, today + timedelta(days=1)]),
+        ShiftRoster.status != "cancelled"
+    ).order_by(ShiftRoster.shift_date.asc()).first()
+    
+    recipient_date_str = recipient_roster.shift_date.strftime("%Y-%m-%d") if recipient_roster else today_str
+
     recipient_state = db.query(UserShiftState).filter(
         UserShiftState.user_id == recipient.id,
-        UserShiftState.shift_date == today_str
+        UserShiftState.shift_date == recipient_date_str
     ).first()
     if recipient_state:
         recipient_state.status = "active"
@@ -341,7 +418,7 @@ def propose_handover(
             user_id=recipient.id,
             project=recipient.project,
             office_name=my_active_stock[0].office_name if my_active_stock else recipient.project,
-            shift_date=today_str,
+            shift_date=recipient_date_str,
             status="active"
         )
         db.add(new_recipient_state)
@@ -396,12 +473,31 @@ def accept_handover(
     from app.models.shift import UserShiftState
     from datetime import datetime, timezone, timedelta
     tz = timezone(timedelta(hours=5, minutes=30))
-    today_str = datetime.now(tz).strftime("%Y-%m-%d")
+    today = datetime.now(tz).date()
+    today_str = today.strftime("%Y-%m-%d")
     
+    # Find current user's roster date
+    from app.models.roster import ShiftRoster
+    c_roster = db.query(ShiftRoster).filter(
+        ShiftRoster.employee_code == current_user.username,
+        ShiftRoster.shift_date == today,
+        ShiftRoster.status != "cancelled"
+    ).first()
+    if not c_roster:
+        yesterday = today - timedelta(days=1)
+        c_roster = db.query(ShiftRoster).filter(
+            ShiftRoster.employee_code == current_user.username,
+            ShiftRoster.shift_date == yesterday,
+            ShiftRoster.status != "cancelled"
+        ).first()
+
+    c_roster_date = c_roster.shift_date if c_roster else today
+    c_roster_date_str = c_roster_date.strftime("%Y-%m-%d")
+
     # 1. Update/Create recipient (current user) state to "active"
     recipient_state = db.query(UserShiftState).filter(
         UserShiftState.user_id == current_user.id,
-        UserShiftState.shift_date == today_str
+        UserShiftState.shift_date == c_roster_date_str
     ).first()
     if recipient_state:
         recipient_state.status = "active"
@@ -410,16 +506,31 @@ def accept_handover(
             user_id=current_user.id,
             project=current_user.project,
             office_name=handovers[0].office_name if handovers else current_user.project,
-            shift_date=today_str,
+            shift_date=c_roster_date_str,
             status="active"
         )
         db.add(new_recipient_state)
         
     # 2. Update/Create sender (previous operator) state to "handed_over"
     if sender:
+        s_roster = db.query(ShiftRoster).filter(
+            ShiftRoster.employee_code == sender.username,
+            ShiftRoster.shift_date == today,
+            ShiftRoster.status != "cancelled"
+        ).first()
+        if not s_roster:
+            yesterday = today - timedelta(days=1)
+            s_roster = db.query(ShiftRoster).filter(
+                ShiftRoster.employee_code == sender.username,
+                ShiftRoster.shift_date == yesterday,
+                ShiftRoster.status != "cancelled"
+            ).first()
+            
+        s_roster_date_str = s_roster.shift_date.strftime("%Y-%m-%d") if s_roster else today_str
+
         sender_state = db.query(UserShiftState).filter(
             UserShiftState.user_id == sender.id,
-            UserShiftState.shift_date == today_str
+            UserShiftState.shift_date == s_roster_date_str
         ).first()
         if sender_state:
             sender_state.status = "handed_over"
@@ -428,7 +539,7 @@ def accept_handover(
                 user_id=sender.id,
                 project=sender.project,
                 office_name=handovers[0].office_name if handovers else sender.project,
-                shift_date=today_str,
+                shift_date=s_roster_date_str,
                 status="handed_over"
             )
             db.add(new_sender_state)

@@ -83,6 +83,28 @@ def get_bootstrap(
             ).all()
             
             roster_entries = [e for e in roster_entries if e.shift_type != "off"]
+            roster_date = today
+            roster_date_str = today_str
+            
+            if not roster_entries:
+                # Fallback to yesterday if they haven't handed over yet
+                yesterday = today - timedelta(days=1)
+                yesterday_entries = db.query(ShiftRoster).filter(
+                    ShiftRoster.employee_code == current_user.username,
+                    ShiftRoster.shift_date == yesterday,
+                    ShiftRoster.status != "cancelled"
+                ).all()
+                yesterday_entries = [e for e in yesterday_entries if e.shift_type != "off"]
+                
+                if yesterday_entries:
+                    yesterday_state = db.query(UserShiftState).filter(
+                        UserShiftState.user_id == current_user.id,
+                        UserShiftState.shift_date == yesterday.strftime("%Y-%m-%d")
+                    ).first()
+                    if not yesterday_state or yesterday_state.status != "handed_over":
+                        roster_entries = yesterday_entries
+                        roster_date = yesterday
+                        roster_date_str = yesterday.strftime("%Y-%m-%d")
             
             if not roster_entries:
                 shift_status = "view_only"
@@ -96,7 +118,7 @@ def get_bootstrap(
                 is_double_shift_pending = False
                 if roster_entry.shift_type == "shift_2":
                     shift1_rostered = db.query(ShiftRoster).filter(
-                        ShiftRoster.shift_date == today,
+                        ShiftRoster.shift_date == roster_date,
                         ShiftRoster.shift_type == "shift_1",
                         ShiftRoster.status != "cancelled"
                     ).first()
@@ -109,17 +131,29 @@ def get_bootstrap(
                             shift1_finalized = db.query(ShiftLog).filter(
                                 ShiftLog.operator_id == current_user.id,
                                 ShiftLog.shift_type == "shift_1",
-                                ShiftLog.date >= datetime.combine(today, datetime.min.time()),
-                                ShiftLog.date <= datetime.combine(today, datetime.max.time()),
+                                ShiftLog.date >= datetime.combine(roster_date, datetime.min.time()),
+                                ShiftLog.date <= datetime.combine(roster_date, datetime.max.time()),
                                 ShiftLog.is_draft == False
                             ).first()
                             if not shift1_finalized:
                                 is_double_shift_pending = True
+                elif roster_entry.shift_type == "general":
+                    # Check if there was a general shift rostered yesterday with a different employee
+                    yesterday_roster_date = roster_date - timedelta(days=1)
+                    prev_rostered = db.query(ShiftRoster).filter(
+                        ShiftRoster.project == roster_entry.project,
+                        ShiftRoster.office_name == roster_entry.office_name,
+                        ShiftRoster.shift_date == yesterday_roster_date,
+                        ShiftRoster.shift_type == "general",
+                        ShiftRoster.status != "cancelled"
+                    ).first()
+                    if prev_rostered and prev_rostered.employee_code != current_user.username:
+                        needs_handover_activation = True
 
                 # They have an active roster entry. Let's check handover status.
                 shift_state = db.query(UserShiftState).filter(
                     UserShiftState.user_id == current_user.id,
-                    UserShiftState.shift_date == today_str
+                    UserShiftState.shift_date == roster_date_str
                 ).first()
 
                 if shift_state and shift_state.status == "handed_over":
