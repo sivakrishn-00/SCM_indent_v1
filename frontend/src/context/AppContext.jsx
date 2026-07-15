@@ -266,8 +266,8 @@ export function AppProvider({ user, onLogout, children }) {
     }
   };
 
-  const fetchIndents = async () => {
-    setLoadingIndents(true);
+  const fetchIndents = async (isSilent = false) => {
+    if (!isSilent) setLoadingIndents(true);
     try {
       const data = await api.indents.getIndents();
       const mapped = (data || []).map(ind => ({
@@ -278,7 +278,7 @@ export function AppProvider({ user, onLogout, children }) {
     } catch (err) {
       console.error("Error fetching indents:", err);
     } finally {
-      setLoadingIndents(false);
+      if (!isSilent) setLoadingIndents(false);
     }
   };
 

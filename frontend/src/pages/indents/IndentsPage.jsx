@@ -57,9 +57,15 @@ export default function IndentsPage() {
   const isHandoverInitiated = !!pendingHandover || hasProposedHandover || shiftStatus === 'view_only' || shiftStatus === 'handed_over' || shiftStatus === 'pending_first_shift';
 
   useEffect(() => {
-    if (indents.length === 0 && !loadingIndents) {
-      fetchIndents();
-    }
+    // Unconditionally fetch indents when mounting to get the absolute latest status
+    fetchIndents();
+
+    // Setup silent background polling every 10 seconds (no layout re-renders/skeletons)
+    const timer = setInterval(() => {
+      fetchIndents(true);
+    }, 10000);
+
+    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
