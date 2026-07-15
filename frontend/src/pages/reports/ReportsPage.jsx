@@ -146,40 +146,41 @@ export default function ReportsPage() {
         let totCost = 0;
 
         itemsWithSNo.forEach(item => {
+          const hasBagData = item.bag_ob !== undefined && item.bag_ob !== null;
           const officeOB = Math.round(item.opening_balance || 0);
+          const officeReceived = Math.round(item.received_qty || 0);
           const officeSentBack = Math.round(item.sent_back_qty || 0);
-          const officeConsumed = Math.round(item.consumed_qty || 0);
+          const officeDrawn = Math.round(item.drawn_qty || 0);
+          const officeClosing = Math.round(item.closing_balance || 0);
 
-          let officeReceived = 0;
-          let officeClosing = 0;
           let bagOB = 0;
           let bagReceived = 0;
+          let bagSentBack = 0;
           let bagConsumed = 0;
           let bagClosing = 0;
 
-          if (officeConsumed > 0 || officeSentBack > 0) {
-            officeReceived = Math.round(item.received_qty || 0);
-            officeClosing = Math.round(item.closing_balance || 0);
-            bagOB = 0;
-            bagReceived = officeConsumed;
-            bagConsumed = officeConsumed;
-            bagClosing = 0;
+          if (hasBagData) {
+            bagOB = Math.round(item.bag_ob || 0);
+            bagReceived = Math.round(item.bag_received || 0);
+            bagSentBack = Math.round(item.bag_sent_back || 0);
+            bagConsumed = Math.round(item.bag_consumed || 0);
+            bagClosing = Math.round(item.bag_closing || 0);
           } else {
-            officeReceived = 0;
-            officeClosing = officeOB;
-            bagOB = Math.round(item.received_qty || 0);
-            bagReceived = 0;
-            bagConsumed = 0;
-            bagClosing = bagOB;
+            const officeConsumed = Math.round(item.consumed_qty || 0);
+            if (officeConsumed > 0) {
+              bagReceived = officeConsumed;
+              bagConsumed = officeConsumed;
+            }
           }
 
           totOfficeOB += officeOB;
           totOfficeRec += officeReceived;
           totOfficeSent += officeSentBack;
-          totOfficeDrawn += officeConsumed;
+          totOfficeDrawn += officeDrawn;
           totOfficeClosing += officeClosing;
           totBagOB += bagOB;
           totBagRec += bagReceived;
+          totBagSent += bagSentBack;
           totBagCons += bagConsumed;
           totBagClosing += bagClosing;
           totCost += bagConsumed * (item.unit_mrp || 0);
@@ -194,11 +195,11 @@ export default function ReportsPage() {
             officeOB,
             officeReceived,
             officeSentBack,
-            officeConsumed,
+            officeDrawn,
             officeClosing,
             bagOB,
             bagReceived,
-            0, // bag sent back
+            bagSentBack,
             bagConsumed,
             bagClosing,
             Math.round(item.unit_mrp || 0),
@@ -219,7 +220,7 @@ export default function ReportsPage() {
           totOfficeClosing,
           totBagOB,
           totBagRec,
-          0,
+          totBagSent,
           totBagCons,
           totBagClosing,
           `""`,
@@ -1380,31 +1381,31 @@ export default function ReportsPage() {
                   </thead>
                   <tbody>
                     {itemsWithSNo.map((item, idx) => {
+                      const hasBagData = item.bag_ob !== undefined && item.bag_ob !== null;
                       const officeOB = Math.round(item.opening_balance || 0);
+                      const officeReceived = Math.round(item.received_qty || 0);
                       const officeSentBack = Math.round(item.sent_back_qty || 0);
-                      const officeConsumed = Math.round(item.consumed_qty || 0);
+                      const officeDrawn = Math.round(item.drawn_qty || 0);
+                      const officeClosing = Math.round(item.closing_balance || 0);
 
-                      let officeReceived = 0;
-                      let officeClosing = 0;
                       let bagOB = 0;
                       let bagReceived = 0;
+                      let bagSentBack = 0;
                       let bagConsumed = 0;
                       let bagClosing = 0;
 
-                      if (officeConsumed > 0 || officeSentBack > 0) {
-                        officeReceived = Math.round(item.received_qty || 0);
-                        officeClosing = Math.round(item.closing_balance || 0);
-                        bagOB = 0;
-                        bagReceived = officeConsumed;
-                        bagConsumed = officeConsumed;
-                        bagClosing = 0;
+                      if (hasBagData) {
+                        bagOB = Math.round(item.bag_ob || 0);
+                        bagReceived = Math.round(item.bag_received || 0);
+                        bagSentBack = Math.round(item.bag_sent_back || 0);
+                        bagConsumed = Math.round(item.bag_consumed || 0);
+                        bagClosing = Math.round(item.bag_closing || 0);
                       } else {
-                        officeReceived = 0;
-                        officeClosing = officeOB;
-                        bagOB = Math.round(item.received_qty || 0);
-                        bagReceived = 0;
-                        bagConsumed = 0;
-                        bagClosing = bagOB;
+                        const officeConsumed = Math.round(item.consumed_qty || 0);
+                        if (officeConsumed > 0) {
+                          bagReceived = officeConsumed;
+                          bagConsumed = officeConsumed;
+                        }
                       }
 
                       return (
@@ -1428,7 +1429,7 @@ export default function ReportsPage() {
                           <td style={{ padding: '4px', textAlign: 'center', borderRight: '1px solid #ffe8cc' }}>{officeOB}</td>
                           <td style={{ padding: '4px', textAlign: 'center', borderRight: '1px solid #ffe8cc' }}>{officeReceived > 0 ? `+${officeReceived}` : '0'}</td>
                           <td style={{ padding: '4px', textAlign: 'center', borderRight: '1px solid #ffe8cc' }}>{officeSentBack > 0 ? `-${officeSentBack}` : '0'}</td>
-                          <td style={{ padding: '4px', textAlign: 'center', borderRight: '1px solid #ffe8cc' }}>{officeConsumed > 0 ? `-${officeConsumed}` : '0'}</td>
+                          <td style={{ padding: '4px', textAlign: 'center', borderRight: '1px solid #ffe8cc' }}>{officeDrawn > 0 ? `-${officeDrawn}` : '0'}</td>
                           <td style={{ padding: '4px', textAlign: 'center', fontWeight: '700', backgroundColor: '#fff7ed', borderRight: '1px solid #cbd5e1' }}>{officeClosing}</td>
                           <td style={{ padding: '4px', textAlign: 'center', backgroundColor: '#f0f9ff', borderRight: '1px solid #e0f2fe' }}>{bagOB}</td>
                           <td style={{ padding: '4px', textAlign: 'center', backgroundColor: '#f0f9ff', borderRight: '1px solid #e0f2fe' }}>{bagReceived > 0 ? `+${bagReceived}` : '0'}</td>
