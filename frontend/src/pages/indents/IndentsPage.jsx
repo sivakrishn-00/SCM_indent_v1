@@ -54,7 +54,7 @@ export default function IndentsPage() {
     pendingHandover, hasProposedHandover, shiftStatus
   } = useApp();
 
-  const isHandoverInitiated = !!pendingHandover || hasProposedHandover || shiftStatus === 'view_only';
+  const isHandoverInitiated = !!pendingHandover || hasProposedHandover || shiftStatus === 'view_only' || shiftStatus === 'handed_over' || shiftStatus === 'pending_first_shift';
 
   useEffect(() => {
     if (indents.length === 0 && !loadingIndents) {

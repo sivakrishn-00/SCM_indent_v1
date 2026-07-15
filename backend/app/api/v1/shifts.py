@@ -52,66 +52,54 @@ def check_operator_shift_active(db: Session, user: User, shift_type: Optional[st
     now_dt = datetime.now(tz)
     today = now_dt.date()
     
-    # 4. Roster validation
-    roster_entry = None
-    roster_date = today
-    if shift_type:
-        roster_entry = db.query(ShiftRoster).filter(
-            ShiftRoster.employee_code == user.username,
-            ShiftRoster.shift_date == today,
-            ShiftRoster.shift_type == shift_type,
-            ShiftRoster.status != "cancelled"
+    # Check if last scheduled shift before today is NOT completed yet
+    last_roster = db.query(ShiftRoster).filter(
+        ShiftRoster.employee_code == user.username,
+        ShiftRoster.shift_date < today,
+        ShiftRoster.shift_type != "off",
+        ShiftRoster.status != "cancelled"
+    ).order_by(ShiftRoster.shift_date.desc()).first()
+    
+    unfinished_past_shift = None
+    if last_roster:
+        state = db.query(UserShiftState).filter(
+            UserShiftState.user_id == user.id,
+            UserShiftState.shift_date == last_roster.shift_date.strftime("%Y-%m-%d")
         ).first()
-        
-        # Fallback to yesterday
-        if not roster_entry:
-            yesterday = today - timedelta(days=1)
-            yesterday_entry = db.query(ShiftRoster).filter(
+        if not state or state.status != "handed_over":
+            unfinished_past_shift = last_roster
+
+    if unfinished_past_shift:
+        roster_entry = unfinished_past_shift
+        roster_date = unfinished_past_shift.shift_date
+    else:
+        roster_date = today
+        if shift_type:
+            roster_entry = db.query(ShiftRoster).filter(
                 ShiftRoster.employee_code == user.username,
-                ShiftRoster.shift_date == yesterday,
+                ShiftRoster.shift_date == today,
                 ShiftRoster.shift_type == shift_type,
                 ShiftRoster.status != "cancelled"
             ).first()
-            if yesterday_entry:
-                yesterday_state = db.query(UserShiftState).filter(
-                    UserShiftState.user_id == user.id,
-                    UserShiftState.shift_date == yesterday.strftime("%Y-%m-%d")
-                ).first()
-                if not yesterday_state or yesterday_state.status != "handed_over":
-                    roster_entry = yesterday_entry
-                    roster_date = yesterday
-
-    if not roster_entry:
-        roster_entries = db.query(ShiftRoster).filter(
-            ShiftRoster.employee_code == user.username,
-            ShiftRoster.shift_date == today,
-            ShiftRoster.status != "cancelled"
-        ).all()
-        roster_entries = [e for e in roster_entries if e.shift_type != "off"]
-        
-        if roster_entries:
-            preferred_type = "shift_1" if now_dt.hour < 14 else "shift_2"
-            roster_entry = next((e for e in roster_entries if e.shift_type == preferred_type), None)
-            if not roster_entry:
-                roster_entry = roster_entries[0]
-            roster_date = today
-        else:
-            # Fallback to yesterday
-            yesterday = today - timedelta(days=1)
-            yesterday_entries = db.query(ShiftRoster).filter(
+        if not roster_entry:
+            roster_entries = db.query(ShiftRoster).filter(
                 ShiftRoster.employee_code == user.username,
-                ShiftRoster.shift_date == yesterday,
+                ShiftRoster.shift_date == today,
                 ShiftRoster.status != "cancelled"
             ).all()
-            yesterday_entries = [e for e in yesterday_entries if e.shift_type != "off"]
-            if yesterday_entries:
-                yesterday_state = db.query(UserShiftState).filter(
-                    UserShiftState.user_id == user.id,
-                    UserShiftState.shift_date == yesterday.strftime("%Y-%m-%d")
-                ).first()
-                if not yesterday_state or yesterday_state.status != "handed_over":
-                    roster_entry = yesterday_entries[0]
-                    roster_date = yesterday
+            roster_entries = [e for e in roster_entries if e.shift_type != "off"]
+            
+            if roster_entries:
+                preferred_type = "shift_1" if now_dt.hour < 14 else "shift_2"
+                roster_entry = next((e for e in roster_entries if e.shift_type == preferred_type), None)
+                if not roster_entry:
+                    roster_entry = roster_entries[0]
+                roster_date = today
+            else:
+                # Fallback to last rostered shift (if any)
+                if last_roster:
+                    roster_entry = last_roster
+                    roster_date = last_roster.shift_date
     
     if not roster_entry:
         raise HTTPException(
@@ -121,8 +109,8 @@ def check_operator_shift_active(db: Session, user: User, shift_type: Optional[st
         
     # Enforce shift type matching
     if shift_type and roster_entry.shift_type != shift_type:
-        assigned_label = "Shift 1 (Morning)" if roster_entry.shift_type == "shift_1" else "Shift 2 (Evening)"
-        requested_label = "Shift 1 (Morning)" if shift_type == "shift_1" else "Shift 2 (Evening)"
+        assigned_label = "Shift 1 (Morning)" if roster_entry.shift_type == "shift_1" else ("General Shift" if roster_entry.shift_type == "general" else "Shift 2 (Evening)")
+        requested_label = "Shift 1 (Morning)" if shift_type == "shift_1" else ("General Shift" if shift_type == "general" else "Shift 2 (Evening)")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"You are rostered for {assigned_label} on {roster_date.strftime('%Y-%m-%d')}. Access to {requested_label} is forbidden."
@@ -257,7 +245,12 @@ def log_shift_batch(
     from sqlalchemy import func
     
     logged_shifts = []
-    st = ShiftType.SHIFT_1 if shift_in.shift_type == "shift_1" else ShiftType.SHIFT_2
+    if shift_in.shift_type == "shift_1":
+        st = ShiftType.SHIFT_1
+    elif shift_in.shift_type == "general":
+        st = ShiftType.GENERAL
+    else:
+        st = ShiftType.SHIFT_2
     
     now_time = get_india_now()
     for item in shift_in.items:
@@ -462,32 +455,35 @@ def log_shift_batch(
         has_leftovers = len(active_transit) > 0
         
         is_self_handover = False
+        incoming_roster = None
+        next_roster_entry = None
         if c_roster:
-            if c_roster.shift_type == "shift_1":
-                next_date = roster_date
-                next_shift = "shift_2"
-            elif c_roster.shift_type == "shift_2":
-                next_date = roster_date + timedelta(days=1)
-                next_shift = "shift_1"
-            elif c_roster.shift_type == "general":
-                next_date = roster_date + timedelta(days=1)
-                next_shift = "general"
-            else:
-                next_date = roster_date
-                next_shift = "shift_2"
-                
+            # Find the actual next scheduled roster entry for this project and office after roster_date
             incoming_roster = db.query(ShiftRoster).filter(
                 ShiftRoster.project == c_roster.project,
                 ShiftRoster.office_name == c_roster.office_name,
-                ShiftRoster.shift_date == next_date,
-                ShiftRoster.shift_type == next_shift,
+                ShiftRoster.shift_date >= roster_date,
                 ShiftRoster.status != "cancelled"
-            ).first()
-            if incoming_roster and incoming_roster.employee_code == current_user.username:
+            ).all()
+            
+            # Filter matches chronologically
+            incoming_roster = [e for e in incoming_roster if e.shift_type != "off"]
+            # Exclude the current roster entry itself
+            incoming_roster = [e for e in incoming_roster if not (e.shift_date == roster_date and e.shift_type == c_roster.shift_type)]
+            # Sort by date asc
+            incoming_roster.sort(key=lambda x: (x.shift_date, x.created_at))
+            
+            next_roster_entry = incoming_roster[0] if incoming_roster else None
+            
+            if next_roster_entry and next_roster_entry.employee_code == current_user.username:
                 is_self_handover = True
+                incoming_roster = next_roster_entry
                 
-        # If no leftovers OR self-handover, transition shift state automatically
-        if not has_leftovers or is_self_handover:
+        # Transition shift state automatically only if:
+        # 1. It is a self-handover, OR
+        # 2. There are no leftovers AND no scheduled incoming operator for the next shift
+        has_incoming_operator = next_roster_entry is not None
+        if is_self_handover or (not has_leftovers and not has_incoming_operator):
             from app.models.shift import UserShiftState
             state = db.query(UserShiftState).filter(
                 UserShiftState.user_id == current_user.id,
@@ -505,8 +501,8 @@ def log_shift_batch(
                 )
                 db.add(state)
                 
-            if is_self_handover:
-                next_date_str = next_date.strftime("%Y-%m-%d")
+            if is_self_handover and incoming_roster:
+                next_date_str = incoming_roster.shift_date.strftime("%Y-%m-%d")
                 next_state = db.query(UserShiftState).filter(
                     UserShiftState.user_id == current_user.id,
                     UserShiftState.shift_date == next_date_str
@@ -540,7 +536,12 @@ def get_shift_drafts(
     Get all active draft shift log entries for the current operator, project, office, and shift.
     Also auto-calculates received, sent back, and damaged quantities from today's dispatched indents.
     """
-    st = ShiftType.SHIFT_1 if shift_type == "shift_1" else ShiftType.SHIFT_2
+    if shift_type == "shift_1":
+        st = ShiftType.SHIFT_1
+    elif shift_type == "general":
+        st = ShiftType.GENERAL
+    else:
+        st = ShiftType.SHIFT_2
     
     # 1. Fetch active draft entries for this operator / shift
     drafts = db.query(ShiftLog).filter(
@@ -615,7 +616,10 @@ def get_shift_drafts(
         # Partition based on status
         if ind.status == IndentStatus.RECEIVED:
             # Already received. Partition based on the time it was received/acknowledged
-            indent_shift = "shift_1" if ind_ist.hour < 14 else "shift_2"
+            if current_active_shift == "general":
+                indent_shift = "general"
+            else:
+                indent_shift = "shift_1" if ind_ist.hour < 14 else "shift_2"
         else:
             # Pending dispatch. Matches the current active shift
             indent_shift = current_active_shift

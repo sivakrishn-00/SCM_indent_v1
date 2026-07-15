@@ -513,13 +513,16 @@ export default function ConsumptionPage() {
     
     setLoggingShift(true);
     try {
-      // 1. Submit the consumption log first
+      // 1. Verify the Takeover PIN first
+      await api.transit.verifyHandoverPin(recipientUsername, enteredPin);
+
+      // 2. Submit the consumption log
       const itemsToSubmit = getSelectedItemsPayload();
       if (itemsToSubmit.length > 0) {
         await api.shifts.submitReport(shiftProject, shiftOffice, shiftSelectedType, itemsToSubmit, shiftRemarks, false);
       }
       
-      // 2. Complete the secure handover with Takeover PIN verification
+      // 3. Complete the secure handover with Takeover PIN verification
       await api.transit.proposeHandover(recipientUsername, enteredPin);
       
       toast.success(`Shift logs submitted and stock handover completed successfully to ${recipientUsername}!`);
@@ -1051,20 +1054,26 @@ export default function ConsumptionPage() {
       setShowShiftSubmitPreview(false);
       
       // Fetch current transit inventory to determine if handover is required
-      const activeTransit = await api.transit.getTransitInventory();
+      const activeTransit = await api.transit.getCurrent();
       const hasLeftovers = activeTransit && activeTransit.length > 0;
+      const hasIncoming = incomingRosterOperator && incomingRosterOperator.employee_code;
+      const isSelfHandover = incomingRosterOperator && incomingRosterOperator.employee_code === user?.username;
+      const needsHandover = (hasLeftovers || hasIncoming) && !isSelfHandover;
       
-      if (hasLeftovers) {
-        // Retain selection and show handover modal for remaining stock
+      if (needsHandover) {
+        // Retain selection and show handover modal for remaining stock or shift handover
         setShowHandoverModal(true);
-        toast.success("Shift log submitted. Leftover stock detected in transit. Handover reconciliation is required to complete shift.");
+        toast.success("Shift log submitted. Handover reconciliation is required to complete shift.");
       } else {
-        // No leftovers, skip handover step and complete shift log directly
+        // No leftovers or self-handover, skip handover step and complete shift log directly
         setSelectedShiftItems({});
         setShiftRemarks('');
         setConsumptionSubView('HISTORY');
         fetchShiftSubmissionsHistory();
         fetchDashboardData();
+        if (isSelfHandover) {
+          toast.success("Self-handover completed automatically. Next shift unlocked!");
+        }
       }
       
       addAuditLog(
@@ -1086,7 +1095,7 @@ export default function ConsumptionPage() {
 // ====================================
 // FUNCTION: handleShiftBatchSubmit (Lines 1694-1756)
 // ====================================
-  const handleShiftBatchSubmit = (e) => {
+  const handleShiftBatchSubmit = async (e) => {
     e.preventDefault();
     setShiftFormMessage({ type: '', text: '' });
     
@@ -1154,6 +1163,13 @@ export default function ConsumptionPage() {
       toast.error("One or more items have consumed quantities exceeding their available stock.");
       setShiftFormMessage({ type: 'error', text: 'Consumption cannot exceed available stock (OB + Received - Sent Back).' });
       return;
+    }
+    
+    // Fetch incoming operator to check if self-handover
+    try {
+      await fetchIncomingRosterOperator(shiftProject, shiftOffice, shiftSelectedType);
+    } catch (err) {
+      console.error("Failed to fetch incoming operator in submit:", err);
     }
     
     setPreviewPage(1);
@@ -3006,10 +3022,10 @@ export default function ConsumptionPage() {
                             borderRadius: '4px',
                             fontSize: '11.5px',
                             fontWeight: '700',
-                            backgroundColor: selectedHistoryGroup.shift_type === 'shift_1' ? '#eff6ff' : '#faf5ff',
-                            color: selectedHistoryGroup.shift_type === 'shift_1' ? '#1d4ed8' : '#7e22ce'
+                            backgroundColor: selectedHistoryGroup.shift_type === 'shift_1' ? '#eff6ff' : (selectedHistoryGroup.shift_type === 'general' ? '#ecfdf5' : '#faf5ff'),
+                            color: selectedHistoryGroup.shift_type === 'shift_1' ? '#1d4ed8' : (selectedHistoryGroup.shift_type === 'general' ? '#047857' : '#7e22ce')
                           }}>
-                            {selectedHistoryGroup.shift_type === 'shift_1' ? 'Shift 1 (Morning)' : 'Shift 2 (Evening)'}
+                            {selectedHistoryGroup.shift_type === 'shift_1' ? 'Shift 1 (Morning)' : (selectedHistoryGroup.shift_type === 'general' ? 'General Shift' : 'Shift 2 (Evening)')}
                           </span>
                         </div>
                       </div>
@@ -4203,7 +4219,7 @@ export default function ConsumptionPage() {
                 <div>
                   <span style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: '700', color: '#64748b', display: 'block' }}>Shift Type</span>
                   <span style={{ fontSize: '13px', fontWeight: '750', color: 'var(--text-primary)' }}>
-                    {shiftSelectedType === 'shift_1' ? 'Shift 1 (Morning)' : 'Shift 2 (Evening)'}
+                    {shiftSelectedType === 'shift_1' ? 'Shift 1 (Morning)' : (shiftSelectedType === 'general' ? 'General Shift' : 'Shift 2 (Evening)')}
                   </span>
                 </div>
               </div>
@@ -4517,9 +4533,19 @@ export default function ConsumptionPage() {
                 <button
                   type="button"
                   className="action-btn-primary"
-                  onClick={() => {
-                    setShowShiftSubmitPreview(false);
-                    setShowHandoverModal(true);
+                  onClick={async () => {
+                    const activeTransit = transitInventory.filter(t => t.quantity > 0);
+                    const hasLeftovers = activeTransit && activeTransit.length > 0;
+                    const hasIncoming = incomingRosterOperator && incomingRosterOperator.employee_code;
+                    const isSelfHandover = incomingRosterOperator && incomingRosterOperator.employee_code === user?.username;
+                    const needsHandover = (hasLeftovers || hasIncoming) && !isSelfHandover;
+
+                    if (needsHandover) {
+                      setShowShiftSubmitPreview(false);
+                      setShowHandoverModal(true);
+                    } else {
+                      await submitShiftBatch();
+                    }
                   }}
                   disabled={loggingShift}
                   style={{ padding: '8px 16px', fontSize: '12.5px', fontWeight: '600' }}
@@ -5094,7 +5120,7 @@ export default function ConsumptionPage() {
                   className="action-btn-primary"
                   style={{ 
                     fontSize: '13px',
-                    backgroundColor: (!selectedRecipientUsername || enteredPin.length !== 6 || !incomingRosterOperator) ? '#cbd5e1' : undefined,
+                    background: (!selectedRecipientUsername || enteredPin.length !== 6 || !incomingRosterOperator) ? '#cbd5e1' : undefined,
                     cursor: (!selectedRecipientUsername || enteredPin.length !== 6 || !incomingRosterOperator) ? 'not-allowed' : 'pointer'
                   }}
                   onClick={() => handleProposeHandover(selectedRecipientUsername)}

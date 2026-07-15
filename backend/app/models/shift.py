@@ -6,13 +6,14 @@ from app.core.database import Base
 class ShiftType(str, enum.Enum):
     SHIFT_1 = "shift_1"
     SHIFT_2 = "shift_2"
+    GENERAL = "general"
 
 class ShiftLog(Base):
     __tablename__ = "shift_logs"
 
     id = Column(Integer, primary_key=True, index=True)
     date = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    shift_type = Column(Enum(ShiftType), nullable=False)
+    shift_type = Column(Enum(ShiftType, values_callable=lambda x: [e.value for e in x]), nullable=False)
     
     vehicle_id = Column(Integer, ForeignKey("vehicles.id"), nullable=True)
     consumable_id = Column(Integer, ForeignKey("consumables.id"), nullable=True)

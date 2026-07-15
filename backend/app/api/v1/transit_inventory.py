@@ -39,66 +39,55 @@ def check_operator_shift_active(db: Session, user: User, shift_type: Optional[st
     now_dt = datetime.now(tz)
     today = now_dt.date()
     
-    # 4. Roster validation
-    roster_entry = None
-    roster_date = today
-    if shift_type:
-        roster_entry = db.query(ShiftRoster).filter(
-            ShiftRoster.employee_code == user.username,
-            ShiftRoster.shift_date == today,
-            ShiftRoster.shift_type == shift_type,
-            ShiftRoster.status != "cancelled"
+    # Check if last scheduled shift before today is NOT completed yet
+    last_roster = db.query(ShiftRoster).filter(
+        ShiftRoster.employee_code == user.username,
+        ShiftRoster.shift_date < today,
+        ShiftRoster.shift_type != "off",
+        ShiftRoster.status != "cancelled"
+    ).order_by(ShiftRoster.shift_date.desc()).first()
+    
+    unfinished_past_shift = None
+    if last_roster:
+        state = db.query(UserShiftState).filter(
+            UserShiftState.user_id == user.id,
+            UserShiftState.shift_date == last_roster.shift_date.strftime("%Y-%m-%d")
         ).first()
-        
-        # Fallback to yesterday
-        if not roster_entry:
-            yesterday = today - timedelta(days=1)
-            yesterday_entry = db.query(ShiftRoster).filter(
+        if not state or state.status != "handed_over":
+            unfinished_past_shift = last_roster
+
+    if unfinished_past_shift:
+        roster_entry = unfinished_past_shift
+        roster_date = unfinished_past_shift.shift_date
+    else:
+        roster_date = today
+        roster_entry = None
+        if shift_type:
+            roster_entry = db.query(ShiftRoster).filter(
                 ShiftRoster.employee_code == user.username,
-                ShiftRoster.shift_date == yesterday,
+                ShiftRoster.shift_date == today,
                 ShiftRoster.shift_type == shift_type,
                 ShiftRoster.status != "cancelled"
             ).first()
-            if yesterday_entry:
-                yesterday_state = db.query(UserShiftState).filter(
-                    UserShiftState.user_id == user.id,
-                    UserShiftState.shift_date == yesterday.strftime("%Y-%m-%d")
-                ).first()
-                if not yesterday_state or yesterday_state.status != "handed_over":
-                    roster_entry = yesterday_entry
-                    roster_date = yesterday
-
-    if not roster_entry:
-        roster_entries = db.query(ShiftRoster).filter(
-            ShiftRoster.employee_code == user.username,
-            ShiftRoster.shift_date == today,
-            ShiftRoster.status != "cancelled"
-        ).all()
-        roster_entries = [e for e in roster_entries if e.shift_type != "off"]
-        
-        if roster_entries:
-            preferred_type = "shift_1" if now_dt.hour < 14 else "shift_2"
-            roster_entry = next((e for e in roster_entries if e.shift_type == preferred_type), None)
-            if not roster_entry:
-                roster_entry = roster_entries[0]
-            roster_date = today
-        else:
-            # Fallback to yesterday
-            yesterday = today - timedelta(days=1)
-            yesterday_entries = db.query(ShiftRoster).filter(
+        if not roster_entry:
+            roster_entries = db.query(ShiftRoster).filter(
                 ShiftRoster.employee_code == user.username,
-                ShiftRoster.shift_date == yesterday,
+                ShiftRoster.shift_date == today,
                 ShiftRoster.status != "cancelled"
             ).all()
-            yesterday_entries = [e for e in yesterday_entries if e.shift_type != "off"]
-            if yesterday_entries:
-                yesterday_state = db.query(UserShiftState).filter(
-                    UserShiftState.user_id == user.id,
-                    UserShiftState.shift_date == yesterday.strftime("%Y-%m-%d")
-                ).first()
-                if not yesterday_state or yesterday_state.status != "handed_over":
-                    roster_entry = yesterday_entries[0]
-                    roster_date = yesterday
+            roster_entries = [e for e in roster_entries if e.shift_type != "off"]
+            
+            if roster_entries:
+                preferred_type = "shift_1" if now_dt.hour < 14 else "shift_2"
+                roster_entry = next((e for e in roster_entries if e.shift_type == preferred_type), None)
+                if not roster_entry:
+                    roster_entry = roster_entries[0]
+                roster_date = today
+            else:
+                # Fallback to last rostered shift (if any)
+                if last_roster:
+                    roster_entry = last_roster
+                    roster_date = last_roster.shift_date
     
     if not roster_entry:
         raise HTTPException(
@@ -108,8 +97,8 @@ def check_operator_shift_active(db: Session, user: User, shift_type: Optional[st
         
     # Enforce shift type matching
     if shift_type and roster_entry.shift_type != shift_type:
-        assigned_label = "Shift 1 (Morning)" if roster_entry.shift_type == "shift_1" else "Shift 2 (Evening)"
-        requested_label = "Shift 1 (Morning)" if shift_type == "shift_1" else "Shift 2 (Evening)"
+        assigned_label = "Shift 1 (Morning)" if roster_entry.shift_type == "shift_1" else ("General Shift" if roster_entry.shift_type == "general" else "Shift 2 (Evening)")
+        requested_label = "Shift 1 (Morning)" if shift_type == "shift_1" else ("General Shift" if shift_type == "general" else "Shift 2 (Evening)")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"You are rostered for {assigned_label} on {roster_date.strftime('%Y-%m-%d')}. Access to {requested_label} is forbidden."
@@ -296,6 +285,55 @@ def get_proposed_handovers_pending(
         }
         for h in handovers
     ]
+
+
+@router.post("/transit-inventory/handover/verify-pin")
+def verify_handover_pin(
+    payload: TransitHandoverRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+) -> Any:
+    """
+    Verify the Takeover PIN for the recipient username before starting the handover process.
+    Does not delete/evict the PIN from the cache unless it is invalid/expired or maxed out.
+    """
+    from app.models.user import User as UserModel
+    from app.core.cache import cache_service
+
+    recipient = db.query(UserModel).filter(UserModel.username == payload.recipient_username).first()
+    if not recipient:
+        raise HTTPException(status_code=404, detail=f"Operator '{payload.recipient_username}' not found.")
+
+    if not payload.pin:
+        raise HTTPException(status_code=400, detail="Takeover verification PIN is required.")
+
+    cache_data = cache_service.get_otp(payload.recipient_username)
+    if not cache_data:
+        raise HTTPException(
+            status_code=400,
+            detail="Takeover authorization PIN has expired or is invalid. Please ask the incoming operator to generate a new PIN."
+        )
+
+    stored_pin = cache_data.get("pin")
+    attempts = cache_data.get("attempts", 0)
+
+    if stored_pin != payload.pin:
+        attempts += 1
+        if attempts >= 3:
+            cache_service.delete_otp(payload.recipient_username)
+            raise HTTPException(
+                status_code=400,
+                detail="Too many incorrect PIN attempts. Handover authorization cancelled. Please generate a new PIN."
+            )
+        else:
+            cache_data["attempts"] = attempts
+            cache_service.update_otp(payload.recipient_username, cache_data, ttl=300)
+            raise HTTPException(
+                status_code=400,
+                detail=f"Incorrect takeover PIN. {3 - attempts} attempts remaining."
+            )
+
+    return {"message": "PIN verified successfully"}
 
 
 @router.post("/transit-inventory/handover/start")

@@ -189,6 +189,12 @@ export const api = {
     getProposedHandoversPending() {
       return api.request('/transit-inventory/handovers/proposed/pending');
     },
+    verifyHandoverPin(recipientUsername, pin) {
+      return api.request('/transit-inventory/handover/verify-pin', {
+        method: 'POST',
+        body: JSON.stringify({ recipient_username: recipientUsername, pin })
+      });
+    },
     proposeHandover(recipientUsername, pin) {
       return api.request('/transit-inventory/handover/start', {
         method: 'POST',

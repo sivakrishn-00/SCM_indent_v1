@@ -920,7 +920,7 @@ export default function ReportsPage() {
                       <div>
                         <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', fontWeight: '700', display: 'block', marginBottom: '2px' }}>Shift Type</span>
                         <span style={{ fontSize: '13px', fontWeight: '800', color: '#1e293b' }}>
-                          {group.shift_type === 'shift_1' ? 'Shift 1' : 'Shift 2'}
+                          {group.shift_type === 'shift_1' ? 'Shift 1' : (group.shift_type === 'general' ? 'General Shift' : 'Shift 2')}
                         </span>
                       </div>
                       <div>
