@@ -22,7 +22,31 @@ export default function Layout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
-  const [dismissedNotifications, setDismissedNotifications] = useState(new Set());
+  const [dismissedNotifications, setDismissedNotifications] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('dismissed_notifications');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('dismissed_notifications', JSON.stringify([...dismissedNotifications]));
+    } catch (e) {
+      console.error("Error writing dismissed notifications:", e);
+    }
+  }, [dismissedNotifications]);
+
+  const dismissIndividual = (id) => {
+    setDismissedNotifications(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  };
+
   const notificationsRef = useRef(null);
 
   useEffect(() => {
@@ -43,14 +67,18 @@ export default function Layout({ children }) {
   const notifications = [];
   const now = new Date();
 
-  const pendingIndents = indents.filter(i => i.status === 'pending' || i.status === 'approved');
-  const pendingCount = indents.filter(i => i.status === 'pending').length;
-  const approvedCount = indents.filter(i => i.status === 'approved').length;
+  const pendingList = indents.filter(i => i.status === 'pending');
+  const approvedList = indents.filter(i => i.status === 'approved');
+  const pendingCount = pendingList.length;
+  const approvedCount = approvedList.length;
+
   if (pendingCount > 0) {
-    notifications.push({ id: 'pending-indents', type: 'warning', icon: Clock, title: `${pendingCount} Indent${pendingCount > 1 ? 's' : ''} Pending Approval`, desc: 'Requires review in the Indents tab', time: 'Active' });
+    const pendingKeys = pendingList.map(i => i.id).join('-');
+    notifications.push({ id: `pending-indents-${pendingKeys}`, type: 'warning', icon: Clock, title: `${pendingCount} Indent${pendingCount > 1 ? 's' : ''} Pending Approval`, desc: 'Requires review in the Indents tab', time: 'Active' });
   }
   if (approvedCount > 0) {
-    notifications.push({ id: 'approved-indents', type: 'info', icon: CheckCircle, title: `${approvedCount} Indent${approvedCount > 1 ? 's' : ''} Approved`, desc: 'Ready for dispatch', time: 'Active' });
+    const approvedKeys = approvedList.map(i => i.id).join('-');
+    notifications.push({ id: `approved-indents-${approvedKeys}`, type: 'info', icon: CheckCircle, title: `${approvedCount} Indent${approvedCount > 1 ? 's' : ''} Approved`, desc: 'Ready for dispatch', time: 'Active' });
   }
 
   const recentDispatched = indents.filter(i => {
@@ -58,14 +86,16 @@ export default function Layout({ children }) {
     try { return (now - new Date(i.updated_at || i.date)) < 86400000; } catch { return false; }
   });
   if (recentDispatched.length > 0) {
-    notifications.push({ id: 'recent-dispatched', type: 'success', icon: PackageCheck, title: `${recentDispatched.length} Indent${recentDispatched.length > 1 ? 's' : ''} Dispatched`, desc: 'Dispatched in the last 24 hours', time: 'Today' });
+    const dispatchedKeys = recentDispatched.map(i => i.id).join('-');
+    notifications.push({ id: `recent-dispatched-${dispatchedKeys}`, type: 'success', icon: PackageCheck, title: `${recentDispatched.length} Indent${recentDispatched.length > 1 ? 's' : ''} Dispatched`, desc: 'Dispatched in the last 24 hours', time: 'Today' });
   }
 
   const recentShifts = dashboardShifts.filter(s => {
     try { return (now - new Date(s.shift_date || s.created_at)) < 86400000; } catch { return false; }
   });
   if (recentShifts.length > 0) {
-    notifications.push({ id: 'recent-shifts', type: 'info', icon: ClipboardCheck, title: `${recentShifts.length} Consumption Log${recentShifts.length > 1 ? 's' : ''} Today`, desc: 'Finalized shift reports logged', time: 'Today' });
+    const shiftKeys = recentShifts.map(s => s.id).join('-');
+    notifications.push({ id: `recent-shifts-${shiftKeys}`, type: 'info', icon: ClipboardCheck, title: `${recentShifts.length} Consumption Log${recentShifts.length > 1 ? 's' : ''} Today`, desc: 'Finalized shift reports logged', time: 'Today' });
   }
 
   const lowStockItems = (officeInventory || []).filter(item => {
@@ -73,7 +103,8 @@ export default function Layout({ children }) {
     return qty > 0 && qty <= 5;
   });
   if (lowStockItems.length > 0) {
-    notifications.push({ id: 'low-stock', type: 'danger', icon: AlertTriangle, title: `${lowStockItems.length} Item${lowStockItems.length > 1 ? 's' : ''} Low in Stock`, desc: 'Office inventory running critically low', time: 'Check Now' });
+    const lowStockKeys = lowStockItems.map(item => `${item.item_code || item.id}_${item.closing_balance ?? item.quantity ?? 0}`).join('-');
+    notifications.push({ id: `low-stock-${lowStockKeys}`, type: 'danger', icon: AlertTriangle, title: `${lowStockItems.length} Item${lowStockItems.length > 1 ? 's' : ''} Low in Stock`, desc: 'Office inventory running critically low', time: 'Check Now' });
   }
 
   const visibleNotifications = notifications.filter(n => !dismissedNotifications.has(n.id));
@@ -308,7 +339,7 @@ export default function Layout({ children }) {
                     </button>
                   )}
                 </div>
-                <div style={{ maxHeight: '360px', overflowY: 'auto' }}>
+              <div style={{ maxHeight: '360px', overflowY: 'auto' }}>
                   {visibleNotifications.length === 0 ? (
                     <div style={{ padding: '30px 20px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
                       No new notifications
@@ -319,18 +350,53 @@ export default function Layout({ children }) {
                       const colorMap = { warning: '#f59e0b', info: '#3b82f6', success: '#10b981', danger: '#ef4444' };
                       const bgMap = { warning: '#fffbeb', info: '#eff6ff', success: '#ecfdf5', danger: '#fef2f2' };
                       return (
-                        <div key={n.id} style={{ padding: '14px 20px', borderBottom: '1px solid #f8fafc', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                        <div key={n.id} style={{ padding: '14px 20px', borderBottom: '1px solid #f8fafc', display: 'flex', alignItems: 'flex-start', gap: '12px', position: 'relative' }}>
                           <div style={{
                             width: '36px', height: '36px', borderRadius: '10px', backgroundColor: bgMap[n.type],
                             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                           }}>
                             <IconComp size={16} style={{ color: colorMap[n.type] }} />
                           </div>
-                          <div style={{ flex: 1 }}>
+                          <div style={{ flex: 1, paddingRight: '20px' }}>
                             <div style={{ fontWeight: '700', fontSize: '12.5px', color: '#1e293b' }}>{n.title}</div>
                             <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '2px' }}>{n.desc}</div>
+                            <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px' }}>{n.time}</div>
                           </div>
-                          <span style={{ fontSize: '10px', color: '#94a3b8', whiteSpace: 'nowrap' }}>{n.time}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              dismissIndividual(n.id);
+                            }}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              color: '#94a3b8',
+                              cursor: 'pointer',
+                              padding: '4px',
+                              position: 'absolute',
+                              right: '12px',
+                              top: '12px',
+                              fontSize: '11px',
+                              lineHeight: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '4px',
+                              transition: 'all 0.15s ease-in-out'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.color = '#ef4444';
+                              e.target.style.backgroundColor = '#fef2f2';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.color = '#94a3b8';
+                              e.target.style.backgroundColor = 'transparent';
+                            }}
+                            title="Dismiss notification"
+                          >
+                            ✕
+                          </button>
                         </div>
                       );
                     })
