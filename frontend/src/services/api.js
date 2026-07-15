@@ -460,6 +460,31 @@ export const api = {
   // Bootstrap
   bootstrap() {
     return api.request('/bootstrap');
+  },
+
+  // API Config Management
+  apiConfigs: {
+    getConfigs() {
+      return api.request('/api-configs');
+    },
+    createConfig(payload) {
+      return api.request('/api-configs', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+    },
+    updateConfig(apiIdentifier, payload) {
+      return api.request(`/api-configs/${apiIdentifier}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+      });
+    },
+    testConnection(payload) {
+      return api.request('/api-configs/test-connection', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+    }
   }
 };
 

@@ -35,13 +35,43 @@ def _perform_ems_api_fetch() -> List[dict]:
     """Perform the blocking network request to the EMS API."""
     import requests
     from concurrent.futures import ThreadPoolExecutor
+    from app.core.database import SessionLocal
+    from app.models.api_config import APISetting
+    from app.core.crypto import decrypt_auth_config
     
-    headers = {"X-api-key": settings.BAVYA_EMS_API_KEY}
+    headers = {}
+    auth_params = None
     url = settings.BAVYA_EMS_API_URL
+
+    db = SessionLocal()
+    try:
+        ems_setting = db.query(APISetting).filter(
+            APISetting.api_identifier == "bavya_ems_api",
+            APISetting.is_active == True
+        ).first()
+        if ems_setting:
+            url = ems_setting.base_url
+            auth_data = decrypt_auth_config(ems_setting.encrypted_auth_data)
+            if ems_setting.auth_type == "api_key_header":
+                header_name = auth_data.get("header_name", "X-api-key")
+                headers[header_name] = auth_data.get("api_key")
+            elif ems_setting.auth_type == "bearer_token":
+                headers["Authorization"] = f"Bearer {auth_data.get('token')}"
+            elif ems_setting.auth_type == "basic_auth":
+                from requests.auth import HTTPBasicAuth
+                auth_params = HTTPBasicAuth(auth_data.get("username"), auth_data.get("password"))
+        else:
+            headers = {"X-api-key": settings.BAVYA_EMS_API_KEY}
+    except Exception as e:
+        print(f"Warning: Database check failed for EMS settings. Falling back to env: {e}")
+        headers = {"X-api-key": settings.BAVYA_EMS_API_KEY}
+    finally:
+        db.close()
+
     all_results = []
     
     try:
-        response = requests.get(url, headers=headers, params={"page": 1}, timeout=10)
+        response = requests.get(url, headers=headers, auth=auth_params, params={"page": 1}, timeout=10)
         if response.status_code != 200:
             raise Exception(f"External EMS API returned status code {response.status_code}.")
             
@@ -55,7 +85,7 @@ def _perform_ems_api_fetch() -> List[dict]:
         if total_pages > 1:
             def fetch_page(page_num):
                 try:
-                    res = requests.get(url, headers=headers, params={"page": page_num}, timeout=10)
+                    res = requests.get(url, headers=headers, auth=auth_params, params={"page": page_num}, timeout=10)
                     if res.status_code == 200:
                         return res.json().get("results", [])
                 except Exception:

@@ -264,7 +264,7 @@ export default function Layout({ children }) {
             <div className="nav-dropdown">
               <button
                 type="button"
-                className={`nav-link ${(isActive('/users') || isActive('/reports') || isActive('/audit') || isActive('/permissions') || isActive('/analytics') || isActive('/shift-management')) ? 'active' : ''}`}
+                className={`nav-link ${(isActive('/users') || isActive('/reports') || isActive('/audit') || isActive('/permissions') || isActive('/analytics') || isActive('/shift-management') || isActive('/api-management')) ? 'active' : ''}`}
                 style={{ cursor: 'default' }}
               >
                 <Settings size={18} />
@@ -300,6 +300,11 @@ export default function Layout({ children }) {
                 {userRole === 'admin' && (
                   <button type="button" className={isActive('/permissions') ? 'active-dropdown-item' : ''} onClick={() => navigate('/permissions')}>
                     Role Permissions
+                  </button>
+                )}
+                {userRole === 'admin' && (
+                  <button type="button" className={isActive('/api-management') ? 'active-dropdown-item' : ''} onClick={() => navigate('/api-management')}>
+                    API Management
                   </button>
                 )}
               </div>

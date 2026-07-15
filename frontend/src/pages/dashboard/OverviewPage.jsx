@@ -3,6 +3,56 @@ import { CalendarDays, FileText, ClipboardCheck, Database, Truck } from 'lucide-
 import { useApp } from '../../context/AppContext';
 import api from '../../services/api';
 
+function AnimatedCounter({ value, duration = 1000 }) {
+  const [count, setCount] = React.useState(0);
+  const prevValueRef = React.useRef(0);
+
+  React.useEffect(() => {
+    const end = parseInt(value, 10);
+    if (isNaN(end)) {
+      setCount(value);
+      return;
+    }
+    
+    const start = prevValueRef.current;
+    prevValueRef.current = end;
+    
+    if (start === end) {
+      setCount(end);
+      return;
+    }
+
+    const startTime = performance.now();
+    let animationFrameId;
+    
+    const updateCount = (currentTime) => {
+      const elapsedTime = currentTime - startTime;
+      const progress = Math.min(elapsedTime / duration, 1);
+      
+      // Easing function (cubic ease-out)
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      
+      const currentCount = Math.floor(start + easeProgress * (end - start));
+      setCount(currentCount);
+      
+      if (progress < 1) {
+        animationFrameId = requestAnimationFrame(updateCount);
+      } else {
+        setCount(end);
+      }
+    };
+    
+    animationFrameId = requestAnimationFrame(updateCount);
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [value, duration]);
+
+  return <>{count}</>;
+}
+
 export default function OverviewPage() {
   const {
     user, userRole, indents, dashboardShifts, vehicles, projects, setSelectedProject,
@@ -94,10 +144,10 @@ export default function OverviewPage() {
                 ) : (
                   <>
                     <span style={{ fontSize: '22px', fontWeight: '800', color: '#1e293b', lineHeight: '1.1', display: 'block' }}>
-                      {indents.length}
+                      <AnimatedCounter value={indents.length} />
                     </span>
                     <span style={{ fontSize: '11px', color: '#64748b', display: 'block', marginTop: '4px' }}>
-                      <strong>{indents.filter(i => i.status === 'PENDING').length}</strong> Pending | <strong>{indents.filter(i => i.status === 'DISPATCHED').length}</strong> Dispatched
+                      <strong><AnimatedCounter value={indents.filter(i => i.status === 'PENDING').length} /></strong> Pending | <strong><AnimatedCounter value={indents.filter(i => i.status === 'DISPATCHED').length} /></strong> Dispatched
                     </span>
                   </>
                 )}
@@ -132,7 +182,7 @@ export default function OverviewPage() {
                 ) : (
                   <>
                     <span style={{ fontSize: '22px', fontWeight: '800', color: '#1e293b', lineHeight: '1.1', display: 'block' }}>
-                      {dashboardShifts.length}
+                      <AnimatedCounter value={dashboardShifts.length} />
                     </span>
                     <span style={{ fontSize: '11px', color: '#64748b', display: 'block', marginTop: '4px' }}>
                       Finalized shift log entries
@@ -172,7 +222,7 @@ export default function OverviewPage() {
                   return (
                     <>
                       <span style={{ fontSize: '22px', fontWeight: '800', color: '#1e293b', lineHeight: '1.1', display: 'block' }}>
-                        {totalOffices}
+                        <AnimatedCounter value={totalOffices} />
                       </span>
                       <span style={{ fontSize: '11px', color: '#64748b', display: 'block', marginTop: '4px' }}>
                         Active health facility locations
@@ -203,8 +253,8 @@ export default function OverviewPage() {
                 <span style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '2px' }}>
                   Project Sites
                 </span>
-                <span style={{ fontSize: '22px', fontWeight: '800', color: '#1e293b', lineHeight: '1.1' }}>
-                  {projects.length}
+                <span style={{ fontSize: '22px', fontWeight: '800', color: '#1e293b', lineHeight: '1.1', display: 'block' }}>
+                  <AnimatedCounter value={projects.length} />
                 </span>
                 <span style={{ fontSize: '11px', color: '#64748b', display: 'block', marginTop: '4px' }}>
                   Configured operational areas
@@ -298,7 +348,7 @@ export default function OverviewPage() {
                           <span className="skeleton" style={{ width: '60px', height: '14px', marginTop: '4px', display: 'block' }} />
                         ) : (
                           <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
-                            {(projectOfficesMap[proj] || []).length} <span style={{ fontSize: '11px', fontWeight: 'normal', color: '#64748b' }}>Offices</span>
+                            <AnimatedCounter value={(projectOfficesMap[proj] || []).length} /> <span style={{ fontSize: '11px', fontWeight: 'normal', color: '#64748b' }}>Offices</span>
                           </span>
                         )}
                       </div>
@@ -315,7 +365,7 @@ export default function OverviewPage() {
                           <span className="skeleton" style={{ width: '50px', height: '14px', marginTop: '4px', display: 'block' }} />
                         ) : (
                           <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
-                            {projDrugs} <span style={{ fontSize: '11px', fontWeight: 'normal', color: '#64748b' }}>Masters</span>
+                            <AnimatedCounter value={projDrugs} /> <span style={{ fontSize: '11px', fontWeight: 'normal', color: '#64748b' }}>Masters</span>
                           </span>
                         )}
                       </div>
@@ -332,7 +382,7 @@ export default function OverviewPage() {
                           <span className="skeleton" style={{ width: '60px', height: '14px', marginTop: '4px', display: 'block' }} />
                         ) : (
                           <span style={{ fontSize: '13px', fontWeight: '700', color: pendingIndents > 0 ? '#d97706' : '#1e293b' }}>
-                            {pendingIndents} <span style={{ fontSize: '11px', fontWeight: 'normal', color: '#64748b' }}>Requests</span>
+                            <AnimatedCounter value={pendingIndents} /> <span style={{ fontSize: '11px', fontWeight: 'normal', color: '#64748b' }}>Requests</span>
                           </span>
                         )}
                       </div>
@@ -349,7 +399,7 @@ export default function OverviewPage() {
                           <span className="skeleton" style={{ width: '60px', height: '14px', marginTop: '4px', display: 'block' }} />
                         ) : (
                           <span style={{ fontSize: '13px', fontWeight: '700', color: '#2563eb' }}>
-                            {dispatchedIndents} <span style={{ fontSize: '11px', fontWeight: 'normal', color: '#64748b' }}>Orders</span>
+                            <AnimatedCounter value={dispatchedIndents} /> <span style={{ fontSize: '11px', fontWeight: 'normal', color: '#64748b' }}>Orders</span>
                           </span>
                         )}
                       </div>
@@ -467,10 +517,10 @@ export default function OverviewPage() {
               ) : (
                 <>
                   <span style={{ fontSize: '24px', fontWeight: '850', color: '#1e293b', display: 'block' }}>
-                    {indents.length}
+                    <AnimatedCounter value={indents.length} />
                   </span>
                   <span style={{ fontSize: '11px', color: '#64748b', display: 'block', marginTop: '2px' }}>
-                    Pending: <strong>{indents.filter(i => i.status === 'PENDING').length}</strong> | Dispatched: <strong>{indents.filter(i => i.status === 'DISPATCHED').length}</strong>
+                    Pending: <strong><AnimatedCounter value={indents.filter(i => i.status === 'PENDING').length} /></strong> | Dispatched: <strong><AnimatedCounter value={indents.filter(i => i.status === 'DISPATCHED').length} /></strong>
                   </span>
                 </>
               )}
@@ -503,7 +553,7 @@ export default function OverviewPage() {
               ) : (
                 <>
                   <span style={{ fontSize: '24px', fontWeight: '850', color: '#1e293b', display: 'block' }}>
-                    {myShifts.length}
+                    <AnimatedCounter value={myShifts.length} />
                   </span>
                   <span style={{ fontSize: '11px', color: '#64748b', display: 'block', marginTop: '2px' }}>
                     Successfully submitted items
@@ -566,7 +616,7 @@ export default function OverviewPage() {
               ) : (
                 <>
                   <span style={{ fontSize: '24px', fontWeight: '850', color: '#1e293b', display: 'block' }}>
-                    {myProjectDrugs.length}
+                    <AnimatedCounter value={myProjectDrugs.length} />
                   </span>
                   <span style={{ fontSize: '11px', color: '#64748b', display: 'block', marginTop: '2px' }}>
                     Active stock items in catalog

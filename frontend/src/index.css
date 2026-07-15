@@ -278,5 +278,20 @@ h1, h2, h3, h4, .brand-font {
   100% { transform: rotate(360deg); }
 }
 
+/* Hide duplicate browser-native reveal password eye buttons globally in Edge, Chrome, and Safari */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input::-ms-reveal,
+input::-ms-clear {
+  display: none !important;
+}
+
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  display: none !important;
+  pointer-events: none;
+}
+
 
 

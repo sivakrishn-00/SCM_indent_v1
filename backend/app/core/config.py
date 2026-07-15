@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     # BAVYA EMS API Settings (loaded from .env)
     BAVYA_EMS_API_URL: str
     BAVYA_EMS_API_KEY: str
+    
+    # Credentials encryption key (44 base64 characters for Fernet)
+    CREDENTIALS_ENCRYPTION_KEY: str = "-9q2zB6Pb_rT1zT7VN2_aNH3ZexzyyNNquERWOO19dk="
 
     
     SQLALCHEMY_DATABASE_URI: Optional[str] = None

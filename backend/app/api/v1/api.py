@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from app.api.v1 import (
     auth, users, audit, projects, indents, shifts, drugs, 
-    office_inventory, transit_inventory, bootstrap, roster
+    office_inventory, transit_inventory, bootstrap, roster, api_configs
 )
 
 api_router = APIRouter()
@@ -16,4 +16,5 @@ api_router.include_router(drugs.router, tags=["drugs"])
 api_router.include_router(office_inventory.router, tags=["office_inventory"])
 api_router.include_router(transit_inventory.router, tags=["transit_inventory"])
 api_router.include_router(roster.router, tags=["roster"])
+api_router.include_router(api_configs.router, tags=["api_configs"])
 

@@ -19,6 +19,7 @@ import ShiftManagementPage from './pages/roster/ShiftManagementPage';
 import ShiftAuditLogsPage from './pages/roster/ShiftAuditLogsPage';
 import AuditLogs from './pages/audit/AuditLogs';
 import ProfilePage from './pages/profile/ProfilePage';
+import ApiManagementPage from './pages/settings/ApiManagementPage';
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -195,6 +196,7 @@ function App() {
                       <Route path="/audit" element={<AuditLogs />} />
                       <Route path="/reports" element={<ReportsPage />} />
                       <Route path="/permissions" element={<PermissionsPage />} />
+                      <Route path="/api-management" element={<ApiManagementPage />} />
                       <Route path="/profile" element={<ProfilePage />} />
                       <Route path="*" element={<Navigate to="/dashboard" replace />} />
                     </Routes>

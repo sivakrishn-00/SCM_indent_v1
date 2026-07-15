@@ -733,11 +733,21 @@ def get_shift_report(
     
     logs = query.order_by(ShiftLog.date.desc()).all()
     
+    # ── BULK OPTIMIZATION (Prevent N+1 Queries) ──
+    drug_ids = {log.drug_id for log in logs if log.drug_id}
+    operator_ids = {log.operator_id for log in logs if log.operator_id}
+    vehicle_ids = {log.vehicle_id for log in logs if log.vehicle_id}
+    
+    drugs_map = {d.id: d for d in db.query(DrugMaster).filter(DrugMaster.id.in_(drug_ids)).all()} if drug_ids else {}
+    operators_map = {u.id: u for u in db.query(User).filter(User.id.in_(operator_ids)).all()} if operator_ids else {}
+    vehicles_map = {v.id: v for v in db.query(Vehicle).filter(Vehicle.id.in_(vehicle_ids)).all()} if vehicle_ids else {}
+    # ──────────────────────────────────────────────
+    
     result = []
     for log in logs:
-        drug = db.query(DrugMaster).filter(DrugMaster.id == log.drug_id).first()
-        operator = db.query(User).filter(User.id == log.operator_id).first()
-        vehicle = db.query(Vehicle).filter(Vehicle.id == log.vehicle_id).first() if log.vehicle_id else None
+        drug = drugs_map.get(log.drug_id)
+        operator = operators_map.get(log.operator_id)
+        vehicle = vehicles_map.get(log.vehicle_id) if log.vehicle_id else None
         
         usr_details = emp_code_to_details.get(operator.username) if operator else None
         usr_name = usr_details.get("name") if usr_details else None
