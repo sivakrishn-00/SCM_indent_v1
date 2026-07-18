@@ -27,11 +27,17 @@ class VerifyOTPRequest(BaseModel):
     username: str
     email: str
     otp: str
+    new_password: str
 
-def send_otp_email(email: str, otp: str):
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+def send_otp_email(email: str, otp: str, is_reset: bool = False):
     # Log to console so it's always visible in development terminal
     print("\n" + "="*50)
-    print(f"  [OTP EMAIL] To: {email} | OTP Code: {otp}")
+    print(f"  [OTP EMAIL] To: {email} | OTP Code: {otp} | Reset: {is_reset}")
     print("="*50 + "\n")
     
     try:
@@ -44,21 +50,36 @@ def send_otp_email(email: str, otp: str):
             msg = MIMEMultipart()
             msg['From'] = sender_email
             msg['To'] = email
-            msg['Subject'] = "Bit-Indent: Your One-Time Password (OTP)"
             
-            body = f"""
-            Hello,
+            if is_reset:
+                msg['Subject'] = "Bit-Indent: Password Reset OTP"
+                body = f"""
+                Hello,
 
-            Thank you for registering with Bit-Indcon.
-            This is your first-time login verification.
+                We received a request to reset your password for Bit-Indcon.
 
-            Your One-Time Password (OTP) is: {otp}
+                Your One-Time Password (OTP) is: {otp}
 
-            This code is valid for 10 minutes. Please do not share this code with anyone.
+                This code is valid for 10 minutes. Please do not share this code with anyone.
 
-            Best regards,
-            Bit-Indent SCM Team
-            """
+                Best regards,
+                Bit-Indent SCM Team
+                """
+            else:
+                msg['Subject'] = "Bit-Indent: Your One-Time Password (OTP)"
+                body = f"""
+                Hello,
+
+                Thank you for registering with Bit-Indcon.
+                This is your first-time login verification.
+
+                Your One-Time Password (OTP) is: {otp}
+
+                This code is valid for 10 minutes. Please do not share this code with anyone.
+
+                Best regards,
+                Bit-Indent SCM Team
+                """
             msg.attach(MIMEText(body, 'plain'))
             
             with smtplib.SMTP(smtp_server, smtp_port) as server:
@@ -242,6 +263,10 @@ def first_login_verify_otp(
     user.first_login = False
     user.otp_code = None
     user.otp_expiry = None
+    
+    # Hash and save the new password
+    user.hashed_password = get_password_hash(request_data.new_password)
+    
     db.commit()
     db.refresh(user)
 
@@ -253,6 +278,120 @@ def first_login_verify_otp(
         "token_type": "bearer",
         "user": user
     }
+
+@router.post("/forgot-password-send-otp")
+def forgot_password_send_otp(
+    request_data: SendOTPRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(deps.get_db)
+) -> Any:
+    """
+    Send OTP for password reset if the username and email match.
+    """
+    user = db.query(User).filter(User.username == request_data.username).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive user"
+        )
+        
+    if user.email.lower() != request_data.email.lower():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email does not match our records."
+        )
+
+    # Generate 6-digit OTP
+    otp = f"{random.randint(100000, 999999)}"
+    user.otp_code = otp
+    user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+    db.commit()
+
+    # Send email asynchronously in the background
+    background_tasks.add_task(send_otp_email, user.email, otp, True)
+
+    resp = {"message": "OTP sent successfully to your email."}
+    if settings.ENVIRONMENT == "development":
+        resp["dev_otp"] = otp
+    return resp
+
+@router.post("/forgot-password-verify-reset")
+def forgot_password_verify_reset(
+    request_data: VerifyOTPRequest,
+    db: Session = Depends(deps.get_db)
+) -> Any:
+    """
+    Verify OTP and reset password.
+    """
+    user = db.query(User).filter(
+        (User.username == request_data.username) & (User.email == request_data.email)
+    ).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User or email not found"
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive user"
+        )
+
+    is_dev_bypass = settings.ENVIRONMENT == "development" and request_data.otp == "000000"
+    
+    if not is_dev_bypass:
+        if not user.otp_code or user.otp_code != request_data.otp:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid OTP code"
+            )
+
+        if not user.otp_expiry or user.otp_expiry < datetime.utcnow():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="OTP has expired"
+            )
+
+    # Clear OTP and mark first_login as False since they have now set their password
+    user.first_login = False
+    user.otp_code = None
+    user.otp_expiry = None
+    
+    # Hash and save the new password
+    user.hashed_password = get_password_hash(request_data.new_password)
+    
+    db.commit()
+    db.refresh(user)
+
+    return {"message": "Password reset successfully. Please log in with your new password."}
+
+@router.post("/change-password")
+def change_password(
+    request_data: ChangePasswordRequest,
+    current_user: User = Depends(deps.get_current_user),
+    db: Session = Depends(deps.get_db)
+) -> Any:
+    """
+    Change user's password securely by providing the current password.
+    """
+    if not verify_password(request_data.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect current password."
+        )
+    
+    current_user.hashed_password = get_password_hash(request_data.new_password)
+    db.commit()
+    db.refresh(current_user)
+    return {"message": "Password changed successfully."}
 
 @router.post("/register", response_model=UserOut)
 def register_user(

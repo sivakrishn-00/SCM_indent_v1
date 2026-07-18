@@ -70,10 +70,28 @@ export const api = {
         body: JSON.stringify({ username, email })
       });
     },
-    verifyOtp(username, email, otp) {
+    verifyOtp(username, email, otp, newPassword) {
       return api.request('/auth/first-login-verify-otp', {
         method: 'POST',
-        body: JSON.stringify({ username, email, otp })
+        body: JSON.stringify({ username, email, otp, new_password: newPassword })
+      });
+    },
+    forgotPasswordSendOtp(username, email) {
+      return api.request('/auth/forgot-password-send-otp', {
+        method: 'POST',
+        body: JSON.stringify({ username, email })
+      });
+    },
+    forgotPasswordVerifyReset(username, email, otp, newPassword) {
+      return api.request('/auth/forgot-password-verify-reset', {
+        method: 'POST',
+        body: JSON.stringify({ username, email, otp, new_password: newPassword })
+      });
+    },
+    changePassword(currentPassword, newPassword) {
+      return api.request('/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
       });
     }
   },

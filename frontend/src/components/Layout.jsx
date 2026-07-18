@@ -4,10 +4,11 @@ import { toast } from 'react-hot-toast';
 import {
   LayoutDashboard, ClipboardCheck, FileText, Package, Database,
   Settings, LogOut, UserIcon, Bell, Clock, CheckCircle, AlertTriangle,
-  PackageCheck, CalendarDays, Plus, BarChart3, Menu, X
+  PackageCheck, CalendarDays, Plus, BarChart3, Menu, X, Shield, Lock
 } from 'lucide-react';
 import { User as UserIconLucide } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import api from '../services/api';
 import '../pages/dashboard/Dashboard.css';
 
 export default function Layout({ children }) {
@@ -24,6 +25,53 @@ export default function Layout({ children }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
+
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [modalCurrentPass, setModalCurrentPass] = useState('');
+  const [modalNewPass, setModalNewPass] = useState('');
+  const [modalConfirmPass, setModalConfirmPass] = useState('');
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalError, setModalError] = useState('');
+  const [modalSuccess, setModalSuccess] = useState('');
+
+  const profileDropdownRef = useRef(null);
+
+  const handleModalPasswordSubmit = (e) => {
+    e.preventDefault();
+    setModalError('');
+    setModalSuccess('');
+
+    if (modalNewPass.length < 6) {
+      setModalError('New password must be at least 6 characters long.');
+      return;
+    }
+
+    if (modalNewPass !== modalConfirmPass) {
+      setModalError('New passwords do not match.');
+      return;
+    }
+
+    setModalLoading(true);
+
+    api.auth.changePassword(modalCurrentPass, modalNewPass)
+      .then(() => {
+        setModalLoading(false);
+        setModalSuccess('Password updated successfully!');
+        setModalCurrentPass('');
+        setModalNewPass('');
+        setModalConfirmPass('');
+        toast.success('Password updated successfully!');
+        setTimeout(() => {
+          setShowChangePasswordModal(false);
+          setModalSuccess('');
+        }, 1500);
+      })
+      .catch((err) => {
+        setModalLoading(false);
+        setModalError(err.message || 'Failed to change password. Please check current password.');
+      });
+  };
 
   const toggleMobileNav = () => setIsMobileNavOpen(!isMobileNavOpen);
   const closeMobileNav = () => {
@@ -68,6 +116,9 @@ export default function Layout({ children }) {
     function handleClickOutside(event) {
       if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
         setShowNotifications(false);
+      }
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
+        setShowProfileDropdown(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -436,19 +487,108 @@ export default function Layout({ children }) {
             )}
           </div>
 
-          <div 
-            className="user-profile" 
-            onClick={() => navigate('/profile')} 
-            style={{ cursor: 'pointer' }} 
-            title="View Profile"
-          >
-            <div className="user-avatar">
-              <UserIconLucide size={16} />
+          <div ref={profileDropdownRef} className="user-profile-wrapper" style={{ position: 'relative' }}>
+            <div 
+              className="user-profile" 
+              onClick={() => setShowProfileDropdown(prev => !prev)} 
+              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem' }} 
+              title="User Options"
+            >
+              <div className="user-avatar" style={{ backgroundColor: '#d81159', border: '1px solid rgba(0,0,0,0.06)' }}>
+                <UserIconLucide size={16} />
+              </div>
+              <div className="user-info" style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                <span className="user-username" style={{ color: '#ffffff' }}>{user?.role ? user.role.toUpperCase() : 'Admin'}</span>
+                <span className="user-role-badge">{user?.project || 'Global'}</span>
+              </div>
             </div>
-            <div className="user-info">
-              <span className="user-username">{user?.role ? user.role.toUpperCase() : 'Admin'}</span>
-              <span className="user-role-badge">{user?.project || 'Global'}</span>
-            </div>
+
+            {showProfileDropdown && (
+              <div className="profile-dropdown-menu" style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                width: '180px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '10px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                zIndex: 10001,
+                marginTop: '8px',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                padding: '6px 0'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowProfileDropdown(false);
+                    navigate('/profile');
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 16px',
+                    background: 'none',
+                    border: 'none',
+                    width: '100%',
+                    textAlign: 'left',
+                    fontSize: '13.5px',
+                    fontWeight: '600',
+                    color: '#334155',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#f1f5f9';
+                    e.target.style.color = '#d81159';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.color = '#334155';
+                  }}
+                >
+                  <UserIconLucide size={15} style={{ color: '#d81159' }} />
+                  <span style={{ color: 'inherit' }}>Profile</span>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowProfileDropdown(false);
+                    setShowChangePasswordModal(true);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 16px',
+                    background: 'none',
+                    border: 'none',
+                    width: '100%',
+                    textAlign: 'left',
+                    fontSize: '13.5px',
+                    fontWeight: '600',
+                    color: '#334155',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#f1f5f9';
+                    e.target.style.color = '#d81159';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.color = '#334155';
+                  }}
+                >
+                  <Lock size={15} style={{ color: '#d81159' }} />
+                  <span style={{ color: 'inherit' }}>Change Password</span>
+                </button>
+              </div>
+            )}
           </div>
           <button className="logout-button" onClick={onLogout} title="Log Out">
             <LogOut size={18} />
@@ -719,6 +859,204 @@ export default function Layout({ children }) {
           </button>
         </div>
       </div>
+
+      {/* Change Password Modal */}
+      {showChangePasswordModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.45)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 99999
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '16px',
+            border: '1px solid #e2e8f0',
+            width: '400px',
+            maxWidth: '90%',
+            padding: '28px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            position: 'relative',
+            boxSizing: 'border-box'
+          }}>
+            <button
+              onClick={() => {
+                setShowChangePasswordModal(false);
+                setModalError('');
+                setModalSuccess('');
+                setModalCurrentPass('');
+                setModalNewPass('');
+                setModalConfirmPass('');
+              }}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'none',
+                border: 'none',
+                fontSize: '18px',
+                cursor: 'pointer',
+                color: '#64748b',
+                lineHeight: 1
+              }}
+            >
+              ✕
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '14px', marginBottom: '20px' }}>
+              <Shield size={22} style={{ color: '#d81159', flexShrink: 0 }} />
+              <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: 0, textAlign: 'left' }}>Change Password</h3>
+            </div>
+
+            {modalError && (
+              <div style={{
+                backgroundColor: '#fff1f2',
+                border: '1px solid #fecdd3',
+                color: '#be123c',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                fontSize: '12.5px',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                textAlign: 'left'
+              }}>
+                <span>{modalError}</span>
+              </div>
+            )}
+
+            {modalSuccess && (
+              <div style={{
+                backgroundColor: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                color: '#15803d',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                fontSize: '12.5px',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                textAlign: 'left'
+              }}>
+                <span>{modalSuccess}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleModalPasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', textAlign: 'left' }}>
+                <label style={{ fontSize: '12.5px', fontWeight: '700', color: '#475569' }}>Current Password</label>
+                <input
+                  type="password"
+                  value={modalCurrentPass}
+                  onChange={(e) => setModalCurrentPass(e.target.value)}
+                  disabled={modalLoading}
+                  required
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '14px',
+                    outline: 'none',
+                    width: '100%',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', textAlign: 'left' }}>
+                <label style={{ fontSize: '12.5px', fontWeight: '700', color: '#475569' }}>New Password</label>
+                <input
+                  type="password"
+                  value={modalNewPass}
+                  onChange={(e) => setModalNewPass(e.target.value)}
+                  disabled={modalLoading}
+                  required
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '14px',
+                    outline: 'none',
+                    width: '100%',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', textAlign: 'left' }}>
+                <label style={{ fontSize: '12.5px', fontWeight: '700', color: '#475569' }}>Confirm New Password</label>
+                <input
+                  type="password"
+                  value={modalConfirmPass}
+                  onChange={(e) => setModalConfirmPass(e.target.value)}
+                  disabled={modalLoading}
+                  required
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '14px',
+                    outline: 'none',
+                    width: '100%',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+                <button
+                  type="button"
+                  disabled={modalLoading}
+                  onClick={() => {
+                    setShowChangePasswordModal(false);
+                    setModalError('');
+                    setModalSuccess('');
+                    setModalCurrentPass('');
+                    setModalNewPass('');
+                    setModalConfirmPass('');
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '10px 16px',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    color: '#475569',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    background: '#f8fafc'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={modalLoading}
+                  style={{
+                    flex: 1,
+                    padding: '10px 16px',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: 'white',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    cursor: modalLoading ? 'not-allowed' : 'pointer',
+                    background: 'linear-gradient(135deg, #d81159 0%, #a00639 100%)'
+                  }}
+                >
+                  {modalLoading ? 'Saving...' : 'Save Password'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
