@@ -427,6 +427,15 @@ export const api = {
         body: JSON.stringify({ project, office_name: officeName, assignments, remarks })
       });
     },
+    importRoster(project, file) {
+      const formData = new FormData();
+      formData.append('project', project);
+      formData.append('file', file);
+      return api.request('/roster/bulk-import', {
+        method: 'POST',
+        body: formData
+      });
+    },
     updateEntry(rosterId, payload) {
       return api.request(`/roster/${rosterId}`, {
         method: 'PUT',

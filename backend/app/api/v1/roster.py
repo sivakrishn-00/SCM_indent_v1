@@ -1,6 +1,6 @@
 from typing import List, Any, Optional
 from datetime import datetime, date, timedelta, timezone
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, File, UploadFile, Form
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from pydantic import BaseModel
@@ -79,8 +79,13 @@ def bulk_create_roster(
     if not _check_roster_admin(current_user):
         raise HTTPException(status_code=403, detail="Only admin/supervisor/manager roles can manage rosters.")
 
+    from app.api.v1.utils import get_hierarchy_maps
+    emp_code_to_details, _, _ = get_hierarchy_maps()
+
     created_count = 0
     skipped_count = 0
+
+    assigned_in_payload = set()
 
     for assignment in payload.assignments:
         for date_str in assignment.dates:
@@ -88,7 +93,15 @@ def bulk_create_roster(
             if shift_date < date.today():
                 raise HTTPException(status_code=400, detail=f"Cannot assign shift to past date: {date_str}")
 
-            # Check if already exists (skip duplicates)
+            # Resolve target office name dynamically if payload.office_name is 'all'
+            resolved_office = payload.office_name
+            if resolved_office == "all":
+                emp_details = emp_code_to_details.get(assignment.employee_code, {})
+                emp_office = emp_details.get("office_name")
+                if emp_office and emp_office != "N/A":
+                    resolved_office = emp_office
+
+            # Check if this operator is already assigned to this exact shift (allow re-runs/duplicates of SAME person)
             existing = db.query(ShiftRoster).filter(
                 ShiftRoster.employee_code == assignment.employee_code,
                 ShiftRoster.shift_date == shift_date,
@@ -96,11 +109,50 @@ def bulk_create_roster(
                 ShiftRoster.project == payload.project
             ).first()
 
+            if assignment.shift_type != "off":
+                emp_role = emp_code_to_details.get(assignment.employee_code, {}).get("role", "OPERATOR")
+
+                # Check if we already scheduled another employee with the same role in this call
+                payload_key = (payload.project, resolved_office, shift_date, assignment.shift_type, emp_role)
+                if payload_key in assigned_in_payload:
+                    shift_label = "Shift 1 (Morning)" if assignment.shift_type == "shift_1" else ("General Shift" if assignment.shift_type == "general" else "Shift 2 (Evening)")
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Cannot assign shift: Multiple employees with the role '{emp_role}' are being assigned to {shift_label} on {date_str} at {resolved_office} in this request."
+                    )
+
+                # Check database for existing active conflict (different employee code, same role)
+                active_shifts = db.query(ShiftRoster).filter(
+                    ShiftRoster.project == payload.project,
+                    ShiftRoster.office_name == resolved_office,
+                    ShiftRoster.shift_date == shift_date,
+                    ShiftRoster.shift_type == assignment.shift_type,
+                    ShiftRoster.employee_code != assignment.employee_code,
+                    ShiftRoster.status != "cancelled"
+                ).all()
+
+                conflict = None
+                for active_shift in active_shifts:
+                    other_emp_role = emp_code_to_details.get(active_shift.employee_code, {}).get("role", "OPERATOR")
+                    if other_emp_role == emp_role:
+                        conflict = active_shift
+                        break
+
+                if conflict:
+                    shift_label = "Shift 1 (Morning)" if assignment.shift_type == "shift_1" else ("General Shift" if assignment.shift_type == "general" else "Shift 2 (Evening)")
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Cannot assign shift: {conflict.employee_name} ({conflict.employee_code}) is already assigned to {shift_label} on {date_str} at {resolved_office} with the role '{emp_role}'."
+                    )
+                
+                # Add to payload tracking set
+                assigned_in_payload.add(payload_key)
+
             if existing:
                 # Update if it was cancelled, else skip
                 if existing.status == "cancelled":
                     existing.status = "scheduled"
-                    existing.office_name = payload.office_name
+                    existing.office_name = resolved_office
                     existing.employee_name = assignment.employee_name or existing.employee_name
                     existing.start_time = assignment.start_time or existing.start_time
                     existing.end_time = assignment.end_time or existing.end_time
@@ -113,7 +165,7 @@ def bulk_create_roster(
 
             entry = ShiftRoster(
                 project=payload.project,
-                office_name=payload.office_name,
+                office_name=resolved_office,
                 employee_code=assignment.employee_code,
                 employee_name=assignment.employee_name,
                 shift_date=shift_date,
@@ -238,6 +290,39 @@ def update_roster_entry(
 
     # Track changes for audit logging
     changes = []
+    
+    target_shift_type = payload.shift_type if payload.shift_type is not None else entry.shift_type
+    target_status = payload.status if payload.status is not None else entry.status
+
+    # Validate conflicts on shift updates
+    if (payload.shift_type is not None or payload.status is not None) and target_status != "cancelled" and target_shift_type != "off":
+        from app.api.v1.utils import get_hierarchy_maps
+        emp_code_to_details, _, _ = get_hierarchy_maps()
+        emp_role = emp_code_to_details.get(entry.employee_code, {}).get("role", "OPERATOR")
+
+        active_shifts = db.query(ShiftRoster).filter(
+            ShiftRoster.project == entry.project,
+            ShiftRoster.office_name == entry.office_name,
+            ShiftRoster.shift_date == entry.shift_date,
+            ShiftRoster.shift_type == target_shift_type,
+            ShiftRoster.employee_code != entry.employee_code,
+            ShiftRoster.status != "cancelled"
+        ).all()
+
+        conflict = None
+        for active_shift in active_shifts:
+            other_emp_role = emp_code_to_details.get(active_shift.employee_code, {}).get("role", "OPERATOR")
+            if other_emp_role == emp_role:
+                conflict = active_shift
+                break
+
+        if conflict:
+            shift_label = "Shift 1 (Morning)" if target_shift_type == "shift_1" else ("General Shift" if target_shift_type == "general" else "Shift 2 (Evening)")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot update shift: {conflict.employee_name} ({conflict.employee_code}) is already assigned to {shift_label} on {entry.shift_date} at {entry.office_name} with the role '{emp_role}'."
+            )
+
     if payload.shift_type is not None and payload.shift_type != entry.shift_type:
         changes.append(f"shift_type: '{entry.shift_type}' -> '{payload.shift_type}'")
         entry.shift_type = payload.shift_type
@@ -559,5 +644,258 @@ def generate_handover_pin(
         "expires_in_seconds": 300,
         "employee_code": current_user.username,
         "employee_name": roster_entry.employee_name or current_user.username
+    }
+
+
+# ─── 8. Import Roster Excel/CSV ───────────────────────────────
+
+@router.post("/roster/bulk-import")
+def import_roster(
+    project: str = Form(...),
+    file: UploadFile = File(...),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+) -> Any:
+    """
+    Import roster assignments from a CSV or Excel (.xlsx) file.
+    Validates same-role conflicts and dynamically resolves office/facility.
+    """
+    import csv
+    import io
+    import openpyxl
+    from app.api.v1.utils import get_hierarchy_maps
+
+    if not _check_roster_admin(current_user):
+        raise HTTPException(status_code=403, detail="Only admin/supervisor/manager roles can manage rosters.")
+
+    filename = file.filename.lower()
+    contents = file.file.read()
+    
+    rows = []
+    errors = []
+
+    if filename.endswith(".csv"):
+        try:
+            decoded = contents.decode("utf-8-sig")
+            csv_reader = csv.DictReader(io.StringIO(decoded))
+            for idx, row in enumerate(csv_reader, start=2):
+                clean_row = {
+                    k.strip().lower().replace(" ", "_"): v.strip() if v else "" 
+                    for k, v in row.items() if k
+                }
+                rows.append((idx, clean_row))
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Failed to read CSV file: {str(e)}")
+
+    elif filename.endswith((".xlsx", ".xls")):
+        try:
+            wb = openpyxl.load_workbook(io.BytesIO(contents), data_only=True)
+            sheet = wb.active
+            headers = [cell.value for cell in sheet[1]]
+            headers_clean = []
+            for h in headers:
+                if h is not None:
+                    headers_clean.append(str(h).strip().lower().replace(" ", "_"))
+                else:
+                    headers_clean.append("")
+
+            for idx, row_cells in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+                if not any(cell is not None for cell in row_cells):
+                    continue
+                row_dict = {}
+                for h, val in zip(headers_clean, row_cells):
+                    if h:
+                        if isinstance(val, (datetime, date)):
+                            val_str = val.strftime("%Y-%m-%d")
+                        elif val is not None:
+                            val_str = str(val).strip()
+                        else:
+                            val_str = ""
+                        row_dict[h] = val_str
+                rows.append((idx, row_dict))
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Failed to read Excel file: {str(e)}")
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported file format. Please upload a .csv or .xlsx file.")
+
+    if not rows:
+        raise HTTPException(status_code=400, detail="The uploaded file contains no data rows.")
+
+    # Validate template headers
+    first_row_idx, first_row = rows[0]
+    required_cols = {"employee_code", "shift_date", "shift_type"}
+    missing = required_cols - set(first_row.keys())
+    if missing:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid file template. Missing required column(s): {', '.join(missing)}."
+        )
+
+    emp_code_to_details, _, _ = get_hierarchy_maps()
+
+    assigned_in_payload = set()
+    to_create = []
+    created_count = 0
+    skipped_count = 0
+
+    SHIFT_TYPES_CONFIG = {
+        "shift_1": {"defaultStart": "06:00", "defaultEnd": "14:00"},
+        "shift_2": {"defaultStart": "14:00", "defaultEnd": "22:00"},
+        "general": {"defaultStart": "09:00", "defaultEnd": "18:00"},
+        "off": {"defaultStart": None, "defaultEnd": None}
+    }
+
+    for row_num, rdata in rows:
+        emp_code = rdata.get("employee_code", "").strip()
+        date_str = rdata.get("shift_date", "").strip()
+        shift_type = rdata.get("shift_type", "").strip().lower()
+        office_name_field = rdata.get("office_name", "").strip()
+        emp_name = rdata.get("employee_name", "").strip()
+        start_time = rdata.get("start_time", "").strip()
+        end_time = rdata.get("end_time", "").strip()
+
+        if not emp_code:
+            errors.append(f"Row {row_num}: Missing Employee Code.")
+            continue
+        if not date_str:
+            errors.append(f"Row {row_num}: Missing Shift Date.")
+            continue
+        if not shift_type:
+            errors.append(f"Row {row_num}: Missing Shift Type.")
+            continue
+
+        # Parse date
+        parsed_date = None
+        for fmt in ("%Y-%m-%d", "%d-%m-%Y"):
+            try:
+                parsed_date = datetime.strptime(date_str, fmt).date()
+                break
+            except ValueError:
+                continue
+
+        if not parsed_date:
+            errors.append(f"Row {row_num}: Invalid date format '{date_str}'. Use YYYY-MM-DD or DD-MM-YYYY.")
+            continue
+
+        if parsed_date < date.today():
+            errors.append(f"Row {row_num}: Cannot assign shift to past date: {date_str}.")
+            continue
+
+        if shift_type not in SHIFT_TYPES_CONFIG:
+            errors.append(f"Row {row_num}: Invalid shift type '{shift_type}'. Permitted values: shift_1, shift_2, general, off.")
+            continue
+
+        # Resolve Office
+        resolved_office = office_name_field
+        emp_details = emp_code_to_details.get(emp_code, {})
+        if not resolved_office or resolved_office.lower() == "all":
+            emp_office = emp_details.get("office_name")
+            if emp_office and emp_office != "N/A":
+                resolved_office = emp_office
+            else:
+                resolved_office = "Default Office"
+
+        # Resolve role
+        emp_role = emp_details.get("role", "OPERATOR")
+        final_emp_name = emp_name or emp_details.get("name") or "Unknown"
+
+        config = SHIFT_TYPES_CONFIG.get(shift_type, {})
+        final_start = start_time or config.get("defaultStart")
+        final_end = end_time or config.get("defaultEnd")
+
+        # Conflict validations
+        if shift_type != "off":
+            payload_key = (project, resolved_office, parsed_date, shift_type, emp_role)
+            if payload_key in assigned_in_payload:
+                errors.append(
+                    f"Row {row_num}: Multiple employees with role '{emp_role}' are assigned to {shift_type} on {date_str} at {resolved_office} in this file."
+                )
+                continue
+
+            active_shifts = db.query(ShiftRoster).filter(
+                ShiftRoster.project == project,
+                ShiftRoster.office_name == resolved_office,
+                ShiftRoster.shift_date == parsed_date,
+                ShiftRoster.shift_type == shift_type,
+                ShiftRoster.employee_code != emp_code,
+                ShiftRoster.status != "cancelled"
+            ).all()
+
+            conflict = None
+            for active in active_shifts:
+                other_emp_role = emp_code_to_details.get(active.employee_code, {}).get("role", "OPERATOR")
+                if other_emp_role == emp_role:
+                    conflict = active
+                    break
+
+            if conflict:
+                errors.append(
+                    f"Row {row_num}: {conflict.employee_name} ({conflict.employee_code}) is already assigned to {shift_type} on {date_str} at {resolved_office} with the role '{emp_role}'."
+                )
+                continue
+
+            assigned_in_payload.add(payload_key)
+
+        existing = db.query(ShiftRoster).filter(
+            ShiftRoster.employee_code == emp_code,
+            ShiftRoster.shift_date == parsed_date,
+            ShiftRoster.shift_type == shift_type,
+            ShiftRoster.project == project
+        ).first()
+
+        if existing:
+            if existing.status == "cancelled":
+                existing.status = "scheduled"
+                existing.office_name = resolved_office
+                existing.employee_name = final_emp_name
+                existing.start_time = final_start
+                existing.end_time = final_end
+                existing.created_by = current_user.username
+                created_count += 1
+            else:
+                skipped_count += 1
+        else:
+            entry = ShiftRoster(
+                project=project,
+                office_name=resolved_office,
+                employee_code=emp_code,
+                employee_name=final_emp_name,
+                shift_date=parsed_date,
+                shift_type=shift_type,
+                start_time=final_start or None,
+                end_time=final_end or None,
+                status="scheduled",
+                created_by=current_user.username,
+                remarks="Imported via file upload"
+            )
+            to_create.append(entry)
+            created_count += 1
+
+    if errors:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail={"message": "Validation fails. Please resolve conflicts:", "errors": errors}
+        )
+
+    for entry in to_create:
+        db.add(entry)
+    db.commit()
+
+    audit = AuditLog(
+        user=current_user.username,
+        action="IMPORT_ROSTER",
+        module="SHIFT_MANAGEMENT",
+        description=f"Imported roster file: created {created_count} entries, {skipped_count} skipped.",
+        status="SUCCESS",
+        project=project
+    )
+    db.add(audit)
+    db.commit()
+
+    return {
+        "message": f"Roster imported successfully! Created {created_count} entries, {skipped_count} skipped.",
+        "created": created_count,
+        "skipped": skipped_count
     }
 

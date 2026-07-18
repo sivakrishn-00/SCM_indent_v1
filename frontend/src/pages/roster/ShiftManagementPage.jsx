@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   CalendarDays, Search, Plus, RefreshCw, ChevronLeft, ChevronRight,
   X, Users, Clock, AlertTriangle, Edit3, Trash2, ArrowLeftRight,
-  Coffee, Sun, Sunset, Briefcase
+  Coffee, Sun, Sunset, Briefcase, Upload, Download
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import CustomSelect from '../../components/CustomSelect';
@@ -190,6 +190,117 @@ export default function ShiftManagementPage() {
   const [configGeneralStart, setConfigGeneralStart] = useState('09:00');
   const [configGeneralEnd, setConfigGeneralEnd] = useState('18:00');
 
+
+  // ─── Import Modal State ──────────────────────────
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importProject, setImportProject] = useState(selectedProject || '');
+  const [importFile, setImportFile] = useState(null);
+  const [importSubmitting, setImportSubmitting] = useState(false);
+  const [importErrors, setImportErrors] = useState([]);
+
+  useEffect(() => {
+    if (selectedProject) {
+      setImportProject(selectedProject);
+    }
+  }, [selectedProject]);
+
+  const downloadCSVTemplate = () => {
+    const headers = ["employee_code", "shift_date", "shift_type", "office_name", "employee_name", "start_time", "end_time"];
+    const csvContent = [
+      headers.join(","),
+      `"HR-EMP-12010","2026-07-28","shift_1","AP-1962-MVU-KOTHAPATNAM","Subbarao","06:00","14:00"`,
+      `"HR-EMP-12009","2026-07-28","shift_2","AP-1962-MVU-KOTHAPATNAM","Ramesh","14:00","22:00"`,
+      `"HR-EMP-07989","2026-07-28","general","AP-1962-MVU-KOTHAPATNAM","Suresh","09:00","18:00"`,
+      `"HR-EMP-12010","2026-07-29","off","","","",""`
+    ].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `roster_template_${importProject}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImportRoster = async (e) => {
+    e.preventDefault();
+    if (!importFile) {
+      toast.error("Please select a CSV or Excel file to upload.");
+      return;
+    }
+    setImportSubmitting(true);
+    setImportErrors([]);
+    try {
+      const response = await api.roster.importRoster(importProject, importFile);
+      toast.success(response.message || "Roster imported successfully!");
+      setShowImportModal(false);
+      setImportFile(null);
+      fetchRoster();
+
+      await api.audit.createLog(
+        'IMPORT_ROSTER',
+        'SHIFT_MANAGEMENT',
+        `Imported roster file: ${importFile.name}`,
+        'SUCCESS',
+        importProject
+      );
+    } catch (err) {
+      console.error("Import error:", err);
+      if (err.detail && err.detail.errors) {
+        setImportErrors(err.detail.errors);
+      } else {
+        toast.error(err.message || "Failed to import roster.");
+      }
+    } finally {
+      setImportSubmitting(false);
+    }
+  };
+
+  const downloadActiveRosterCSV = () => {
+    if (!rosterData || !rosterData.employees || rosterData.employees.length === 0) {
+      toast.error("No roster data available to download.");
+      return;
+    }
+    const headers = ["employee_code", "employee_name", "shift_date", "shift_type", "start_time", "end_time", "office_name"];
+    const rows = [];
+    
+    rosterData.employees.forEach(emp => {
+      Object.keys(emp.shifts || {}).forEach(dateStr => {
+        const s = emp.shifts[dateStr];
+        if (s && s.shift_type) {
+          rows.push([
+            emp.employee_code,
+            emp.employee_name,
+            dateStr,
+            s.shift_type,
+            s.start_time || "",
+            s.end_time || "",
+            emp.office_name || ""
+          ]);
+        }
+      });
+    });
+    
+    if (rows.length === 0) {
+      toast.error("No shift assignments found for the current selection.");
+      return;
+    }
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `roster_export_${selectedProject}_${formatDate(weekDates[0])}_to_${formatDate(weekDates[6])}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Helper to determine if a date string YYYY-MM-DD is in the past
   const isPastDate = (dateStr) => {
@@ -667,7 +778,7 @@ export default function ShiftManagementPage() {
     try {
       const result = await api.roster.bulkCreate(
         selectedProject,
-        selectedOffice !== 'all' ? selectedOffice : (offices.length > 0 ? offices[0].name : ''),
+        selectedOffice,
         assignments,
         assignRemarks
       );
@@ -717,6 +828,14 @@ export default function ShiftManagementPage() {
           <button className="action-btn-secondary" onClick={() => navigate('/shift-management/audits')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text-secondary)' }}>
             <CalendarDays size={14} />
             <span>Shift Audits</span>
+          </button>
+          <button className="action-btn-secondary" onClick={() => setShowImportModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text-secondary)' }}>
+            <Upload size={14} />
+            <span>Import Excel/CSV</span>
+          </button>
+          <button className="action-btn-secondary" onClick={downloadActiveRosterCSV} disabled={!rosterData} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text-secondary)' }}>
+            <Download size={14} />
+            <span>Export Roster CSV</span>
           </button>
           <button className="btn-primary-gradient" onClick={openAssignModal}>
             <Plus size={14} />
@@ -1625,6 +1744,100 @@ export default function ShiftManagementPage() {
                 Confirm
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import Modal */}
+      {showImportModal && (
+        <div className="roster-modal-overlay" onClick={() => { setShowImportModal(false); setImportFile(null); setImportErrors([]); }}>
+          <div className="roster-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+            <div className="roster-modal-header">
+              <h3>Import Roster Sheet</h3>
+              <button className="roster-modal-close" onClick={() => { setShowImportModal(false); setImportFile(null); setImportErrors([]); }}>
+                <X size={16} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleImportRoster}>
+              <div className="roster-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ background: '#faf5ff', border: '1px solid #e9d5ff', padding: '12px', borderRadius: '8px', fontSize: '12px', color: '#6b21a8' }}>
+                  <strong>Prerequisites:</strong> Upload a <strong>.csv</strong> or <strong>.xlsx</strong> file specifying the roster.
+                  <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Ensure columns: <code>employee_code</code>, <code>shift_date</code>, <code>shift_type</code></span>
+                    <button type="button" onClick={downloadCSVTemplate} style={{ color: '#9333ea', background: 'none', border: 'none', textDecoration: 'underline', fontWeight: 'bold', cursor: 'pointer', padding: 0 }}>
+                      Download CSV Template
+                    </button>
+                  </div>
+                </div>
+
+                <div className="roster-modal-field">
+                  <label>Select Project</label>
+                  <CustomSelect
+                    value={importProject}
+                    onChange={(e) => setImportProject(e.target.value)}
+                    options={projects.map(p => ({ value: p, label: p }))}
+                    placeholder="Select Project"
+                  />
+                </div>
+
+                <div className="roster-modal-field">
+                  <label>Select File</label>
+                  <input 
+                    type="file" 
+                    accept=".csv, .xlsx, .xls"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        setImportFile(e.target.files[0]);
+                      }
+                    }}
+                    style={{ padding: '8px', border: '1px dashed #cbd5e1', borderRadius: '6px', background: '#f8fafc', width: '100%' }}
+                  />
+                  {importFile && (
+                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                      Selected: <strong>{importFile.name}</strong> ({(importFile.size / 1024).toFixed(1)} KB)
+                    </div>
+                  )}
+                </div>
+
+                {importErrors.length > 0 && (
+                  <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid #fee2e2', backgroundColor: '#fef2f2', padding: '8px 12px', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ color: '#991b1b', fontWeight: '700', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                      <AlertTriangle size={14} />
+                      <span>Roster Overlap Conflicts Detected:</span>
+                    </div>
+                    <ul style={{ margin: 0, paddingLeft: '18px', color: '#b91c1c', fontSize: '11px', lineHeight: '1.4' }}>
+                      {importErrors.map((err, idx) => (
+                        <li key={idx}>{err}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              <div className="roster-modal-footer">
+                <button type="button" className="btn-secondary-outline" onClick={() => { setShowImportModal(false); setImportFile(null); setImportErrors([]); }}>
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn-primary-gradient" 
+                  disabled={importSubmitting || !importFile}
+                >
+                  {importSubmitting ? (
+                    <>
+                      <RefreshCw size={14} className="spin-animation" />
+                      Importing...
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={14} />
+                      Upload & Apply
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
