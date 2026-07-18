@@ -36,3 +36,6 @@ Dockerfile
 *.dockerfile
 docker-compose.yml
 docker-compose*.yml
+
+# Persistent Cache Files
+*employees_persistent_cache.json
