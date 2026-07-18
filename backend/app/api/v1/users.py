@@ -29,7 +29,10 @@ _is_fetching = False
 _perms_sync_lock = Lock()
 CACHE_TTL = 300.0  # 5 minutes in seconds
 
-CACHE_FILE = os.path.join(os.path.dirname(__file__), "employees_persistent_cache.json")
+CACHE_FILE = os.getenv(
+    "EMPLOYEES_CACHE_PATH",
+    os.path.join(os.path.dirname(__file__), "employees_persistent_cache.json")
+)
 
 def _perform_ems_api_fetch() -> List[dict]:
     """Perform the blocking network request to the EMS API."""
