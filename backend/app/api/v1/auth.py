@@ -1,6 +1,6 @@
 from datetime import timedelta
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.core.config import settings
@@ -147,6 +147,7 @@ def login_access_token(
 @router.post("/first-login-send-otp")
 def first_login_send_otp(
     request_data: SendOTPRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(deps.get_db)
 ) -> Any:
     """
@@ -170,23 +171,23 @@ def first_login_send_otp(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User has already completed first-time login verification"
         )
-
+ 
     # Check if the email matches the registered email
     if user.email.lower() != request_data.email.lower():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email does not match our records."
         )
-
+ 
     # Generate 6-digit OTP
     otp = f"{random.randint(100000, 999999)}"
     user.otp_code = otp
     user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
     db.commit()
-
-    # Send email
-    send_otp_email(user.email, otp)
-
+ 
+    # Send email asynchronously in the background
+    background_tasks.add_task(send_otp_email, user.email, otp)
+ 
     resp = {"message": "OTP sent successfully to your email."}
     if settings.ENVIRONMENT == "development":
         resp["dev_otp"] = otp
