@@ -28,6 +28,12 @@ class Settings(BaseSettings):
     # BAVYA EMS API Settings (loaded from .env)
     BAVYA_EMS_API_URL: str
     BAVYA_EMS_API_KEY: str
+
+    # SMTP Email Settings
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
     
     # Credentials encryption key (44 base64 characters for Fernet)
     CREDENTIALS_ENCRYPTION_KEY: str = "-9q2zB6Pb_rT1zT7VN2_aNH3ZexzyyNNquERWOO19dk="

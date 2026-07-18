@@ -35,10 +35,10 @@ def send_otp_email(email: str, otp: str):
     print("="*50 + "\n")
     
     try:
-        smtp_server = "smtp.gmail.com"
-        smtp_port = 587
-        sender_email = os.environ.get("SMTP_USER")
-        sender_password = os.environ.get("SMTP_PASSWORD")
+        smtp_server = settings.SMTP_HOST
+        smtp_port = settings.SMTP_PORT
+        sender_email = settings.SMTP_USER
+        sender_password = settings.SMTP_PASSWORD
         
         if sender_email and sender_password:
             msg = MIMEMultipart()
@@ -49,7 +49,7 @@ def send_otp_email(email: str, otp: str):
             body = f"""
             Hello,
 
-            Thank you for registering with Bit-Indent SCM.
+            Thank you for registering with Bit-Indcon.
             This is your first-time login verification.
 
             Your One-Time Password (OTP) is: {otp}
