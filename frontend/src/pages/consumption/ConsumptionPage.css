@@ -1,0 +1,265 @@
+/* CSS styling system for the Shift Consumption Module */
+
+/* Enforce smooth desktop/mobile layout */
+.consumption-page-container {
+  width: 100%;
+  animation: fadeIn 0.25s ease-out;
+}
+
+/* Standardized responsive table scroll container */
+.table-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll-container table {
+  min-width: 850px;
+}
+
+/* Unified historic log control toolbar */
+.controls-toolbar-flex {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 16px !important;
+  margin-bottom: 20px !important;
+  flex-wrap: wrap !important;
+}
+
+/* Stacking for section headers */
+.section-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* Stacking details view header */
+.details-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 14px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* Stacking for materials headers */
+.materials-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.materials-header-flex .controls-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Transit Control card responsiveness */
+.transit-control-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.transit-control-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.transit-control-header .actions-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Stacking form inputs under logs/records */
+.form-inputs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+/* Stacking action button rows */
+.actions-footer-flex {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 16px;
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Responsive Modal Styling override rules */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(28, 25, 23, 0.4);
+  backdrop-filter: blur(8px);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+  padding: 16px;
+}
+
+.modal-content-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -6px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 1150px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+/* Screen size adjustments */
+@media (max-width: 1024px) {
+  .modal-content-card {
+    padding: 20px;
+    max-height: 95vh;
+  }
+}
+
+@media (max-width: 768px) {
+  .controls-toolbar-flex {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .section-header-flex {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .section-header-flex .section-header-left {
+    width: 100%;
+  }
+
+  .section-header-flex button,
+  .section-header-flex .controls-group,
+  .section-header-flex div {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .details-header-flex {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .details-header-flex button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .materials-header-flex {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .materials-header-flex .controls-group {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .materials-header-flex .controls-group > div,
+  .materials-header-flex .controls-group input {
+    width: 100% !important;
+  }
+
+  .transit-control-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .transit-control-header .actions-group {
+    width: 100% !important;
+  }
+
+  .transit-control-header .actions-group button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .actions-footer-flex {
+    flex-direction: column-reverse !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .actions-footer-flex button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .modal-content-card {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .modal-content-card select,
+  .modal-content-card input {
+    width: 100% !important;
+  }
+
+  .modal-content-card .filter-btn,
+  .modal-content-card .action-btn-primary {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .details-header-flex div {
+    width: 100%;
+  }
+  
+  .details-header-flex div h3 {
+    font-size: 15px !important;
+  }
+}

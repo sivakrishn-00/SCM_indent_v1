@@ -1,0 +1,64 @@
+.permissions-tab-pane {
+  box-sizing: border-box;
+}
+
+.permissions-layout-grid {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+  width: 100%;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .permissions-tab-pane {
+    padding: 16px !important;
+  }
+  .permissions-layout-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .permissions-tab-pane {
+    padding: 12px !important;
+  }
+  
+  .permissions-project-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  
+  .permissions-project-bar > div {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100%;
+  }
+
+  .permissions-project-bar select {
+    width: 100% !important;
+  }
+  
+  .permissions-header-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  
+  .permissions-header-row .actions-group {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100%;
+    gap: 10px !important;
+  }
+  
+  .permissions-header-row .actions-group input {
+    width: 100% !important;
+  }
+
+  .permissions-layout-grid button {
+    justify-content: center;
+  }
+}

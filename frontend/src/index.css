@@ -293,5 +293,12 @@ input::-webkit-credentials-auto-fill-button {
   pointer-events: none;
 }
 
+/* Responsive Table Wrappers */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 
 

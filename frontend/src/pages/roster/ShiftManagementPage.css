@@ -50,6 +50,9 @@
 
 .table-scroll-container {
   min-height: 350px;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Roster Grid — Weekly Table */
@@ -637,5 +640,57 @@ tr.audit-tr-hover:hover {
 
 .shift-mgmt-container .filter-select-wrapper:nth-child(2) {
   min-width: 280px; /* Increase Office dropdown size */
+}
+
+@media (max-width: 1024px) {
+  .shift-mgmt-container .section-header-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+  .shift-mgmt-container .section-header-actions {
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 8px !important;
+  }
+  .shift-mgmt-container .section-header-actions button {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .shift-mgmt-container .filters-layout-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .shift-mgmt-container .filter-dropdowns-group {
+    flex-direction: column;
+    width: 100%;
+    gap: 12px;
+  }
+  .shift-mgmt-container .filter-select-wrapper {
+    width: 100%;
+  }
+  .shift-mgmt-container .filter-select-wrapper:nth-child(2) {
+    min-width: 0 !important;
+  }
+  .shift-mgmt-container .week-navigator {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .shift-mgmt-container .week-label {
+    flex: 1;
+    min-width: 0;
+  }
+  .roster-modal {
+    width: 95vw;
+    margin: 10px;
+  }
+  .roster-modal-row {
+    flex-direction: column;
+    gap: 12px;
+  }
 }
 

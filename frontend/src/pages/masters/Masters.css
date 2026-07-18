@@ -837,6 +837,17 @@ tr.inactive-row .sticky-actions-col {
   background-color: #f8fafc !important;
 }
 
+@media (max-width: 768px) {
+  .project-master-filter-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .master-search-group {
+    width: 100%;
+  }
+}
+
 
 
 

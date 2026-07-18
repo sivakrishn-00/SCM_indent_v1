@@ -505,3 +505,37 @@
   box-shadow: 0 2px 8px rgba(247, 147, 30, 0.1);
 }
 
+@media (max-width: 768px) {
+  .users-page-container .section-header-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+  .users-page-container .section-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .users-page-container .section-header-actions button {
+    flex: 1;
+  }
+  .filters-layout-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .search-box-group {
+    width: 100%;
+  }
+  .filter-dropdowns-group {
+    flex-direction: row;
+    width: 100%;
+  }
+  .filter-select-wrapper {
+    flex: 1;
+  }
+  .filter-select-input {
+    width: 100%;
+    min-width: 0;
+  }
+}
+

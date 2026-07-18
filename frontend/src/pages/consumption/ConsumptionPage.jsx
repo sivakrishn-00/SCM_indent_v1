@@ -9,6 +9,7 @@ import {
 import { useApp } from '../../context/AppContext';
 import api from '../../services/api';
 import CustomSelect from '../../components/CustomSelect';
+import './ConsumptionPage.css';
 
 // Helper to format date string to YYYY-MM-DD
 const formatDateForInput = (dateStr) => {
@@ -1200,7 +1201,7 @@ export default function ConsumptionPage() {
   // Render Component
   return (
     <>
-      <div className="tab-pane" style={{ animation: 'fadeIn 0.25s ease-out', width: '100%', padding: '24px' }}>
+      <div className="tab-pane consumption-page-container" style={{ animation: 'fadeIn 0.25s ease-out', width: '100%', padding: '24px' }}>
         {shiftStatus === 'handed_over' && (
           <div style={{
             backgroundColor: '#fef2f2',
@@ -1564,7 +1565,7 @@ export default function ConsumptionPage() {
 
                     if (loadingOfficeInventory) {
                       return (
-                        <div style={{ border: '1px solid #cbd5e1', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)', backgroundColor: '#ffffff' }}>
+                        <div className="table-scroll-container" style={{ border: '1px solid #cbd5e1', borderRadius: '12px', overflowX: 'auto', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)', backgroundColor: '#ffffff' }}>
                           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                             <thead>
                               <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
@@ -1599,7 +1600,7 @@ export default function ConsumptionPage() {
 
                     return (
                       <>
-                        <div style={{ border: '1px solid rgba(28, 25, 23, 0.08)', borderRadius: '16px', overflow: 'hidden', boxShadow: 'var(--shadow-premium)', backgroundColor: '#ffffff' }}>
+                        <div className="table-scroll-container" style={{ border: '1px solid rgba(28, 25, 23, 0.08)', borderRadius: '16px', overflowX: 'auto', boxShadow: 'var(--shadow-premium)', backgroundColor: '#ffffff' }}>
                           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                             <thead>
                               <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid rgba(28, 25, 23, 0.08)' }}>
@@ -2296,7 +2297,7 @@ export default function ConsumptionPage() {
                     ) : shiftSubmissionsData.length === 0 ? (
                       <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>No submissions recorded.</div>
                     ) : (
-                      <div style={{ overflowX: 'auto' }}>
+                      <div className="table-scroll-container">
                         <table className="portal-table" style={{ width: '100%' }}>
                           <thead>
                             <tr>
@@ -2391,7 +2392,7 @@ export default function ConsumptionPage() {
                     ) : auditLogsData.length === 0 ? (
                       <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>No drawings or transfers recorded.</div>
                     ) : (
-                      <div style={{ overflowX: 'auto' }}>
+                      <div className="table-scroll-container">
                         <table className="portal-table" style={{ width: '100%' }}>
                           <thead>
                             <tr>
@@ -2499,7 +2500,7 @@ export default function ConsumptionPage() {
                     ) : indentsData.length === 0 ? (
                       <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>No indents recorded.</div>
                     ) : (
-                      <div style={{ overflowX: 'auto' }}>
+                      <div className="table-scroll-container">
                         <table className="portal-table" style={{ width: '100%' }}>
                           <thead>
                             <tr>
@@ -2621,7 +2622,7 @@ export default function ConsumptionPage() {
 
                   <div className="table-card" style={{ padding: '24px', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', marginTop: '16px' }}>
                     {/* Unified controls toolbar */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                    <div className="controls-toolbar-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
                       <div className="search-input-wrapper" style={{ margin: 0, flex: 1, maxWidth: '380px' }}>
                         <Search size={18} className="search-icon" style={{ top: '50%', transform: 'translateY(-50%)' }} />
                         <input
@@ -2702,7 +2703,7 @@ export default function ConsumptionPage() {
                         {historyLogsSearch ? "No matching consumption logs found." : "No consumption logs submitted yet."}
                       </div>
                     ) : (
-                      <div style={{ overflowX: 'auto' }}>
+                      <div className="table-scroll-container">
                         <table className="portal-table" style={{ width: '100%' }}>
                           <thead>
                             <tr>
@@ -2944,7 +2945,7 @@ export default function ConsumptionPage() {
               return (
                 <div className="tab-pane" style={{ animation: 'fadeIn 0.2s ease-out', width: '100%' }}>
                   <div className="table-card" style={{ padding: '24px', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #f1f5f9', paddingBottom: '14px' }}>
+                    <div className="details-header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #f1f5f9', paddingBottom: '14px' }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{
@@ -3094,7 +3095,7 @@ export default function ConsumptionPage() {
                     </div>
 
                     {/* Unified Shift Consumption Grid */}
-                    <div style={{ 
+                    <div className="table-scroll-container" style={{ 
                       border: '1px solid #cbd5e1', 
                       borderRadius: '12px', 
                       overflowX: 'auto', 
@@ -3589,7 +3590,7 @@ export default function ConsumptionPage() {
                 </div>
 
                 {/* Materials list header and search */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '16px', flexWrap: 'wrap', width: '100%' }}>
+                <div className="materials-header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '16px', flexWrap: 'wrap', width: '100%' }}>
                   <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
                     Select Consumed Materials {shiftProject && `(${filteredShiftDrugs.length} available)`}
                     {(() => {
@@ -3601,7 +3602,7 @@ export default function ConsumptionPage() {
                       );
                     })()}
                   </span>
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  <div className="controls-group" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     {/* Page Size Selector */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Rows per page:</span>
@@ -3640,7 +3641,7 @@ export default function ConsumptionPage() {
 
 
                 {/* Materials Grid / Table */}
-                <div className="table-card" style={{ marginBottom: '16px', overflowX: 'auto', width: '100%', border: '1px solid rgba(28, 25, 23, 0.08)', borderRadius: '16px', overflow: 'hidden', boxShadow: 'var(--shadow-premium)', backgroundColor: '#ffffff' }}>
+                <div className="table-card table-scroll-container" style={{ marginBottom: '16px', overflowX: 'auto', width: '100%', border: '1px solid rgba(28, 25, 23, 0.08)', borderRadius: '16px', boxShadow: 'var(--shadow-premium)', backgroundColor: '#ffffff' }}>
                   <table className="portal-table" style={{ minWidth: '600px', width: '100%', borderCollapse: 'collapse', border: 'none' }}>
                      <thead>
                       <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid rgba(28, 25, 23, 0.08)' }}>
@@ -4049,7 +4050,7 @@ export default function ConsumptionPage() {
                 </div>
 
                 {/* Submit / Cancel row */}
-                <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '16px', marginTop: '16px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <div className="actions-footer-flex">
                   <button 
                     type="button" 
                     className="filter-btn"
@@ -4164,7 +4165,7 @@ export default function ConsumptionPage() {
         );
 
         return (
-          <div style={{
+          <div className="modal-overlay" style={{
             position: 'fixed',
             top: 0,
             left: 0,
@@ -4178,7 +4179,7 @@ export default function ConsumptionPage() {
             justifyContent: 'center',
             animation: 'fadeIn 0.2s ease-out'
           }}>
-            <div style={{
+            <div className="modal-content-card" style={{
               backgroundColor: '#ffffff',
               borderRadius: '16px',
               border: '1px solid #e2e8f0',
@@ -4279,7 +4280,7 @@ export default function ConsumptionPage() {
                 </div>
 
                 {/* Dynamic Responsive & Scrollable Reconciliation Table Grid */}
-                <div style={{ 
+                <div className="table-scroll-container" style={{ 
                   border: '1px solid #e2e8f0', 
                   borderRadius: '12px', 
                   overflowX: 'auto', 
@@ -4521,7 +4522,7 @@ export default function ConsumptionPage() {
               )}
 
               {/* Action Buttons */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid #f1f5f9', paddingTop: '12px', marginTop: '4px' }}>
+              <div className="actions-footer-flex" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid #f1f5f9', paddingTop: '12px', marginTop: '4px' }}>
                 <button
                   type="button"
                   className="filter-btn"
@@ -4560,7 +4561,7 @@ export default function ConsumptionPage() {
 
       {/* Handover Modal */}
       {showHandoverModal && (
-        <div style={{
+        <div className="modal-overlay" style={{
           position: 'fixed',
           top: 0,
           left: 0,
@@ -4574,7 +4575,7 @@ export default function ConsumptionPage() {
           justifyContent: 'center',
           animation: 'fadeIn 0.2s ease-out'
         }}>
-          <div style={{
+          <div className="modal-content-card" style={{
             backgroundColor: '#ffffff',
             borderRadius: '16px',
             border: '1px solid #e2e8f0',
@@ -4825,7 +4826,7 @@ export default function ConsumptionPage() {
                         backgroundColor: '#ffffff',
                         boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
                       }}>
-                        <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '300px' }}>
+                        <div className="table-scroll-container" style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '300px' }}>
                           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px', textAlign: 'left', minWidth: '950px' }}>
                             <thead>
                               {/* Top Header Group */}
@@ -5106,7 +5107,7 @@ export default function ConsumptionPage() {
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
+              <div className="actions-footer-flex" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
                 <button
                   type="button"
                   className="filter-btn"

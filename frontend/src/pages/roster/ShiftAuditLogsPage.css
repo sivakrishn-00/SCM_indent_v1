@@ -218,3 +218,28 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+
+@media (max-width: 768px) {
+  .audits-header-section {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+  .audits-filter-box {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .audits-search-container {
+    width: 100%;
+    min-width: 0;
+  }
+  .audits-dropdowns-group {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+  .modern-dropdown-wrapper {
+    width: 100%;
+  }
+}

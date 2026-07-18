@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 import { useApp } from '../../context/AppContext';
 import CustomSelect from '../../components/CustomSelect';
 import api from '../../services/api';
+import './PermissionsPage.css';
 
 export default function PermissionsPage() {
   const {
@@ -145,7 +146,7 @@ export default function PermissionsPage() {
   }
 
   return (
-    <div className="tab-pane" style={{ animation: 'fadeIn 0.2s ease-out', width: '100%', padding: '24px' }}>
+    <div className="tab-pane permissions-tab-pane" style={{ animation: 'fadeIn 0.2s ease-out', width: '100%' }}>
       <div className="section-header-flex" style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem', marginBottom: '0.25rem' }}>
         <div className="section-header-left">
           <h2>Role Permissions</h2>
@@ -155,7 +156,7 @@ export default function PermissionsPage() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
         {/* Project Selector Bar */}
-        <div className="form-container-card" style={{ padding: '16px 20px', background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        <div className="form-container-card permissions-project-bar" style={{ padding: '16px 20px', background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ fontSize: '13px', fontWeight: '800', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Project Site:
@@ -174,7 +175,7 @@ export default function PermissionsPage() {
           )}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '24px', width: '100%', alignItems: 'start' }}>
+        <div className="permissions-layout-grid">
           {/* Sidebar Roles Panel */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ padding: '4px 8px', fontSize: '11px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -226,7 +227,7 @@ export default function PermissionsPage() {
           {/* Permissions Grid Panel */}
           <div className="table-card" style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px 0 rgba(0,0,0,0.05)', overflow: 'hidden' }}>
             {/* Editor Header & Quick Actions */}
-            <div style={{ 
+            <div className="permissions-header-row" style={{ 
               padding: '16px 20px', 
               borderBottom: '1px solid #f1f5f9', 
               display: 'flex', 
@@ -260,7 +261,7 @@ export default function PermissionsPage() {
                 )}
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <div className="actions-group" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                 {/* Table search filter */}
                 <input 
                   type="text"
@@ -290,185 +291,187 @@ export default function PermissionsPage() {
             </div>
 
             {/* High Datatable for access permissions */}
-            <table className="portal-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-                  <th style={{ padding: '12px 20px', fontSize: '11.5px', fontWeight: '800', textTransform: 'uppercase', color: '#475569', textAlign: 'left', letterSpacing: '0.05em' }}>
-                    Page Module
-                  </th>
-                  <th style={{ padding: '12px 16px', fontSize: '11.5px', fontWeight: '800', textTransform: 'uppercase', color: '#475569', textAlign: 'center', width: '130px', letterSpacing: '0.05em' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                      <span>View</span>
-                      <input 
-                        type="checkbox"
-                        checked={isAllChecked('can_view')}
-                        disabled={selectedRole === 'admin'}
-                        onChange={e => handleBulkColumnToggle('can_view', e.target.checked)}
-                        style={{ width: '14px', height: '14px', cursor: selectedRole === 'admin' ? 'not-allowed' : 'pointer', accentColor: 'var(--primary)' }}
-                        title="Toggle View column for all pages"
-                      />
-                    </div>
-                  </th>
-                  <th style={{ padding: '12px 16px', fontSize: '11.5px', fontWeight: '800', textTransform: 'uppercase', color: '#475569', textAlign: 'center', width: '130px', letterSpacing: '0.05em' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                      <span>Create</span>
-                      <input 
-                        type="checkbox"
-                        checked={isAllChecked('can_create')}
-                        disabled={selectedRole === 'admin'}
-                        onChange={e => handleBulkColumnToggle('can_create', e.target.checked)}
-                        style={{ width: '14px', height: '14px', cursor: selectedRole === 'admin' ? 'not-allowed' : 'pointer', accentColor: 'var(--primary)' }}
-                        title="Toggle Create column for all pages"
-                      />
-                    </div>
-                  </th>
-                  <th style={{ padding: '12px 16px', fontSize: '11.5px', fontWeight: '800', textTransform: 'uppercase', color: '#475569', textAlign: 'center', width: '130px', letterSpacing: '0.05em' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                      <span>Update</span>
-                      <input 
-                        type="checkbox"
-                        checked={isAllChecked('can_update')}
-                        disabled={selectedRole === 'admin'}
-                        onChange={e => handleBulkColumnToggle('can_update', e.target.checked)}
-                        style={{ width: '14px', height: '14px', cursor: selectedRole === 'admin' ? 'not-allowed' : 'pointer', accentColor: 'var(--primary)' }}
-                        title="Toggle Update column for all pages"
-                      />
-                    </div>
-                  </th>
-                  <th style={{ padding: '12px 16px', fontSize: '11.5px', fontWeight: '800', textTransform: 'uppercase', color: '#475569', textAlign: 'center', width: '130px', letterSpacing: '0.05em' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                      <span>Delete</span>
-                      <input 
-                        type="checkbox"
-                        checked={isAllChecked('can_delete')}
-                        disabled={selectedRole === 'admin'}
-                        onChange={e => handleBulkColumnToggle('can_delete', e.target.checked)}
-                        style={{ width: '14px', height: '14px', cursor: selectedRole === 'admin' ? 'not-allowed' : 'pointer', accentColor: 'var(--primary)' }}
-                        title="Toggle Delete column for all pages"
-                      />
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRolePerms.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: '#64748b', fontSize: '13px' }}>
-                      {searchQuery ? 'No matching pages found.' : 'No permissions loaded.'}
-                    </td>
+            <div className="table-scroll-container">
+              <table className="portal-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                    <th style={{ padding: '12px 20px', fontSize: '11.5px', fontWeight: '800', textTransform: 'uppercase', color: '#475569', textAlign: 'left', letterSpacing: '0.05em' }}>
+                      Page Module
+                    </th>
+                    <th style={{ padding: '12px 16px', fontSize: '11.5px', fontWeight: '800', textTransform: 'uppercase', color: '#475569', textAlign: 'center', width: '130px', letterSpacing: '0.05em' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                        <span>View</span>
+                        <input 
+                          type="checkbox"
+                          checked={isAllChecked('can_view')}
+                          disabled={selectedRole === 'admin'}
+                          onChange={e => handleBulkColumnToggle('can_view', e.target.checked)}
+                          style={{ width: '14px', height: '14px', cursor: selectedRole === 'admin' ? 'not-allowed' : 'pointer', accentColor: 'var(--primary)' }}
+                          title="Toggle View column for all pages"
+                        />
+                      </div>
+                    </th>
+                    <th style={{ padding: '12px 16px', fontSize: '11.5px', fontWeight: '800', textTransform: 'uppercase', color: '#475569', textAlign: 'center', width: '130px', letterSpacing: '0.05em' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                        <span>Create</span>
+                        <input 
+                          type="checkbox"
+                          checked={isAllChecked('can_create')}
+                          disabled={selectedRole === 'admin'}
+                          onChange={e => handleBulkColumnToggle('can_create', e.target.checked)}
+                          style={{ width: '14px', height: '14px', cursor: selectedRole === 'admin' ? 'not-allowed' : 'pointer', accentColor: 'var(--primary)' }}
+                          title="Toggle Create column for all pages"
+                        />
+                      </div>
+                    </th>
+                    <th style={{ padding: '12px 16px', fontSize: '11.5px', fontWeight: '800', textTransform: 'uppercase', color: '#475569', textAlign: 'center', width: '130px', letterSpacing: '0.05em' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                        <span>Update</span>
+                        <input 
+                          type="checkbox"
+                          checked={isAllChecked('can_update')}
+                          disabled={selectedRole === 'admin'}
+                          onChange={e => handleBulkColumnToggle('can_update', e.target.checked)}
+                          style={{ width: '14px', height: '14px', cursor: selectedRole === 'admin' ? 'not-allowed' : 'pointer', accentColor: 'var(--primary)' }}
+                          title="Toggle Update column for all pages"
+                        />
+                      </div>
+                    </th>
+                    <th style={{ padding: '12px 16px', fontSize: '11.5px', fontWeight: '800', textTransform: 'uppercase', color: '#475569', textAlign: 'center', width: '130px', letterSpacing: '0.05em' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                        <span>Delete</span>
+                        <input 
+                          type="checkbox"
+                          checked={isAllChecked('can_delete')}
+                          disabled={selectedRole === 'admin'}
+                          onChange={e => handleBulkColumnToggle('can_delete', e.target.checked)}
+                          style={{ width: '14px', height: '14px', cursor: selectedRole === 'admin' ? 'not-allowed' : 'pointer', accentColor: 'var(--primary)' }}
+                          title="Toggle Delete column for all pages"
+                        />
+                      </div>
+                    </th>
                   </tr>
-                ) : (
-                  filteredRolePerms.map(p => (
-                    <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.15s ease' }}>
-                      <td style={{ padding: '16px 20px', fontSize: '13px', fontWeight: '600', color: '#1e293b' }}>
-                        <span style={{ textTransform: 'capitalize' }}>
-                          {p.page === 'shift' ? 'Shift Consumption' : 
-                           p.page === 'masters' ? 'Material Master' :
-                           p.page === 'workflow' ? 'Workflow Config' :
-                           p.page}
-                        </span>
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <label className="toggle-switch-label" style={{ display: 'inline-block', position: 'relative', width: '36px', height: '20px' }}>
-                          <input 
-                            type="checkbox" 
-                            checked={p.can_view} 
-                            disabled={selectedRole === 'admin'}
-                            onChange={e => handleCheckboxChange(p.id, 'can_view', e.target.checked)}
-                            style={{ opacity: 0, width: 0, height: 0 }}
-                          />
-                          <span style={{
-                            position: 'absolute', cursor: selectedRole === 'admin' ? 'not-allowed' : 'pointer',
-                            top: 0, left: 0, right: 0, bottom: 0,
-                            backgroundColor: p.can_view ? 'var(--primary)' : '#cbd5e1',
-                            transition: '.2s', borderRadius: '20px',
-                            boxShadow: p.can_view ? '0 2px 4px rgba(16, 185, 129, 0.2)' : 'none'
-                          }}>
-                            <span style={{
-                              position: 'absolute', content: '""', height: '14px', width: '14px',
-                              left: p.can_view ? '18px' : '4px', bottom: '3px',
-                              backgroundColor: 'white', transition: '.2s', borderRadius: '50%'
-                            }} />
-                          </span>
-                        </label>
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <label className="toggle-switch-label" style={{ display: 'inline-block', position: 'relative', width: '36px', height: '20px' }}>
-                          <input 
-                            type="checkbox" 
-                            checked={p.can_create} 
-                            disabled={selectedRole === 'admin'}
-                            onChange={e => handleCheckboxChange(p.id, 'can_create', e.target.checked)}
-                            style={{ opacity: 0, width: 0, height: 0 }}
-                          />
-                          <span style={{
-                            position: 'absolute', cursor: selectedRole === 'admin' ? 'not-allowed' : 'pointer',
-                            top: 0, left: 0, right: 0, bottom: 0,
-                            backgroundColor: p.can_create ? 'var(--primary)' : '#cbd5e1',
-                            transition: '.2s', borderRadius: '20px',
-                            boxShadow: p.can_create ? '0 2px 4px rgba(16, 185, 129, 0.2)' : 'none'
-                          }}>
-                            <span style={{
-                              position: 'absolute', content: '""', height: '14px', width: '14px',
-                              left: p.can_create ? '18px' : '4px', bottom: '3px',
-                              backgroundColor: 'white', transition: '.2s', borderRadius: '50%'
-                            }} />
-                          </span>
-                        </label>
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <label className="toggle-switch-label" style={{ display: 'inline-block', position: 'relative', width: '36px', height: '20px' }}>
-                          <input 
-                            type="checkbox" 
-                            checked={p.can_update} 
-                            disabled={selectedRole === 'admin'}
-                            onChange={e => handleCheckboxChange(p.id, 'can_update', e.target.checked)}
-                            style={{ opacity: 0, width: 0, height: 0 }}
-                          />
-                          <span style={{
-                            position: 'absolute', cursor: selectedRole === 'admin' ? 'not-allowed' : 'pointer',
-                            top: 0, left: 0, right: 0, bottom: 0,
-                            backgroundColor: p.can_update ? 'var(--primary)' : '#cbd5e1',
-                            transition: '.2s', borderRadius: '20px',
-                            boxShadow: p.can_update ? '0 2px 4px rgba(16, 185, 129, 0.2)' : 'none'
-                          }}>
-                            <span style={{
-                              position: 'absolute', content: '""', height: '14px', width: '14px',
-                              left: p.can_update ? '18px' : '4px', bottom: '3px',
-                              backgroundColor: 'white', transition: '.2s', borderRadius: '50%'
-                            }} />
-                          </span>
-                        </label>
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <label className="toggle-switch-label" style={{ display: 'inline-block', position: 'relative', width: '36px', height: '20px' }}>
-                          <input 
-                            type="checkbox" 
-                            checked={p.can_delete} 
-                            disabled={selectedRole === 'admin'}
-                            onChange={e => handleCheckboxChange(p.id, 'can_delete', e.target.checked)}
-                            style={{ opacity: 0, width: 0, height: 0 }}
-                          />
-                          <span style={{
-                            position: 'absolute', cursor: selectedRole === 'admin' ? 'not-allowed' : 'pointer',
-                            top: 0, left: 0, right: 0, bottom: 0,
-                            backgroundColor: p.can_delete ? 'var(--primary)' : '#cbd5e1',
-                            transition: '.2s', borderRadius: '20px',
-                            boxShadow: p.can_delete ? '0 2px 4px rgba(16, 185, 129, 0.2)' : 'none'
-                          }}>
-                            <span style={{
-                              position: 'absolute', content: '""', height: '14px', width: '14px',
-                              left: p.can_delete ? '18px' : '4px', bottom: '3px',
-                              backgroundColor: 'white', transition: '.2s', borderRadius: '50%'
-                            }} />
-                          </span>
-                        </label>
+                </thead>
+                <tbody>
+                  {filteredRolePerms.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: '#64748b', fontSize: '13px' }}>
+                        {searchQuery ? 'No matching pages found.' : 'No permissions loaded.'}
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    filteredRolePerms.map(p => (
+                      <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.15s ease' }}>
+                        <td style={{ padding: '16px 20px', fontSize: '13px', fontWeight: '600', color: '#1e293b' }}>
+                          <span style={{ textTransform: 'capitalize' }}>
+                            {p.page === 'shift' ? 'Shift Consumption' : 
+                             p.page === 'masters' ? 'Material Master' :
+                             p.page === 'workflow' ? 'Workflow Config' :
+                             p.page}
+                          </span>
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'center' }}>
+                          <label className="toggle-switch-label" style={{ display: 'inline-block', position: 'relative', width: '36px', height: '20px' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={p.can_view} 
+                              disabled={selectedRole === 'admin'}
+                              onChange={e => handleCheckboxChange(p.id, 'can_view', e.target.checked)}
+                              style={{ opacity: 0, width: 0, height: 0 }}
+                            />
+                            <span style={{
+                              position: 'absolute', cursor: selectedRole === 'admin' ? 'not-allowed' : 'pointer',
+                              top: 0, left: 0, right: 0, bottom: 0,
+                              backgroundColor: p.can_view ? 'var(--primary)' : '#cbd5e1',
+                              transition: '.2s', borderRadius: '20px',
+                              boxShadow: p.can_view ? '0 2px 4px rgba(16, 185, 129, 0.2)' : 'none'
+                            }}>
+                              <span style={{
+                                position: 'absolute', content: '""', height: '14px', width: '14px',
+                                left: p.can_view ? '18px' : '4px', bottom: '3px',
+                                backgroundColor: 'white', transition: '.2s', borderRadius: '50%'
+                              }} />
+                            </span>
+                          </label>
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'center' }}>
+                          <label className="toggle-switch-label" style={{ display: 'inline-block', position: 'relative', width: '36px', height: '20px' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={p.can_create} 
+                              disabled={selectedRole === 'admin'}
+                              onChange={e => handleCheckboxChange(p.id, 'can_create', e.target.checked)}
+                              style={{ opacity: 0, width: 0, height: 0 }}
+                            />
+                            <span style={{
+                              position: 'absolute', cursor: selectedRole === 'admin' ? 'not-allowed' : 'pointer',
+                              top: 0, left: 0, right: 0, bottom: 0,
+                              backgroundColor: p.can_create ? 'var(--primary)' : '#cbd5e1',
+                              transition: '.2s', borderRadius: '20px',
+                              boxShadow: p.can_create ? '0 2px 4px rgba(16, 185, 129, 0.2)' : 'none'
+                            }}>
+                              <span style={{
+                                position: 'absolute', content: '""', height: '14px', width: '14px',
+                                left: p.can_create ? '18px' : '4px', bottom: '3px',
+                                backgroundColor: 'white', transition: '.2s', borderRadius: '50%'
+                              }} />
+                            </span>
+                          </label>
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'center' }}>
+                          <label className="toggle-switch-label" style={{ display: 'inline-block', position: 'relative', width: '36px', height: '20px' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={p.can_update} 
+                              disabled={selectedRole === 'admin'}
+                              onChange={e => handleCheckboxChange(p.id, 'can_update', e.target.checked)}
+                              style={{ opacity: 0, width: 0, height: 0 }}
+                            />
+                            <span style={{
+                              position: 'absolute', cursor: selectedRole === 'admin' ? 'not-allowed' : 'pointer',
+                              top: 0, left: 0, right: 0, bottom: 0,
+                              backgroundColor: p.can_update ? 'var(--primary)' : '#cbd5e1',
+                              transition: '.2s', borderRadius: '20px',
+                              boxShadow: p.can_update ? '0 2px 4px rgba(16, 185, 129, 0.2)' : 'none'
+                            }}>
+                              <span style={{
+                                position: 'absolute', content: '""', height: '14px', width: '14px',
+                                left: p.can_update ? '18px' : '4px', bottom: '3px',
+                                backgroundColor: 'white', transition: '.2s', borderRadius: '50%'
+                              }} />
+                            </span>
+                          </label>
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'center' }}>
+                          <label className="toggle-switch-label" style={{ display: 'inline-block', position: 'relative', width: '36px', height: '20px' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={p.can_delete} 
+                              disabled={selectedRole === 'admin'}
+                              onChange={e => handleCheckboxChange(p.id, 'can_delete', e.target.checked)}
+                              style={{ opacity: 0, width: 0, height: 0 }}
+                            />
+                            <span style={{
+                              position: 'absolute', cursor: selectedRole === 'admin' ? 'not-allowed' : 'pointer',
+                              top: 0, left: 0, right: 0, bottom: 0,
+                              backgroundColor: p.can_delete ? 'var(--primary)' : '#cbd5e1',
+                              transition: '.2s', borderRadius: '20px',
+                              boxShadow: p.can_delete ? '0 2px 4px rgba(16, 185, 129, 0.2)' : 'none'
+                            }}>
+                              <span style={{
+                                position: 'absolute', content: '""', height: '14px', width: '14px',
+                                left: p.can_delete ? '18px' : '4px', bottom: '3px',
+                                backgroundColor: 'white', transition: '.2s', borderRadius: '50%'
+                              }} />
+                            </span>
+                          </label>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

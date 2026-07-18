@@ -4,7 +4,7 @@ import { toast } from 'react-hot-toast';
 import {
   LayoutDashboard, ClipboardCheck, FileText, Package, Database,
   Settings, LogOut, UserIcon, Bell, Clock, CheckCircle, AlertTriangle,
-  PackageCheck, CalendarDays, Plus, BarChart3
+  PackageCheck, CalendarDays, Plus, BarChart3, Menu, X
 } from 'lucide-react';
 import { User as UserIconLucide } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -22,6 +22,21 @@ export default function Layout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
+
+  const toggleMobileNav = () => setIsMobileNavOpen(!isMobileNavOpen);
+  const closeMobileNav = () => {
+    setIsMobileNavOpen(false);
+    setActiveMobileDropdown(null);
+  };
+  const toggleMobileDropdown = (name) => {
+    setActiveMobileDropdown(activeMobileDropdown === name ? null : name);
+  };
+
+  useEffect(() => {
+    closeMobileNav();
+  }, [location.pathname]);
   const [dismissedNotifications, setDismissedNotifications] = useState(() => {
     try {
       const saved = sessionStorage.getItem('dismissed_notifications');
@@ -115,6 +130,16 @@ export default function Layout({ children }) {
       {/* HEADER */}
       <header className="dashboard-header">
         <div className="header-left">
+          {/* Hamburger Menu Toggle */}
+          <button 
+            type="button" 
+            className="mobile-nav-toggle" 
+            onClick={toggleMobileNav}
+            aria-label="Toggle Navigation Menu"
+          >
+            <Menu size={24} />
+          </button>
+          
           <div className="bavya-header-logo-container">
             <div style={{
               backgroundColor: '#ffffff',
@@ -456,6 +481,244 @@ export default function Layout({ children }) {
         <span className="footer-divider">•</span>
         <img src="/BAVYALO.png" alt="BAVYA Logo" className="footer-logo" style={{ maxHeight: '35px' }} />
       </footer>
+
+      {/* MOBILE DRAWER OVERLAY */}
+      <div 
+        className={`mobile-drawer-overlay ${isMobileNavOpen ? 'open' : ''}`}
+        onClick={closeMobileNav}
+      ></div>
+
+      {/* MOBILE DRAWER */}
+      <div className={`mobile-drawer ${isMobileNavOpen ? 'open' : ''}`}>
+        <div className="mobile-drawer-header">
+          <div className="bavya-header-logo-container">
+            <div style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '9999px',
+              padding: '0 14px',
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.06)'
+            }}>
+              <img src="/BAVYALO.png" alt="BAVYA Logo" style={{ height: '26px', objectFit: 'contain' }} />
+            </div>
+            <div className="brand-text-wrapper">
+              <span className="bavya-brand-title">BIT-IndCon</span>
+            </div>
+          </div>
+          <button 
+            type="button" 
+            className="mobile-drawer-close-btn"
+            onClick={closeMobileNav}
+            aria-label="Close Navigation Menu"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        <div className="mobile-drawer-body">
+          <div className="mobile-drawer-nav">
+            {hasPermission('overview', 'view') && (
+              <button
+                type="button"
+                className={`nav-link ${isActive('/dashboard') ? 'active' : ''}`}
+                onClick={() => navigate('/dashboard')}
+              >
+                <LayoutDashboard size={18} />
+                <span>Overview</span>
+              </button>
+            )}
+
+            {hasPermission('shift', 'view') && (
+              <div className="mobile-drawer-dropdown">
+                <button
+                  type="button"
+                  className={`mobile-drawer-dropdown-btn ${isActive('/consumption') ? 'active' : ''}`}
+                  onClick={() => toggleMobileDropdown('consumption')}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <ClipboardCheck size={18} />
+                    <span>Consumption</span>
+                  </div>
+                  <span>{activeMobileDropdown === 'consumption' ? '▲' : '▼'}</span>
+                </button>
+                {activeMobileDropdown === 'consumption' && (
+                  <div className="mobile-drawer-dropdown-content">
+                    <button
+                      type="button"
+                      className={location.pathname === '/consumption' || location.pathname.startsWith('/consumption/draw') || location.pathname.startsWith('/consumption/history') ? 'active-dropdown-item' : ''}
+                      onClick={() => navigate('/consumption')}
+                    >
+                      Consumption Logs
+                    </button>
+                    <button
+                      type="button"
+                      className={location.pathname === '/consumption/record' ? 'active-dropdown-item' : ''}
+                      onClick={() => {
+                        if (shiftStatus === 'handed_over') {
+                          toast.error("Your shift has been completed/handed over. Only view access is permitted.");
+                        } else if (shiftStatus === 'pending_first_shift') {
+                          toast.error("Please finalize your Shift 1 (Morning) consumption log first.");
+                        } else if (shiftStatus === 'view_only') {
+                          toast.error("Handover activation is pending. Access is view-only.");
+                        } else if (isHandoverInitiated) {
+                          toast.error("Stock handover has been initiated. Cannot record consumption.");
+                        } else {
+                          navigate('/consumption/record');
+                        }
+                      }}
+                      disabled={isHandoverInitiated}
+                      style={isHandoverInitiated ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                    >
+                      Record Consumption
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {hasPermission('indents', 'view') && (
+              <button
+                type="button"
+                className={`nav-link ${isActive('/indents') ? 'active' : ''}`}
+                onClick={() => navigate('/indents')}
+              >
+                <FileText size={18} />
+                <span>Indents</span>
+                {pendingGroupedCount > 0 && (
+                  <span className="nav-badge">{pendingGroupedCount}</span>
+                )}
+              </button>
+            )}
+
+            {(hasPermission('masters', 'view') || hasPermission('indents', 'view') || userRole === 'admin') && (
+              <button
+                type="button"
+                className={`nav-link ${isActive('/inventory') ? 'active' : ''}`}
+                onClick={() => navigate('/inventory')}
+              >
+                <Package size={18} />
+                <span>Office Inventory</span>
+              </button>
+            )}
+
+            {(hasPermission('masters', 'view') || hasPermission('workflow', 'view')) && (
+              <div className="mobile-drawer-dropdown">
+                <button
+                  type="button"
+                  className={`mobile-drawer-dropdown-btn ${(isActive('/masters') || isActive('/workflow')) ? 'active' : ''}`}
+                  onClick={() => toggleMobileDropdown('masters')}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Database size={18} />
+                    <span>Masters</span>
+                  </div>
+                  <span>{activeMobileDropdown === 'masters' ? '▲' : '▼'}</span>
+                </button>
+                {activeMobileDropdown === 'masters' && (
+                  <div className="mobile-drawer-dropdown-content">
+                    {hasPermission('masters', 'view') && (
+                      <button
+                        type="button"
+                        className={isActive('/masters') ? 'active-dropdown-item' : ''}
+                        onClick={() => navigate('/masters')}
+                      >
+                        Material Master
+                      </button>
+                    )}
+                    {hasPermission('workflow', 'view') && (
+                      <button
+                        type="button"
+                        className={isActive('/workflow') ? 'active-dropdown-item' : ''}
+                        onClick={() => navigate('/workflow')}
+                      >
+                        Workflow Config
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {(hasPermission('users', 'view') || hasPermission('reports', 'view') || hasPermission('audit', 'view') || userRole === 'admin' || userRole === 'project_manager' || userRole === 'supervisor') && (
+              <div className="mobile-drawer-dropdown">
+                <button
+                  type="button"
+                  className={`mobile-drawer-dropdown-btn ${(isActive('/users') || isActive('/reports') || isActive('/audit') || isActive('/permissions') || isActive('/analytics') || isActive('/shift-management') || isActive('/api-management')) ? 'active' : ''}`}
+                  onClick={() => toggleMobileDropdown('settings')}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Settings size={18} />
+                    <span>Settings</span>
+                  </div>
+                  <span>{activeMobileDropdown === 'settings' ? '▲' : '▼'}</span>
+                </button>
+                {activeMobileDropdown === 'settings' && (
+                  <div className="mobile-drawer-dropdown-content">
+                    {(userRole === 'admin' || userRole === 'project_manager' || userRole === 'supervisor') && (
+                      <button type="button" className={isActive('/analytics') ? 'active-dropdown-item' : ''} onClick={() => navigate('/analytics')}>
+                        Analytics
+                      </button>
+                    )}
+                    {hasPermission('users', 'view') && (
+                      <button type="button" className={isActive('/users') ? 'active-dropdown-item' : ''} onClick={() => navigate('/users')}>
+                        Users
+                      </button>
+                    )}
+                    {(userRole === 'admin' || userRole === 'project_manager' || userRole === 'supervisor') && (
+                      <button type="button" className={isActive('/shift-management') ? 'active-dropdown-item' : ''} onClick={() => navigate('/shift-management')}>
+                        Shift Management
+                      </button>
+                    )}
+                    {hasPermission('reports', 'view') && (
+                      <button type="button" className={isActive('/reports') ? 'active-dropdown-item' : ''} onClick={() => navigate('/reports')}>
+                        Reports
+                      </button>
+                    )}
+                    {hasPermission('audit', 'view') && (
+                      <button type="button" className={isActive('/audit') ? 'active-dropdown-item' : ''} onClick={() => navigate('/audit')}>
+                        Audit Logs
+                      </button>
+                    )}
+                    {userRole === 'admin' && (
+                      <button type="button" className={isActive('/permissions') ? 'active-dropdown-item' : ''} onClick={() => navigate('/permissions')}>
+                        Role Permissions
+                      </button>
+                    )}
+                    {userRole === 'admin' && (
+                      <button type="button" className={isActive('/api-management') ? 'active-dropdown-item' : ''} onClick={() => navigate('/api-management')}>
+                        API Management
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mobile-drawer-footer">
+          <div className="user-profile" onClick={() => { navigate('/profile'); closeMobileNav(); }} style={{ cursor: 'pointer', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#ffffff' }}>
+            <div className="user-avatar" style={{ backgroundColor: '#d81159', border: '1px solid rgba(0,0,0,0.06)' }}>
+              <UserIconLucide size={16} />
+            </div>
+            <div className="user-info">
+              <span className="user-username" style={{ color: 'var(--text-primary)' }}>{user?.role ? user.role.toUpperCase() : 'Admin'}</span>
+              <span className="user-role-badge">{user?.project || 'Global'}</span>
+            </div>
+          </div>
+          <button 
+            type="button" 
+            className="mobile-logout-btn" 
+            onClick={() => { onLogout(); closeMobileNav(); }}
+          >
+            <LogOut size={18} />
+            <span>Log Out</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
