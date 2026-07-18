@@ -131,7 +131,7 @@ export default function Layout({ children }) {
               <img src="/BAVYALO.png" alt="BAVYA Logo" style={{ height: '26px', objectFit: 'contain' }} />
             </div>
             <div className="brand-text-wrapper">
-              <span className="bavya-brand-title">BIT-IndCom</span>
+              <span className="bavya-brand-title">BIT-IndCon</span>
               <span className="header-subtitle">Indent & Consumption Portal</span>
             </div>
           </div>
@@ -451,7 +451,7 @@ export default function Layout({ children }) {
       {/* FOOTER */}
       <footer className="dashboard-footer">
         <span className="footer-text">
-          © {new Date().getFullYear()} Bit-IndCom. All rights reserved.
+          © {new Date().getFullYear()} Bit-IndCon. All rights reserved.
         </span>
         <span className="footer-divider">•</span>
         <img src="/BAVYALO.png" alt="BAVYA Logo" className="footer-logo" style={{ maxHeight: '35px' }} />

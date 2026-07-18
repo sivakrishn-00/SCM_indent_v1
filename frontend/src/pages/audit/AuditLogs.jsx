@@ -3,8 +3,11 @@ import { Search, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import './AuditLogs.css';
 import CustomSelect from '../../components/CustomSelect';
 import api from '../../services/api';
+import { useApp } from '../../context/AppContext';
 
-export default function AuditLogs({ projects = [] }) {
+export default function AuditLogs({ projects: propProjects }) {
+  const { projects: contextProjects } = useApp();
+  const projects = propProjects || contextProjects || [];
   const [auditLogs, setAuditLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [auditSearch, setAuditSearch] = useState('');
