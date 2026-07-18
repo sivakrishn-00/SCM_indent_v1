@@ -493,6 +493,20 @@
   margin-bottom: 1.5rem;
 }
 
+/* Success Banner styling */
+.success-banner {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1.5rem;
+}
+
 /* First-time login onboarding flow elements */
 .back-btn {
   display: flex;

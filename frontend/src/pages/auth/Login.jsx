@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShieldAlert, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import './Login.css';
 import api from '../../services/api';
@@ -11,13 +11,101 @@ export default function Login({ onLoginSuccess }) {
   const [error, setError] = useState('');
   
   // First-time login onboarding flow states
-  const [loginStep, setLoginStep] = useState('LOGIN_FORM'); // 'LOGIN_FORM', 'EMAIL_PROMPT', 'OTP_PROMPT'
+  const [loginStep, setLoginStep] = useState('LOGIN_FORM'); // 'LOGIN_FORM', 'EMAIL_PROMPT', 'OTP_PROMPT', 'FORGOT_EMAIL_PROMPT', 'FORGOT_OTP_PROMPT'
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#forgot') {
+        setError('');
+        setSuccessMessage('');
+        setLoginStep('FORGOT_EMAIL_PROMPT');
+      } else if (window.location.hash === '#login' || !window.location.hash) {
+        setError('');
+        setSuccessMessage('');
+        setLoginStep('LOGIN_FORM');
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const handleForgotEmailSubmit = (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMessage('');
+
+    if (!username || !email) {
+      setError('Please fill in both username and email.');
+      return;
+    }
+
+    setLoading(true);
+
+    api.auth.forgotPasswordSendOtp(username, email)
+      .then((data) => {
+        setLoading(false);
+        setLoginStep('FORGOT_OTP_PROMPT');
+        if (data.dev_otp) {
+          setOtp(data.dev_otp);
+        }
+      })
+      .catch((err) => {
+        setLoading(false);
+        setError(err.message || 'Failed to send reset code. Please check username and email.');
+      });
+  };
+
+  const handleForgotOtpSubmit = (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!otp) {
+      setError('Please enter the OTP reset code.');
+      return;
+    }
+    if (!newPassword) {
+      setError('Please enter a new password.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    setLoading(true);
+
+    api.auth.forgotPasswordVerifyReset(username, email, otp, newPassword)
+      .then((data) => {
+        setLoading(false);
+        setSuccessMessage('Password reset successfully. Please log in with your new password.');
+        setPassword('');
+        setOtp('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setLoginStep('LOGIN_FORM');
+      })
+      .catch((err) => {
+        setLoading(false);
+        setError(err.message || 'Password reset failed. Please check the OTP.');
+      });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
 
     if (!username || !password) {
       setError('Please fill in all fields.');
@@ -84,16 +172,28 @@ export default function Login({ onLoginSuccess }) {
       setError('Please enter the OTP code.');
       return;
     }
+    if (!newPassword) {
+      setError('Please enter a new password.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
 
     setLoading(true);
 
-    api.auth.verifyOtp(username, email, otp)
+    api.auth.verifyOtp(username, email, otp, newPassword)
       .then((data) => {
         setLoading(false);
         sessionStorage.setItem('token', data.access_token);
         sessionStorage.setItem('user', JSON.stringify(data.user));
         
-        api.audit.createLog('LOGIN', 'Auth', `User ${data.user.username} logged in successfully (first-time verified)`, 'SUCCESS', 'Global')
+        api.audit.createLog('LOGIN', 'Auth', `User ${data.user.username} logged in successfully (first-time verified and password set)`, 'SUCCESS', 'Global')
           .catch((err) => console.error("Failed to log login action:", err));
         
         if (onLoginSuccess) {
@@ -160,7 +260,7 @@ export default function Login({ onLoginSuccess }) {
                       <div className="petal petal-bl"></div>
                       <div className="petal petal-br"></div>
                     </div>
-                    <span className="bavya-brand-title">BIT-IndCom</span>
+                    <span className="bavya-brand-title">BIT-IndCon</span>
                   </div>
                   
                   <h2>Log in</h2>
@@ -171,6 +271,12 @@ export default function Login({ onLoginSuccess }) {
                   <div className="error-banner">
                     <ShieldAlert size={18} />
                     <span>{error}</span>
+                  </div>
+                )}
+
+                {successMessage && (
+                  <div className="success-banner">
+                    <span>{successMessage}</span>
                   </div>
                 )}
 
@@ -216,7 +322,12 @@ export default function Login({ onLoginSuccess }) {
 
                   {/* Forgot Password Link */}
                   <div className="forgot-password-container">
-                    <a href="#forgot" className="forgot-password-link">
+                    <a 
+                      href="#forgot" 
+                      className="forgot-password-link"
+                      onClick={() => { setError(''); setSuccessMessage(''); }}
+                      style={{ textDecoration: 'none' }}
+                    >
                       Forgot your <strong>password?</strong>
                     </a>
                   </div>
@@ -359,6 +470,45 @@ export default function Login({ onLoginSuccess }) {
                     <label htmlFor="otp-field" className="floating-label">6-digit OTP</label>
                   </div>
 
+                  {/* New Password Field with Floating Label */}
+                  <div className="input-group password-group floating-label-group">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      id="new-password-field"
+                      className="form-input"
+                      placeholder=" "
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      disabled={loading}
+                      required
+                    />
+                    <label htmlFor="new-password-field" className="floating-label">new password</label>
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      disabled={loading}
+                      tabIndex="-1"
+                    >
+                      {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+
+                  {/* Confirm Password Field with Floating Label */}
+                  <div className="input-group floating-label-group">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      id="confirm-password-field"
+                      className="form-input"
+                      placeholder=" "
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      disabled={loading}
+                      required
+                    />
+                    <label htmlFor="confirm-password-field" className="floating-label">confirm password</label>
+                  </div>
+
                   {/* Submit Button */}
                   <div className="submit-btn-container">
                     <button type="submit" className="submit-button" disabled={loading}>
@@ -376,11 +526,211 @@ export default function Login({ onLoginSuccess }) {
                   <button 
                     type="button" 
                     className="back-btn"
-                    onClick={() => { setLoginStep('EMAIL_PROMPT'); setError(''); setOtp(''); }}
+                    onClick={() => { setLoginStep('EMAIL_PROMPT'); setError(''); setOtp(''); setNewPassword(''); setConfirmPassword(''); }}
                     disabled={loading}
                   >
                     <ArrowLeft size={16} />
                     <span>Back to Email</span>
+                  </button>
+                </form>
+              </>
+            )}
+
+            {loginStep === 'FORGOT_EMAIL_PROMPT' && (
+              <>
+                <div className="form-header">
+                  <div className="bavya-brand-logo-container">
+                    <div className="bavya-brand-logo">
+                      <div className="petal petal-tl"></div>
+                      <div className="petal petal-tr"></div>
+                      <div className="petal petal-bl"></div>
+                      <div className="petal petal-br"></div>
+                    </div>
+                  </div>
+                  <h2>Reset Password</h2>
+                  <div className="title-underline"></div>
+                  <p className="step-description">
+                    Enter your username and registered email address to receive a password reset OTP.
+                  </p>
+                </div>
+
+                {error && (
+                  <div className="error-banner">
+                    <ShieldAlert size={18} />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleForgotEmailSubmit}>
+                  {/* Username Field with Floating Label */}
+                  <div className="input-group floating-label-group">
+                    <input
+                      type="text"
+                      id="forgot-username-field"
+                      className="form-input"
+                      placeholder=" "
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      disabled={loading}
+                      required
+                    />
+                    <label htmlFor="forgot-username-field" className="floating-label">user name</label>
+                  </div>
+
+                  {/* Email Field with Floating Label */}
+                  <div className="input-group floating-label-group">
+                    <input
+                      type="email"
+                      id="forgot-email-field"
+                      className="form-input"
+                      placeholder=" "
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={loading}
+                      required
+                    />
+                    <label htmlFor="forgot-email-field" className="floating-label">registered email</label>
+                  </div>
+
+                  {/* Submit Button */}
+                  <div className="submit-btn-container">
+                    <button type="submit" className="submit-button" disabled={loading}>
+                      {loading ? (
+                        <div className="btn-spinner-container">
+                          <div className="btn-spinner"></div>
+                          <span>Sending...</span>
+                        </div>
+                      ) : (
+                        <span>Send Reset OTP</span>
+                      )}
+                    </button>
+                  </div>
+
+                  <button 
+                    type="button" 
+                    className="back-btn"
+                    onClick={() => { 
+                      window.location.hash = ''; 
+                      setError(''); 
+                      setEmail(''); 
+                    }}
+                    disabled={loading}
+                  >
+                    <ArrowLeft size={16} />
+                    <span>Back to Sign In</span>
+                  </button>
+                </form>
+              </>
+            )}
+
+            {loginStep === 'FORGOT_OTP_PROMPT' && (
+              <>
+                <div className="form-header">
+                  <div className="bavya-brand-logo-container">
+                    <div className="bavya-brand-logo">
+                      <div className="petal petal-tl"></div>
+                      <div className="petal petal-tr"></div>
+                      <div className="petal petal-bl"></div>
+                      <div className="petal petal-br"></div>
+                    </div>
+                  </div>
+                  <h2>Reset Password</h2>
+                  <div className="title-underline"></div>
+                  <p className="step-description">
+                    We've sent a 6-digit reset code to <strong>{email}</strong>.
+                  </p>
+                  {otp && (
+                    <div className="dev-otp-autofill">
+                      <strong>Dev Mode:</strong> OTP autofilled. Bypass using <strong>000000</strong>.
+                    </div>
+                  )}
+                </div>
+
+                {error && (
+                  <div className="error-banner">
+                    <ShieldAlert size={18} />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleForgotOtpSubmit}>
+                  {/* OTP Field with Floating Label */}
+                  <div className="input-group floating-label-group">
+                    <input
+                      type="text"
+                      id="forgot-otp-field"
+                      maxLength={6}
+                      className="form-input otp-input"
+                      placeholder=" "
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                      disabled={loading}
+                      required
+                    />
+                    <label htmlFor="forgot-otp-field" className="floating-label">6-digit OTP</label>
+                  </div>
+
+                  {/* New Password Field with Floating Label */}
+                  <div className="input-group password-group floating-label-group">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      id="forgot-new-password-field"
+                      className="form-input"
+                      placeholder=" "
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      disabled={loading}
+                      required
+                    />
+                    <label htmlFor="forgot-new-password-field" className="floating-label">new password</label>
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      disabled={loading}
+                      tabIndex="-1"
+                    >
+                      {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+
+                  {/* Confirm Password Field with Floating Label */}
+                  <div className="input-group floating-label-group">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      id="forgot-confirm-password-field"
+                      className="form-input"
+                      placeholder=" "
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      disabled={loading}
+                      required
+                    />
+                    <label htmlFor="forgot-confirm-password-field" className="floating-label">confirm password</label>
+                  </div>
+
+                  {/* Submit Button */}
+                  <div className="submit-btn-container">
+                    <button type="submit" className="submit-button" disabled={loading}>
+                      {loading ? (
+                        <div className="btn-spinner-container">
+                          <div className="btn-spinner"></div>
+                          <span>Resetting...</span>
+                        </div>
+                      ) : (
+                        <span>Verify & Reset</span>
+                      )}
+                    </button>
+                  </div>
+
+                  <button 
+                    type="button" 
+                    className="back-btn"
+                    onClick={() => { setLoginStep('FORGOT_EMAIL_PROMPT'); setError(''); setOtp(''); setNewPassword(''); setConfirmPassword(''); }}
+                    disabled={loading}
+                  >
+                    <ArrowLeft size={16} />
+                    <span>Back</span>
                   </button>
                 </form>
               </>

@@ -161,7 +161,7 @@ function App() {
           </ToastBar>
         )}
       </Toaster>
-      <BrowserRouter>
+      <BrowserRouter basename="/bit-indcon">
         <Routes>
           {/* Public Route */}
           <Route
