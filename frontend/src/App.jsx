@@ -21,6 +21,8 @@ import AuditLogs from './pages/audit/AuditLogs';
 import ProfilePage from './pages/profile/ProfilePage';
 import ApiManagementPage from './pages/settings/ApiManagementPage';
 
+const basename = import.meta.env.BASE_URL ? import.meta.env.BASE_URL.replace(/\/$/, '') : '';
+
 function App() {
   const [user, setUser] = useState(() => {
     const savedUser = sessionStorage.getItem('user');
@@ -161,7 +163,7 @@ function App() {
           </ToastBar>
         )}
       </Toaster>
-      <BrowserRouter basename="/bit-indcon">
+      <BrowserRouter basename={basename}>
         <Routes>
           {/* Public Route */}
           <Route
