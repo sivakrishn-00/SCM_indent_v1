@@ -52,25 +52,25 @@ def send_otp_email(email: str, otp: str, is_reset: bool = False):
             msg['To'] = email
             
             if is_reset:
-                msg['Subject'] = "Bit-Indent: Password Reset OTP"
+                msg['Subject'] = f"{settings.PROJECT_NAME}: Password Reset OTP"
                 body = f"""
                 Hello,
 
-                We received a request to reset your password for Bit-Indcon.
+                We received a request to reset your password for {settings.PROJECT_NAME}.
 
                 Your One-Time Password (OTP) is: {otp}
 
                 This code is valid for 10 minutes. Please do not share this code with anyone.
 
                 Best regards,
-                Bit-Indent SCM Team
+                {settings.PROJECT_NAME} Team
                 """
             else:
-                msg['Subject'] = "Bit-Indent: Your One-Time Password (OTP)"
+                msg['Subject'] = f"{settings.PROJECT_NAME}: Your One-Time Password (OTP)"
                 body = f"""
                 Hello,
 
-                Thank you for registering with Bit-Indcon.
+                Thank you for registering with {settings.PROJECT_NAME}.
                 This is your first-time login verification.
 
                 Your One-Time Password (OTP) is: {otp}
@@ -78,7 +78,7 @@ def send_otp_email(email: str, otp: str, is_reset: bool = False):
                 This code is valid for 10 minutes. Please do not share this code with anyone.
 
                 Best regards,
-                Bit-Indent SCM Team
+                {settings.PROJECT_NAME} Team
                 """
             msg.attach(MIMEText(body, 'plain'))
             
