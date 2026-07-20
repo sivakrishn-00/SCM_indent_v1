@@ -19,7 +19,7 @@ from app.models.transit_inventory import TransitInventory
 from app.models.roster import ShiftRoster
 
 # Create tables if they don't exist
-Base.metadata.create_all(bind=engine)
+#Base.metadata.create_all(bind=engine)
 
 # Try to run SQLite migrations for dispatch columns if they don't exist
 try:
