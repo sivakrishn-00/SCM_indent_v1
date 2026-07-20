@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USER: Optional[str] = None
     SMTP_PASSWORD: Optional[str] = None
+
+    # Alternative/New Email Configs mapping
+    EMAIL_HOST: Optional[str] = None
+    EMAIL_PORT: Optional[int] = None
+    EMAIL_HOST_USER: Optional[str] = None
+    EMAIL_HOST_PASSWORD: Optional[str] = None
     
     # Credentials encryption key (44 base64 characters for Fernet)
     CREDENTIALS_ENCRYPTION_KEY: str = "-9q2zB6Pb_rT1zT7VN2_aNH3ZexzyyNNquERWOO19dk="
@@ -48,6 +54,17 @@ class Settings(BaseSettings):
                 f"mysql+pymysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}"
                 f"@{self.MYSQL_SERVER}:{self.MYSQL_PORT}/{self.MYSQL_DB}"
             )
+        
+        # Map alternative/new email configs to standard SMTP keys if provided
+        if self.EMAIL_HOST:
+            self.SMTP_HOST = self.EMAIL_HOST
+        if self.EMAIL_PORT:
+            self.SMTP_PORT = self.EMAIL_PORT
+        if self.EMAIL_HOST_USER:
+            self.SMTP_USER = self.EMAIL_HOST_USER
+        if self.EMAIL_HOST_PASSWORD:
+            self.SMTP_PASSWORD = self.EMAIL_HOST_PASSWORD
+            
         return self
 
 settings = Settings()
