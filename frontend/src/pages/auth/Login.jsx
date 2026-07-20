@@ -18,6 +18,47 @@ export default function Login({ onLoginSuccess }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    let timer;
+    if (resendCooldown > 0) {
+      timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
+  const handleResendOtp = () => {
+    setError('');
+    setSuccessMessage('');
+    setLoading(true);
+    api.auth.sendOtp(username, email)
+      .then(() => {
+        setLoading(false);
+        setSuccessMessage('A new OTP has been sent successfully.');
+        setResendCooldown(30);
+      })
+      .catch((err) => {
+        setLoading(false);
+        setError(err.message || 'Failed to resend OTP. Please try again.');
+      });
+  };
+
+  const handleForgotResendOtp = () => {
+    setError('');
+    setSuccessMessage('');
+    setLoading(true);
+    api.auth.forgotPasswordSendOtp(username, email)
+      .then(() => {
+        setLoading(false);
+        setSuccessMessage('A new reset OTP has been sent successfully.');
+        setResendCooldown(30);
+      })
+      .catch((err) => {
+        setLoading(false);
+        setError(err.message || 'Failed to resend OTP. Please try again.');
+      });
+  };
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -53,9 +94,6 @@ export default function Login({ onLoginSuccess }) {
       .then((data) => {
         setLoading(false);
         setLoginStep('FORGOT_OTP_PROMPT');
-        if (data.dev_otp) {
-          setOtp(data.dev_otp);
-        }
       })
       .catch((err) => {
         setLoading(false);
@@ -154,9 +192,6 @@ export default function Login({ onLoginSuccess }) {
       .then((data) => {
         setLoading(false);
         setLoginStep('OTP_PROMPT');
-        if (data.dev_otp) {
-          setOtp(data.dev_otp);
-        }
       })
       .catch((err) => {
         setLoading(false);
@@ -439,12 +474,13 @@ export default function Login({ onLoginSuccess }) {
                   <p className="step-description">
                     We've sent a 6-digit OTP code to <strong>{email}</strong>.
                   </p>
-                  {otp && (
-                    <div className="dev-otp-autofill">
-                      <strong>Dev Mode:</strong> OTP autofilled. Bypass using <strong>000000</strong>.
-                    </div>
-                  )}
                 </div>
+
+                {successMessage && (
+                  <div className="success-banner">
+                    <span>{successMessage}</span>
+                  </div>
+                )}
 
                 {error && (
                   <div className="error-banner">
@@ -509,6 +545,19 @@ export default function Login({ onLoginSuccess }) {
                     <label htmlFor="confirm-password-field" className="floating-label">confirm password</label>
                   </div>
 
+                  {/* Resend OTP Link */}
+                  <div className="resend-otp-container">
+                    <span>Didn't receive code?</span>
+                    <button
+                      type="button"
+                      className="resend-otp-link-btn"
+                      onClick={handleResendOtp}
+                      disabled={loading || resendCooldown > 0}
+                    >
+                      {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend OTP'}
+                    </button>
+                  </div>
+
                   {/* Submit Button */}
                   <div className="submit-btn-container">
                     <button type="submit" className="submit-button" disabled={loading}>
@@ -526,7 +575,7 @@ export default function Login({ onLoginSuccess }) {
                   <button 
                     type="button" 
                     className="back-btn"
-                    onClick={() => { setLoginStep('EMAIL_PROMPT'); setError(''); setOtp(''); setNewPassword(''); setConfirmPassword(''); }}
+                    onClick={() => { setLoginStep('EMAIL_PROMPT'); setError(''); setSuccessMessage(''); setOtp(''); setNewPassword(''); setConfirmPassword(''); }}
                     disabled={loading}
                   >
                     <ArrowLeft size={16} />
@@ -639,12 +688,13 @@ export default function Login({ onLoginSuccess }) {
                   <p className="step-description">
                     We've sent a 6-digit reset code to <strong>{email}</strong>.
                   </p>
-                  {otp && (
-                    <div className="dev-otp-autofill">
-                      <strong>Dev Mode:</strong> OTP autofilled. Bypass using <strong>000000</strong>.
-                    </div>
-                  )}
                 </div>
+
+                {successMessage && (
+                  <div className="success-banner">
+                    <span>{successMessage}</span>
+                  </div>
+                )}
 
                 {error && (
                   <div className="error-banner">
@@ -709,6 +759,19 @@ export default function Login({ onLoginSuccess }) {
                     <label htmlFor="forgot-confirm-password-field" className="floating-label">confirm password</label>
                   </div>
 
+                  {/* Resend OTP Link */}
+                  <div className="resend-otp-container">
+                    <span>Didn't receive code?</span>
+                    <button
+                      type="button"
+                      className="resend-otp-link-btn"
+                      onClick={handleForgotResendOtp}
+                      disabled={loading || resendCooldown > 0}
+                    >
+                      {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend OTP'}
+                    </button>
+                  </div>
+
                   {/* Submit Button */}
                   <div className="submit-btn-container">
                     <button type="submit" className="submit-button" disabled={loading}>
@@ -726,7 +789,7 @@ export default function Login({ onLoginSuccess }) {
                   <button 
                     type="button" 
                     className="back-btn"
-                    onClick={() => { setLoginStep('FORGOT_EMAIL_PROMPT'); setError(''); setOtp(''); setNewPassword(''); setConfirmPassword(''); }}
+                    onClick={() => { setLoginStep('FORGOT_EMAIL_PROMPT'); setError(''); setSuccessMessage(''); setOtp(''); setNewPassword(''); setConfirmPassword(''); }}
                     disabled={loading}
                   >
                     <ArrowLeft size={16} />

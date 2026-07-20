@@ -209,10 +209,7 @@ def first_login_send_otp(
     # Send email asynchronously in the background
     background_tasks.add_task(send_otp_email, user.email, otp)
  
-    resp = {"message": "OTP sent successfully to your email."}
-    if settings.ENVIRONMENT == "development":
-        resp["dev_otp"] = otp
-    return resp
+    return {"message": "OTP sent successfully to your email."}
 
 @router.post("/first-login-verify-otp", response_model=Token)
 def first_login_verify_otp(
@@ -244,20 +241,17 @@ def first_login_verify_otp(
             detail="User has already completed first-time login verification"
         )
 
-    is_dev_bypass = settings.ENVIRONMENT == "development" and request_data.otp == "000000"
-    
-    if not is_dev_bypass:
-        if not user.otp_code or user.otp_code != request_data.otp:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid OTP code"
-            )
+    if not user.otp_code or user.otp_code != request_data.otp:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid OTP code"
+        )
 
-        if not user.otp_expiry or user.otp_expiry < datetime.utcnow():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="OTP has expired"
-            )
+    if not user.otp_expiry or user.otp_expiry < datetime.utcnow():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP has expired"
+        )
 
     # Clear OTP and mark first_login as False
     user.first_login = False
@@ -316,10 +310,7 @@ def forgot_password_send_otp(
     # Send email asynchronously in the background
     background_tasks.add_task(send_otp_email, user.email, otp, True)
 
-    resp = {"message": "OTP sent successfully to your email."}
-    if settings.ENVIRONMENT == "development":
-        resp["dev_otp"] = otp
-    return resp
+    return {"message": "OTP sent successfully to your email."}
 
 @router.post("/forgot-password-verify-reset")
 def forgot_password_verify_reset(
@@ -345,20 +336,17 @@ def forgot_password_verify_reset(
             detail="Inactive user"
         )
 
-    is_dev_bypass = settings.ENVIRONMENT == "development" and request_data.otp == "000000"
-    
-    if not is_dev_bypass:
-        if not user.otp_code or user.otp_code != request_data.otp:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid OTP code"
-            )
+    if not user.otp_code or user.otp_code != request_data.otp:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid OTP code"
+        )
 
-        if not user.otp_expiry or user.otp_expiry < datetime.utcnow():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="OTP has expired"
-            )
+    if not user.otp_expiry or user.otp_expiry < datetime.utcnow():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP has expired"
+        )
 
     # Clear OTP and mark first_login as False since they have now set their password
     user.first_login = False
