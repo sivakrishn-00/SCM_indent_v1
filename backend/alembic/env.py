@@ -82,6 +82,7 @@ def run_migrations_online() -> None:
         tables = inspector.get_table_names()
         if "alembic_version" not in tables and "consumables" in tables:
             print("Database tables already exist. Stamping revision to head (9b1bb8cca5ac)...")
+            connection.rollback()
             with connection.begin():
                 connection.execute(sa.text("CREATE TABLE alembic_version (version_num VARCHAR(32) NOT NULL, PRIMARY KEY (version_num))"))
                 connection.execute(sa.text("INSERT INTO alembic_version (version_num) VALUES ('9b1bb8cca5ac')"))
