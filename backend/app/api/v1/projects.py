@@ -242,10 +242,18 @@ def get_project_hierarchy_preview(
         
     # Find a leaf node (one not in has_subordinates_set)
     leaf_code = None
+    # 1. Prefer a leaf node that has a manager configured
     for code in proj_employees:
-        if code not in has_subordinates_set:
+        if code not in has_subordinates_set and code in parent_map:
             leaf_code = code
             break
+            
+    # 2. Fallback to any leaf node if none with a manager are found
+    if not leaf_code:
+        for code in proj_employees:
+            if code not in has_subordinates_set:
+                leaf_code = code
+                break
             
     if not leaf_code and proj_employees:
         leaf_code = proj_employees[0]

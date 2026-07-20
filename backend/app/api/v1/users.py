@@ -136,7 +136,7 @@ def fetch_all_employees(force_refresh: bool = False) -> List[dict]:
         try:
             with open(CACHE_FILE, "r", encoding="utf-8") as f:
                 cached_data = json.load(f)
-            if isinstance(cached_data, list) and len(cached_data) > 0:
+            if isinstance(cached_data, list) and len(cached_data) >= 50:
                 with _cache_lock:
                     _employees_cache = cached_data
                 cached_val = cached_data

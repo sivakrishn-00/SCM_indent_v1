@@ -155,3 +155,11 @@ def startup_event():
         print(f"Error seeding permissions: {e}")
     finally:
         db.close()
+
+    # Warm up local employee cache asynchronously on startup
+    try:
+        import threading
+        from app.api.v1.users import fetch_all_employees
+        threading.Thread(target=fetch_all_employees, kwargs={"force_refresh": False}, daemon=True).start()
+    except Exception as e:
+        print(f"Error starting employee caching warmup: {e}")

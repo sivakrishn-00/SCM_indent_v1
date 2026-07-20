@@ -204,7 +204,7 @@ export default function Layout({ children }) {
               cursor: 'pointer',
               boxSizing: 'border-box'
             }} onClick={() => navigate('/dashboard')}>
-              <img src="/BAVYALO.png" alt="BAVYA Logo" style={{ height: '26px', objectFit: 'contain' }} />
+              <img src={`${import.meta.env.BASE_URL}BAVYALO.png`} alt="BAVYA Logo" style={{ height: '26px', objectFit: 'contain' }} />
             </div>
             <div className="brand-text-wrapper">
               <span className="bavya-brand-title">BIT-IndCon</span>
@@ -619,7 +619,7 @@ export default function Layout({ children }) {
           © {new Date().getFullYear()} Bit-IndCon. All rights reserved.
         </span>
         <span className="footer-divider">•</span>
-        <img src="/BAVYALO.png" alt="BAVYA Logo" className="footer-logo" style={{ maxHeight: '35px' }} />
+        <img src={`${import.meta.env.BASE_URL}BAVYALO.png`} alt="BAVYA Logo" className="footer-logo" style={{ maxHeight: '35px' }} />
       </footer>
 
       {/* MOBILE DRAWER OVERLAY */}
@@ -642,7 +642,7 @@ export default function Layout({ children }) {
               justifyContent: 'center',
               boxShadow: '0 2px 4px rgba(0,0,0,0.06)'
             }}>
-              <img src="/BAVYALO.png" alt="BAVYA Logo" style={{ height: '26px', objectFit: 'contain' }} />
+              <img src={`${import.meta.env.BASE_URL}BAVYALO.png`} alt="BAVYA Logo" style={{ height: '26px', objectFit: 'contain' }} />
             </div>
             <div className="brand-text-wrapper">
               <span className="bavya-brand-title">BIT-IndCon</span>
