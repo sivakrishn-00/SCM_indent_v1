@@ -463,7 +463,7 @@ def get_all_permissions(
 
     with _perms_sync_lock:
         # 2. Pages configuration
-        pages = ["overview", "shift", "indents", "masters", "workflow", "users", "audit", "reports"]
+        pages = ["overview", "shift", "indents", "masters", "workflow", "users", "audit", "reports", "inventory"]
         
         # 3. Check existing role permissions
         existing_perms = db.query(RolePermission).filter(RolePermission.project == project).all()
@@ -506,19 +506,19 @@ def get_all_permissions(
                         can_update = True
                         can_delete = True
                     elif "manager" in r_lower or "pm" in r_lower:
-                        if page in ["overview", "shift", "indents", "reports"]:
+                        if page in ["overview", "shift", "indents", "reports", "inventory"]:
                             can_view = True
                             can_create = True
                             can_update = True
                             can_delete = True
                     elif "supervisor" in r_lower:
-                        if page in ["overview", "shift", "indents", "reports"]:
+                        if page in ["overview", "shift", "indents", "reports", "inventory"]:
                             can_view = True
                             can_create = True
                             can_update = True
                             can_delete = True
                     elif "operator" in r_lower or "pilot" in r_lower or "paravet" in r_lower:
-                        if page in ["shift", "indents"]:
+                        if page in ["shift", "indents", "inventory"]:
                             can_view = True
                             can_create = True
                             can_update = (page == "shift")

@@ -65,7 +65,7 @@ export default function InventoryPage() {
     updateBatchRow, addBatchRow, removeBatchRow,
     transitInventory, userRole, userOffice, userProject,
     drugs, projects, selectedProject, setSelectedProject,
-    selectedShiftItems, fetchInitOffices, shiftStatus
+    selectedShiftItems, fetchInitOffices, shiftStatus, hasPermission
   } = useApp();
 
   // Local state for layout/display
@@ -168,7 +168,7 @@ export default function InventoryPage() {
             </div>
 
             
-            {(userRole === 'admin' || userRole.toLowerCase().includes('operator') || userRole.toLowerCase().includes('manager')) && (
+            {hasPermission('inventory', 'create') && (
               <button 
                 type="button"
                 className="action-btn-primary"
@@ -218,10 +218,10 @@ export default function InventoryPage() {
                   opacity: officeInventory.length > 0 ? 0.6 : 1,
                   cursor: officeInventory.length > 0 ? 'not-allowed' : 'pointer'
                 }}
-                title={officeInventory.length > 0 ? "Opening stock has already been initialized for this project/office." : ""}
+                title={officeInventory.length > 0 ? "Opening balance has already been initialized for this project/office." : ""}
               >
                 <Plus size={16} />
-                <span>Configure Opening Stock</span>
+                <span>Opening Balance</span>
               </button>
             )}
           </div>
@@ -327,7 +327,7 @@ export default function InventoryPage() {
                </table>
             ) : officeInventory.length === 0 ? (
               <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
-                No inventory balances found. Setup opening stock using the "Configure Opening Stock" button above.
+                No inventory balances found. Setup opening stock using the "Opening Balance" button above.
               </div>
             ) : (
                <table className="portal-table">

@@ -367,6 +367,7 @@ export default function PermissionsPage() {
                             {p.page === 'shift' ? 'Shift Consumption' : 
                              p.page === 'masters' ? 'Material Master' :
                              p.page === 'workflow' ? 'Workflow Config' :
+                             p.page === 'inventory' ? 'Office Inventory' :
                              p.page}
                           </span>
                         </td>

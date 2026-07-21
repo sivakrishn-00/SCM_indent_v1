@@ -123,6 +123,7 @@ def startup_event():
                 {"role": "admin", "page": "users", "can_view": True, "can_create": True, "can_update": True, "can_delete": True},
                 {"role": "admin", "page": "audit", "can_view": True, "can_create": True, "can_update": True, "can_delete": True},
                 {"role": "admin", "page": "reports", "can_view": True, "can_create": True, "can_update": True, "can_delete": True},
+                {"role": "admin", "page": "inventory", "can_view": True, "can_create": True, "can_update": True, "can_delete": True},
                 # project_manager
                 {"role": "project_manager", "page": "overview", "can_view": True, "can_create": True, "can_update": True, "can_delete": True},
                 {"role": "project_manager", "page": "shift", "can_view": True, "can_create": True, "can_update": True, "can_delete": True},
@@ -131,6 +132,7 @@ def startup_event():
                 {"role": "project_manager", "page": "masters", "can_view": False, "can_create": False, "can_update": False, "can_delete": False},
                 {"role": "project_manager", "page": "users", "can_view": False, "can_create": False, "can_update": False, "can_delete": False},
                 {"role": "project_manager", "page": "audit", "can_view": False, "can_create": False, "can_update": False, "can_delete": False},
+                {"role": "project_manager", "page": "inventory", "can_view": True, "can_create": True, "can_update": True, "can_delete": True},
                 # supervisor
                 {"role": "supervisor", "page": "overview", "can_view": True, "can_create": True, "can_update": True, "can_delete": True},
                 {"role": "supervisor", "page": "shift", "can_view": True, "can_create": True, "can_update": True, "can_delete": True},
@@ -139,6 +141,7 @@ def startup_event():
                 {"role": "supervisor", "page": "masters", "can_view": False, "can_create": False, "can_update": False, "can_delete": False},
                 {"role": "supervisor", "page": "users", "can_view": False, "can_create": False, "can_update": False, "can_delete": False},
                 {"role": "supervisor", "page": "audit", "can_view": False, "can_create": False, "can_update": False, "can_delete": False},
+                {"role": "supervisor", "page": "inventory", "can_view": True, "can_create": True, "can_update": True, "can_delete": True},
                 # operator
                 {"role": "operator", "page": "shift", "can_view": True, "can_create": True, "can_update": True, "can_delete": False},
                 {"role": "operator", "page": "indents", "can_view": True, "can_create": True, "can_update": False, "can_delete": False},
@@ -147,6 +150,7 @@ def startup_event():
                 {"role": "operator", "page": "masters", "can_view": False, "can_create": False, "can_update": False, "can_delete": False},
                 {"role": "operator", "page": "users", "can_view": False, "can_create": False, "can_update": False, "can_delete": False},
                 {"role": "operator", "page": "audit", "can_view": False, "can_create": False, "can_update": False, "can_delete": False},
+                {"role": "operator", "page": "inventory", "can_view": True, "can_create": True, "can_update": True, "can_delete": False},
             ]
             for d in defaults:
                 db.add(RolePermission(**d))
