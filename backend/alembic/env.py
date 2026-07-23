@@ -19,7 +19,7 @@ from app.models.drug import DrugMaster
 from app.models.office_inventory import OfficeInventory
 from app.models.transit_inventory import TransitInventory
 from app.models.audit_log import AuditLog
-from app.models.project_config import ProjectApprovalConfig
+from app.models.project_config import ProjectApprovalConfig, ProjectShiftMapping, ProjectCalendarConfig, ProjectHoliday
 from app.models.permission import RolePermission
 from app.models.roster import ShiftRoster
 from app.models.api_config import APISetting
@@ -95,6 +95,7 @@ def run_migrations_online() -> None:
 
         with context.begin_transaction():
             context.run_migrations()
+        connection.commit()
 
 
 if context.is_offline_mode():

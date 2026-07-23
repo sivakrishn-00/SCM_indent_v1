@@ -100,8 +100,10 @@ export default function ShiftManagementPage() {
   const navigate = useNavigate();
   const {
     user, userRole, projects, userProject, userOffice,
-    addAuditLog
+    addAuditLog, hasPermission
   } = useApp();
+
+  const isAdmin = userRole === 'admin' || user?.username === 'admin';
 
   // ─── Shift Timings Configurations State ────────────
   const [shiftTypes, setShiftTypes] = useState(() => {
@@ -183,12 +185,26 @@ export default function ShiftManagementPage() {
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [configShift1Start, setConfigShift1Start] = useState('06:00');
   const [configShift1End, setConfigShift1End] = useState('14:00');
+  const [configShift1Active, setConfigShift1Active] = useState(true);
   const [configShift2Start, setConfigShift2Start] = useState('14:00');
   const [configShift2End, setConfigShift2End] = useState('22:00');
+  const [configShift2Active, setConfigShift2Active] = useState(true);
   const [configShift3Start, setConfigShift3Start] = useState('22:00');
   const [configShift3End, setConfigShift3End] = useState('06:00');
+  const [configShift3Active, setConfigShift3Active] = useState(true);
   const [configGeneralStart, setConfigGeneralStart] = useState('09:00');
   const [configGeneralEnd, setConfigGeneralEnd] = useState('18:00');
+  const [configGeneralActive, setConfigGeneralActive] = useState(true);
+
+  // ─── Calendar Configuration Modal State ────────────
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [calendarSettings, setCalendarSettings] = useState({ weekoff_days: 'Sunday', holidays: [], working_days_summary: null });
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+  const [newHolidayDate, setNewHolidayDate] = useState('');
+  const [newHolidayDesc, setNewHolidayDesc] = useState('');
 
 
   // ─── Import Modal State ──────────────────────────
@@ -204,23 +220,39 @@ export default function ShiftManagementPage() {
     }
   }, [selectedProject]);
 
-  const downloadCSVTemplate = () => {
-    const headers = ["employee_code", "shift_date", "shift_type", "office_name", "employee_name", "start_time", "end_time"];
-    const csvContent = [
-      headers.join(","),
-      `"HR-EMP-12010","2026-07-28","shift_1","AP-1962-MVU-KOTHAPATNAM","Subbarao","06:00","14:00"`,
-      `"HR-EMP-12009","2026-07-28","shift_2","AP-1962-MVU-KOTHAPATNAM","Ramesh","14:00","22:00"`,
-      `"HR-EMP-07989","2026-07-28","general","AP-1962-MVU-KOTHAPATNAM","Suresh","09:00","18:00"`,
-      `"HR-EMP-12010","2026-07-29","off","","","",""`
-    ].join("\n");
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `roster_template_${importProject}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const downloadCSVTemplate = async () => {
+    if (!importProject) {
+      toast.error("Please select a project first.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000/api/v1`}/roster/template?project=${encodeURIComponent(importProject)}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+          }
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to download template.");
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `roster_template_${importProject.toLowerCase().replace(/ /g, '_')}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Roster template page downloaded successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to download roster template.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleImportRoster = async (e) => {
@@ -322,10 +354,48 @@ export default function ShiftManagementPage() {
       api.projects.getOffices(selectedProject)
         .then(data => setOffices(data || []))
         .catch(err => console.error("Error loading offices:", err));
+
+      // Fetch dynamic active shifts config for this project
+      api.projects.getProjectShifts(selectedProject)
+        .then(data => {
+          const icons = { shift_1: Sun, shift_2: Sunset, shift_3: Clock, general: Briefcase, off: Coffee };
+          const emojis = { shift_1: '🔵', shift_2: '🟠', shift_3: '🟣', general: '🟢', off: '⚪' };
+          const colors = { shift_1: 'blue', shift_2: 'orange', shift_3: 'purple', general: 'green', off: 'gray' };
+
+          const newShifts = {};
+          data.forEach(s => {
+            newShifts[s.shift_type] = {
+              label: s.label,
+              emoji: emojis[s.shift_type] || '⚫',
+              icon: icons[s.shift_type] || Clock,
+              defaultStart: s.default_start,
+              defaultEnd: s.default_end,
+              color: colors[s.shift_type] || 'blue',
+              isActive: s.is_active
+            };
+          });
+          setShiftTypes(newShifts);
+        })
+        .catch(err => console.error("Error loading project shifts:", err));
     } else {
       setOffices([]);
     }
   }, [selectedProject]);
+
+  // ─── Fetch calendar settings when project or month changes ──────────
+  const fetchCalendarSettings = async () => {
+    if (!selectedProject) return;
+    try {
+      const data = await api.projects.getCalendar(selectedProject, calendarMonth);
+      setCalendarSettings(data);
+    } catch (err) {
+      console.error("Error loading calendar settings:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchCalendarSettings();
+  }, [selectedProject, calendarMonth]);
 
   // ─── Auto-set office for non-admin ────────────────
   useEffect(() => {
@@ -432,6 +502,10 @@ export default function ShiftManagementPage() {
 
   // ─── Inline Shift Edit ────────────────────────────
   const handleCellClick = (empCode, dateKey) => {
+    if (!hasPermission('roster', 'update') && !hasPermission('roster', 'create')) {
+      toast.error("You do not have permission to modify shift rosters.");
+      return;
+    }
     if (isPastDate(dateKey)) {
       toast.error("Past shifts cannot be modified.");
       return;
@@ -444,6 +518,10 @@ export default function ShiftManagementPage() {
   };
 
   const handleShiftChange = async (emp, dateKey, newShiftType) => {
+    if (!hasPermission('roster', 'update') && !hasPermission('roster', 'create')) {
+      toast.error("You do not have permission to change shift assignments.");
+      return;
+    }
     if (isPastDate(dateKey)) {
       toast.error("Past shifts cannot be modified.");
       return;
@@ -495,6 +573,10 @@ export default function ShiftManagementPage() {
   };
 
   const handleDeleteShift = async (emp, dateKey) => {
+    if (!hasPermission('roster', 'delete')) {
+      toast.error("You do not have permission to cancel shift assignments.");
+      return;
+    }
     if (isPastDate(dateKey)) {
       toast.error("Past shifts cannot be modified.");
       return;
@@ -530,47 +612,78 @@ export default function ShiftManagementPage() {
   };
 
   const openConfigModal = () => {
-    setConfigShift1Start(SHIFT_TYPES.shift_1.defaultStart || '06:00');
-    setConfigShift1End(SHIFT_TYPES.shift_1.defaultEnd || '14:00');
-    setConfigShift2Start(SHIFT_TYPES.shift_2.defaultStart || '14:00');
-    setConfigShift2End(SHIFT_TYPES.shift_2.defaultEnd || '22:00');
-    setConfigShift3Start(SHIFT_TYPES.shift_3.defaultStart || '22:00');
-    setConfigShift3End(SHIFT_TYPES.shift_3.defaultEnd || '06:00');
-    setConfigGeneralStart(SHIFT_TYPES.general.defaultStart || '09:00');
-    setConfigGeneralEnd(SHIFT_TYPES.general.defaultEnd || '18:00');
+    if (!hasPermission('roster', 'update')) {
+      toast.error("You do not have permission to configure shift timings.");
+      return;
+    }
+    setConfigShift1Start(SHIFT_TYPES.shift_1?.defaultStart || '06:00');
+    setConfigShift1End(SHIFT_TYPES.shift_1?.defaultEnd || '14:00');
+    setConfigShift1Active(SHIFT_TYPES.shift_1?.isActive !== false);
+
+    setConfigShift2Start(SHIFT_TYPES.shift_2?.defaultStart || '14:00');
+    setConfigShift2End(SHIFT_TYPES.shift_2?.defaultEnd || '22:00');
+    setConfigShift2Active(SHIFT_TYPES.shift_2?.isActive !== false);
+
+    setConfigShift3Start(SHIFT_TYPES.shift_3?.defaultStart || '22:00');
+    setConfigShift3End(SHIFT_TYPES.shift_3?.defaultEnd || '06:00');
+    setConfigShift3Active(SHIFT_TYPES.shift_3?.isActive !== false);
+
+    setConfigGeneralStart(SHIFT_TYPES.general?.defaultStart || '09:00');
+    setConfigGeneralEnd(SHIFT_TYPES.general?.defaultEnd || '18:00');
+    setConfigGeneralActive(SHIFT_TYPES.general?.isActive !== false);
+
     setShowConfigModal(true);
   };
 
   const handleConfigSubmit = async () => {
-    const updated = {
-      ...SHIFT_TYPES,
-      shift_1: { ...SHIFT_TYPES.shift_1, defaultStart: configShift1Start, defaultEnd: configShift1End },
-      shift_2: { ...SHIFT_TYPES.shift_2, defaultStart: configShift2Start, defaultEnd: configShift2End },
-      shift_3: { ...SHIFT_TYPES.shift_3, defaultStart: configShift3Start, defaultEnd: configShift3End },
-      general: { ...SHIFT_TYPES.general, defaultStart: configGeneralStart, defaultEnd: configGeneralEnd },
-    };
+    try {
+      const payloadShifts = [
+        { shift_type: 'shift_1', label: SHIFT_TYPES.shift_1.label, default_start: configShift1Start, default_end: configShift1End, is_active: configShift1Active },
+        { shift_type: 'shift_2', label: SHIFT_TYPES.shift_2.label, default_start: configShift2Start, default_end: configShift2End, is_active: configShift2Active },
+        { shift_type: 'shift_3', label: SHIFT_TYPES.shift_3.label, default_start: configShift3Start, default_end: configShift3End, is_active: configShift3Active },
+        { shift_type: 'general', label: SHIFT_TYPES.general.label, default_start: configGeneralStart, default_end: configGeneralEnd, is_active: configGeneralActive },
+        { shift_type: 'off', label: SHIFT_TYPES.off.label, default_start: '', default_end: '', is_active: true }
+      ];
 
-    setShiftTypes(updated);
-    
-    // Save to localStorage
-    const toSave = {};
-    Object.keys(updated).forEach(k => {
-      const { icon, ...rest } = updated[k];
-      toSave[k] = rest;
-    });
-    localStorage.setItem('bit_indent_shift_types', JSON.stringify(toSave));
+      await api.projects.saveProjectShifts(selectedProject, payloadShifts);
 
-    toast.success("Shift timings configured successfully!");
-    setShowConfigModal(false);
+      const icons = { shift_1: Sun, shift_2: Sunset, shift_3: Clock, general: Briefcase, off: Coffee };
+      const emojis = { shift_1: '🔵', shift_2: '🟠', shift_3: '🟣', general: '🟢', off: '⚪' };
+      const colors = { shift_1: 'blue', shift_2: 'orange', shift_3: 'purple', general: 'green', off: 'gray' };
 
-    await addAuditLog('CONFIG_SHIFT_TIMINGS', 'SHIFT_MANAGEMENT',
-      `Configured predefined shift timings: Shift 1 (${configShift1Start}-${configShift1End}), Shift 2 (${configShift2Start}-${configShift2End}), Shift 3 (${configShift3Start}-${configShift3End}), General (${configGeneralStart}-${configGeneralEnd})`,
-      'SUCCESS', selectedProject
-    );
+      const updated = {};
+      payloadShifts.forEach(s => {
+        updated[s.shift_type] = {
+          label: s.label,
+          emoji: emojis[s.shift_type] || '⚫',
+          icon: icons[s.shift_type] || Clock,
+          defaultStart: s.default_start,
+          defaultEnd: s.default_end,
+          color: colors[s.shift_type] || 'blue',
+          isActive: s.is_active
+        };
+      });
+
+      setShiftTypes(updated);
+      toast.success("Shift timings configured successfully!");
+      setShowConfigModal(false);
+
+      await addAuditLog('CONFIG_SHIFT_TIMINGS', 'SHIFT_MANAGEMENT',
+        `Configured predefined shift timings: Shift 1 (${configShift1Start}-${configShift1End}), Shift 2 (${configShift2Start}-${configShift2End}), Shift 3 (${configShift3Start}-${configShift3End}), General (${configGeneralStart}-${configGeneralEnd})`,
+        'SUCCESS', selectedProject
+      );
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || "Failed to configure shift timings.");
+    }
   };
 
   // ─── Assign Modal ──────────────────────────────
   const openAssignModal = async () => {
+    if (!hasPermission('roster', 'create')) {
+      toast.error("You do not have permission to assign shifts.");
+      return;
+    }
     if (!selectedProject) {
       toast.error("Please select a project first.");
       return;
@@ -808,6 +921,14 @@ export default function ShiftManagementPage() {
 
 
   // ─── RENDER ───────────────────────────────────────
+  if (!hasPermission('roster', 'view')) {
+    return (
+      <div style={{ padding: '24px', color: '#f43f5e', fontWeight: 'bold' }}>
+        Unauthorized: Shift Management permission required.
+      </div>
+    );
+  }
+
   return (
     <div className="shift-mgmt-container">
       {/* Header */}
@@ -821,26 +942,42 @@ export default function ShiftManagementPage() {
             <RefreshCw size={14} className={loading ? 'spin-animation' : ''} />
             <span>Refresh</span>
           </button>
-          <button className="action-btn-secondary" onClick={openConfigModal} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text-secondary)' }}>
-            <Clock size={14} />
-            <span>Shift Timings</span>
-          </button>
-          <button className="action-btn-secondary" onClick={() => navigate('/shift-management/audits')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text-secondary)' }}>
-            <CalendarDays size={14} />
-            <span>Shift Audits</span>
-          </button>
-          <button className="action-btn-secondary" onClick={() => setShowImportModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text-secondary)' }}>
-            <Upload size={14} />
-            <span>Import Excel/CSV</span>
-          </button>
-          <button className="action-btn-secondary" onClick={downloadActiveRosterCSV} disabled={!rosterData} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text-secondary)' }}>
-            <Download size={14} />
-            <span>Export Roster CSV</span>
-          </button>
-          <button className="btn-primary-gradient" onClick={openAssignModal}>
-            <Plus size={14} />
-            <span>Assign Shifts</span>
-          </button>
+          {isAdmin && (
+            <button className="action-btn-secondary" onClick={openConfigModal} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text-secondary)' }}>
+              <Clock size={14} />
+              <span>Shift Timings</span>
+            </button>
+          )}
+          {isAdmin && (
+            <button className="action-btn-secondary" onClick={() => navigate('/shift-management/audits')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text-secondary)' }}>
+              <CalendarDays size={14} />
+              <span>Shift Audits</span>
+            </button>
+          )}
+          {isAdmin && (
+            <button className="action-btn-secondary" onClick={() => setShowCalendarModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text-secondary)' }}>
+              <CalendarDays size={14} />
+              <span>Calendar Settings</span>
+            </button>
+          )}
+          {hasPermission('roster', 'create') && (
+            <button className="action-btn-secondary" onClick={() => setShowImportModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text-secondary)' }}>
+              <Upload size={14} />
+              <span>Import Excel/CSV</span>
+            </button>
+          )}
+          {hasPermission('roster', 'view') && (
+            <button className="action-btn-secondary" onClick={downloadActiveRosterCSV} disabled={!rosterData} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text-secondary)' }}>
+              <Download size={14} />
+              <span>Export Roster CSV</span>
+            </button>
+          )}
+          {hasPermission('roster', 'create') && (
+            <button className="btn-primary-gradient" onClick={openAssignModal}>
+              <Plus size={14} />
+              <span>Assign Shifts</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -1127,7 +1264,7 @@ export default function ShiftManagementPage() {
                             {/* Inline Edit Dropdown */}
                             {isEditing && (
                               <div className="inline-shift-edit" ref={editRef}>
-                                {Object.entries(SHIFT_TYPES).map(([key, cfg]) => (
+                                {Object.entries(SHIFT_TYPES).filter(([key, cfg]) => cfg?.isActive !== false).map(([key, cfg]) => (
                                   <button
                                     key={key}
                                     className={`inline-shift-option ${shift?.shift_type === key ? 'selected' : ''}`}
@@ -1270,7 +1407,7 @@ export default function ShiftManagementPage() {
                   <CustomSelect
                     value={assignShiftType}
                     onChange={(e) => handleShiftTypeChange(e.target.value)}
-                    options={Object.entries(SHIFT_TYPES).map(([k, v]) => ({
+                    options={Object.entries(SHIFT_TYPES).filter(([k, v]) => v?.isActive !== false).map(([k, v]) => ({
                       value: k,
                       label: `${v.emoji} ${v.label}`
                     }))}
@@ -1444,7 +1581,7 @@ export default function ShiftManagementPage() {
                     setEditStartTime(cfg.defaultStart || '');
                     setEditEndTime(cfg.defaultEnd || '');
                   }}
-                  options={Object.entries(SHIFT_TYPES).map(([k, v]) => ({
+                  options={Object.entries(SHIFT_TYPES).filter(([k, v]) => v?.isActive !== false).map(([k, v]) => ({
                     value: k,
                     label: `${v.emoji} ${v.label}`
                   }))}
@@ -1616,8 +1753,14 @@ export default function ShiftManagementPage() {
               </div>
 
               {/* Shift 1 */}
-              <div style={{ display: 'grid', gridTemplateColumns: '170px 1fr 1fr', gap: '16px', alignItems: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr 1fr', gap: '16px', alignItems: 'center', opacity: configShift1Active ? 1 : 0.6 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600', fontSize: '13px' }}>
+                  <input
+                    type="checkbox"
+                    checked={configShift1Active}
+                    onChange={(e) => setConfigShift1Active(e.target.checked)}
+                    style={{ margin: 0, width: '16px', height: '16px', cursor: 'pointer' }}
+                  />
                   <span>🔵</span>
                   <span>Shift 1 (Morning)</span>
                 </div>
@@ -1627,6 +1770,7 @@ export default function ShiftManagementPage() {
                     value={configShift1Start}
                     onChange={setConfigShift1Start}
                     placement="bottom"
+                    disabled={!configShift1Active}
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -1635,13 +1779,20 @@ export default function ShiftManagementPage() {
                     value={configShift1End}
                     onChange={setConfigShift1End}
                     placement="bottom"
+                    disabled={!configShift1Active}
                   />
                 </div>
               </div>
 
               {/* Shift 2 */}
-              <div style={{ display: 'grid', gridTemplateColumns: '170px 1fr 1fr', gap: '16px', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #f1f5f9' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr 1fr', gap: '16px', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #f1f5f9', opacity: configShift2Active ? 1 : 0.6 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600', fontSize: '13px' }}>
+                  <input
+                    type="checkbox"
+                    checked={configShift2Active}
+                    onChange={(e) => setConfigShift2Active(e.target.checked)}
+                    style={{ margin: 0, width: '16px', height: '16px', cursor: 'pointer' }}
+                  />
                   <span>🟠</span>
                   <span>Shift 2 (Evening)</span>
                 </div>
@@ -1651,6 +1802,7 @@ export default function ShiftManagementPage() {
                     value={configShift2Start}
                     onChange={setConfigShift2Start}
                     placement="bottom"
+                    disabled={!configShift2Active}
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -1659,13 +1811,20 @@ export default function ShiftManagementPage() {
                     value={configShift2End}
                     onChange={setConfigShift2End}
                     placement="bottom"
+                    disabled={!configShift2Active}
                   />
                 </div>
               </div>
 
               {/* Shift 3 */}
-              <div style={{ display: 'grid', gridTemplateColumns: '170px 1fr 1fr', gap: '16px', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #f1f5f9' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr 1fr', gap: '16px', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #f1f5f9', opacity: configShift3Active ? 1 : 0.6 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600', fontSize: '13px' }}>
+                  <input
+                    type="checkbox"
+                    checked={configShift3Active}
+                    onChange={(e) => setConfigShift3Active(e.target.checked)}
+                    style={{ margin: 0, width: '16px', height: '16px', cursor: 'pointer' }}
+                  />
                   <span>🟣</span>
                   <span>Shift 3 (Night)</span>
                 </div>
@@ -1675,6 +1834,7 @@ export default function ShiftManagementPage() {
                     value={configShift3Start}
                     onChange={setConfigShift3Start}
                     placement="top"
+                    disabled={!configShift3Active}
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -1683,13 +1843,20 @@ export default function ShiftManagementPage() {
                     value={configShift3End}
                     onChange={setConfigShift3End}
                     placement="top"
+                    disabled={!configShift3Active}
                   />
                 </div>
               </div>
 
               {/* General Shift */}
-              <div style={{ display: 'grid', gridTemplateColumns: '170px 1fr 1fr', gap: '16px', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #f1f5f9' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr 1fr', gap: '16px', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #f1f5f9', opacity: configGeneralActive ? 1 : 0.6 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600', fontSize: '13px' }}>
+                  <input
+                    type="checkbox"
+                    checked={configGeneralActive}
+                    onChange={(e) => setConfigGeneralActive(e.target.checked)}
+                    style={{ margin: 0, width: '16px', height: '16px', cursor: 'pointer' }}
+                  />
                   <span>🟢</span>
                   <span>General Shift</span>
                 </div>
@@ -1699,6 +1866,7 @@ export default function ShiftManagementPage() {
                     value={configGeneralStart}
                     onChange={setConfigGeneralStart}
                     placement="top"
+                    disabled={!configGeneralActive}
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -1707,6 +1875,7 @@ export default function ShiftManagementPage() {
                     value={configGeneralEnd}
                     onChange={setConfigGeneralEnd}
                     placement="top"
+                    disabled={!configGeneralActive}
                   />
                 </div>
               </div>
@@ -1719,6 +1888,205 @@ export default function ShiftManagementPage() {
               <button className="btn-primary-gradient" onClick={handleConfigSubmit}>
                 <Plus size={14} />
                 Save Configurations
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CALENDAR & HOLIDAYS CONFIGURATION MODAL */}
+      {showCalendarModal && (
+        <div className="roster-modal-overlay" onClick={() => setShowCalendarModal(false)}>
+          <div className="roster-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '650px', width: '90%' }}>
+            <div className="roster-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CalendarDays size={20} style={{ color: 'var(--primary)' }} />
+                <h3 style={{ margin: 0 }}>Calendar & Holidays Configuration</h3>
+              </div>
+              <button className="roster-modal-close" onClick={() => setShowCalendarModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="roster-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '70vh', overflowY: 'auto' }}>
+              
+              {/* Select Month & Working Days Analysis */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                  <h4 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '14px', fontWeight: '700' }}>Working Days Analysis</h4>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>Month:</label>
+                    <input
+                      type="month"
+                      value={calendarMonth}
+                      onChange={(e) => setCalendarMonth(e.target.value)}
+                      style={{ padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', background: '#fff' }}
+                    />
+                  </div>
+                </div>
+
+                {calendarSettings.working_days_summary ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginTop: '10px' }}>
+                    <div style={{ padding: '10px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', textAlign: 'center' }}>
+                      <span style={{ fontSize: '10px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', display: 'block' }}>Total Days</span>
+                      <span style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b' }}>{calendarSettings.working_days_summary.total_days}</span>
+                    </div>
+                    <div style={{ padding: '10px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', textAlign: 'center' }}>
+                      <span style={{ fontSize: '10px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', display: 'block' }}>Weekoffs</span>
+                      <span style={{ fontSize: '18px', fontWeight: '800', color: '#64748b' }}>{calendarSettings.working_days_summary.weekoffs_count}</span>
+                    </div>
+                    <div style={{ padding: '10px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', textAlign: 'center' }}>
+                      <span style={{ fontSize: '10px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', display: 'block' }}>Holidays</span>
+                      <span style={{ fontSize: '18px', fontWeight: '800', color: '#ef4444' }}>{calendarSettings.working_days_summary.holidays_count}</span>
+                    </div>
+                    <div style={{ padding: '10px', background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', border: '1px solid #bbf7d0', borderRadius: '8px', textAlign: 'center' }}>
+                      <span style={{ fontSize: '10px', fontWeight: '700', color: '#15803d', textTransform: 'uppercase', display: 'block' }}>Working Days</span>
+                      <span style={{ fontSize: '18px', fontWeight: '800', color: '#166534' }}>{calendarSettings.working_days_summary.working_days}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center', padding: '10px' }}>Loading analysis...</div>
+                )}
+              </div>
+
+              {/* Define Weekoff Settings */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Weekly Off Configuration</h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '4px' }}>
+                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
+                    const activeDays = (calendarSettings.weekoff_days || '').split(',').map(d => d.trim());
+                    const isChecked = activeDays.includes(day);
+                    return (
+                      <label key={day} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', background: isChecked ? '#eff6ff' : '#f8fafc', border: isChecked ? '1px solid #bfdbfe' : '1px solid #e2e8f0', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', fontWeight: isChecked ? '600' : 'normal' }}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={async (e) => {
+                            let newActive;
+                            if (e.target.checked) {
+                              newActive = [...activeDays.filter(d => d), day];
+                            } else {
+                              newActive = activeDays.filter(d => d !== day);
+                            }
+                            const updatedString = newActive.join(',');
+                            setCalendarSettings(prev => ({ ...prev, weekoff_days: updatedString }));
+                            try {
+                              await api.projects.saveCalendarSettings(selectedProject, updatedString);
+                              fetchCalendarSettings();
+                              toast.success("Weekoff days updated!");
+                            } catch (err) {
+                              toast.error("Failed to save calendar setting.");
+                            }
+                          }}
+                          style={{ margin: 0 }}
+                        />
+                        {day}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Add Holiday & Manage Holidays */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
+                <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Manage Holidays for Selected Month</h4>
+                
+                {/* Add Holiday Form */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr auto', gap: '10px', alignItems: 'end', background: '#fafafa', padding: '12px', borderRadius: '8px', border: '1px dashed #e2e8f0' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: '700', color: '#687588' }}>Date</label>
+                    <input
+                      type="date"
+                      value={newHolidayDate}
+                      onChange={(e) => setNewHolidayDate(e.target.value)}
+                      style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', width: '100%' }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: '700', color: '#687588' }}>Description</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Independence Day"
+                      value={newHolidayDesc}
+                      onChange={(e) => setNewHolidayDesc(e.target.value)}
+                      style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', width: '100%' }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-primary-gradient"
+                    style={{ padding: '9px 16px' }}
+                    onClick={async () => {
+                      if (!newHolidayDate) {
+                        toast.error("Please select a date.");
+                        return;
+                      }
+                      try {
+                        await api.projects.addHoliday(selectedProject, newHolidayDate, newHolidayDesc);
+                        toast.success("Holiday added successfully!");
+                        setNewHolidayDate('');
+                        setNewHolidayDesc('');
+                        fetchCalendarSettings();
+                      } catch (err) {
+                        toast.error(err.message || "Failed to add holiday.");
+                      }
+                    }}
+                  >
+                    Add Holiday
+                  </button>
+                </div>
+
+                {/* Holiday list */}
+                <div style={{ marginTop: '5px' }}>
+                  {calendarSettings.holidays && calendarSettings.holidays.length > 0 ? (
+                    <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                        <thead>
+                          <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', textAlign: 'left' }}>
+                            <th style={{ padding: '8px 12px', fontWeight: '700', color: '#475569' }}>Date</th>
+                            <th style={{ padding: '8px 12px', fontWeight: '700', color: '#475569' }}>Description</th>
+                            <th style={{ padding: '8px 12px', fontWeight: '700', color: '#475569', textAlign: 'center', width: '60px' }}>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {calendarSettings.holidays.map(h => (
+                            <tr key={h.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                              <td style={{ padding: '8px 12px', fontWeight: '600', color: 'var(--text-primary)' }}>{h.holiday_date}</td>
+                              <td style={{ padding: '8px 12px', color: 'var(--text-secondary)' }}>{h.description || 'N/A'}</td>
+                              <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    try {
+                                      await api.projects.deleteHoliday(selectedProject, h.id);
+                                      toast.success("Holiday deleted successfully!");
+                                      fetchCalendarSettings();
+                                    } catch (err) {
+                                      toast.error("Failed to delete holiday.");
+                                    }
+                                  }}
+                                  style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '20px', background: '#fafafa', border: '1px solid #e2e8f0', borderRadius: '8px', color: 'var(--text-secondary)', fontSize: '13px' }}>
+                      No holidays scheduled for this month.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="roster-modal-footer">
+              <button className="btn-primary-gradient" onClick={() => setShowCalendarModal(false)}>
+                Done
               </button>
             </div>
           </div>

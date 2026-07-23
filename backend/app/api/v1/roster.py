@@ -1,6 +1,7 @@
 from typing import List, Any, Optional
 from datetime import datetime, date, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status, Query, File, UploadFile, Form
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from pydantic import BaseModel
@@ -452,6 +453,23 @@ def get_roster_employees(
     Uses the cached EMS API employee data.
     """
     from app.api.v1.users import fetch_all_employees
+    from app.api.v1.utils import get_hierarchy_maps
+    emp_code_to_details, parent_map, has_subordinates_set = get_hierarchy_maps()
+
+    def is_subordinate(emp_code: str, manager_code: str) -> bool:
+        curr = emp_code
+        visited = set()
+        while curr in parent_map:
+            parent = parent_map[curr]
+            if parent == manager_code:
+                return True
+            if parent in visited:
+                break
+            visited.add(parent)
+            curr = parent
+        return False
+
+    is_admin = current_user.role == "admin" or current_user.username == "admin"
 
     employees_data = fetch_all_employees()
     result = []
@@ -478,6 +496,15 @@ def get_roster_employees(
         emp_code = emp.get("employee_code")
         if not emp_code:
             continue
+
+        # Only allow leaf nodes (subordinates who do not have other reportees)
+        if emp_code in has_subordinates_set:
+            continue
+
+        # If not admin, verify that the employee reports to the current supervisor
+        if not is_admin:
+            if not is_subordinate(emp_code, current_user.username):
+                continue
 
         result.append({
             "employee_code": emp_code,
@@ -738,12 +765,25 @@ def import_roster(
     created_count = 0
     skipped_count = 0
 
-    SHIFT_TYPES_CONFIG = {
-        "shift_1": {"defaultStart": "06:00", "defaultEnd": "14:00"},
-        "shift_2": {"defaultStart": "14:00", "defaultEnd": "22:00"},
-        "general": {"defaultStart": "09:00", "defaultEnd": "18:00"},
-        "off": {"defaultStart": None, "defaultEnd": None}
-    }
+    from app.models.project_config import ProjectShiftMapping
+    db_shifts = db.query(ProjectShiftMapping).filter(
+        ProjectShiftMapping.project_name == project,
+        ProjectShiftMapping.is_active == True
+    ).all()
+    
+    if db_shifts:
+        SHIFT_TYPES_CONFIG = {
+            m.shift_type: {"defaultStart": m.default_start, "defaultEnd": m.default_end}
+            for m in db_shifts
+        }
+    else:
+        SHIFT_TYPES_CONFIG = {
+            "shift_1": {"defaultStart": "06:00", "defaultEnd": "14:00"},
+            "shift_2": {"defaultStart": "14:00", "defaultEnd": "22:00"},
+            "shift_3": {"defaultStart": "22:00", "defaultEnd": "06:00"},
+            "general": {"defaultStart": "09:00", "defaultEnd": "18:00"},
+            "off": {"defaultStart": None, "defaultEnd": None}
+        }
 
     for row_num, rdata in rows:
         emp_code = rdata.get("employee_code", "").strip()
@@ -782,7 +822,7 @@ def import_roster(
             continue
 
         if shift_type not in SHIFT_TYPES_CONFIG:
-            errors.append(f"Row {row_num}: Invalid shift type '{shift_type}'. Permitted values: shift_1, shift_2, general, off.")
+            errors.append(f"Row {row_num}: Invalid shift type '{shift_type}'. Permitted values: {', '.join(SHIFT_TYPES_CONFIG.keys())}.")
             continue
 
         # Resolve Office
@@ -898,4 +938,218 @@ def import_roster(
         "created": created_count,
         "skipped": skipped_count
     }
+
+@router.get("/roster/template")
+def download_roster_template(
+    project: str = Query(...),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+) -> Any:
+    """
+    Generate an Excel sheet template containing active app users for the project,
+    pre-populating their codes and names, with shift_type constrained by project-specific mapping.
+    """
+    import io
+    import openpyxl
+    from openpyxl.worksheet.datavalidation import DataValidation
+    from openpyxl.utils import get_column_letter
+    from app.models.project_config import ProjectShiftMapping
+    from app.api.v1.utils import get_hierarchy_maps
+
+    # Get active users for the project in local database
+    active_users = db.query(User).filter(
+        User.project == project,
+        User.is_active == True
+    ).all()
+    
+    # Enrich user names / offices using EMS API
+    emp_code_to_details, parent_map, has_subordinates_set = get_hierarchy_maps()
+
+    def is_subordinate(emp_code: str, manager_code: str) -> bool:
+        curr = emp_code
+        visited = set()
+        while curr in parent_map:
+            parent = parent_map[curr]
+            if parent == manager_code:
+                return True
+            if parent in visited:
+                break
+            visited.add(parent)
+            curr = parent
+        return False
+
+    is_admin = current_user.role == "admin" or current_user.username == "admin"
+
+    # Get shifts for the project
+    proj_shifts = db.query(ProjectShiftMapping).filter(
+        ProjectShiftMapping.project_name == project,
+        ProjectShiftMapping.is_active == True
+    ).all()
+    
+    if proj_shifts:
+        valid_shifts = [s.shift_type for s in proj_shifts]
+    else:
+        valid_shifts = ["shift_1", "shift_2", "shift_3", "general", "off"]
+
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+    # Create workbook
+    wb = openpyxl.Workbook()
+    
+    # Metadata sheet for Employees list (source of VLOOKUP and dropdowns)
+    ws_emp = wb.create_sheet(title="Employees")
+    ws_emp.append(["employee_code", "employee_name", "office_name"])
+    
+    num_employees = 0
+    for user in active_users:
+        if user.username in has_subordinates_set:
+            continue
+        # If not admin, restrict download to matching subordinates
+        if not is_admin:
+            if not is_subordinate(user.username, current_user.username):
+                continue
+        emp_details = emp_code_to_details.get(user.username) or {}
+        emp_name = emp_details.get("name") or user.username
+        office_name = emp_details.get("office_name") or "Default Office"
+        if office_name == "N/A":
+            office_name = "Default Office"
+        ws_emp.append([user.username, emp_name, office_name])
+        num_employees += 1
+        
+    if num_employees == 0:
+        ws_emp.append(["HR-EMP-00100", "Unknown Subordinate", "Default Office"])
+        num_employees = 1
+        
+    # Hide the source Employees sheet for extra clean workbook design
+    ws_emp.sheet_state = "hidden"
+    
+    # Active sheet for Roster Import entries
+    ws = wb.active
+    ws.title = "Roster Import"
+    
+    # Set headers
+    headers = ["employee_code", "employee_name", "shift_date", "shift_type", "office_name", "start_time", "end_time"]
+    ws.append(headers)
+    
+    # Style active sheet headers with different colors per column
+    column_styles = [
+        {"bg": "4E78A0", "fg": "FFFFFF"},  # A: employee_code -> Steel Blue
+        {"bg": "59A14F", "fg": "FFFFFF"},  # B: employee_name -> Soft Green
+        {"bg": "EDC240", "fg": "0C231E"},  # C: shift_date -> Light Gold/Amber
+        {"bg": "ED8B33", "fg": "FFFFFF"},  # D: shift_type -> Soft Orange
+        {"bg": "499894", "fg": "FFFFFF"},  # E: office_name -> Cool Teal
+        {"bg": "B07AA1", "fg": "FFFFFF"},  # F: start_time -> Plum
+        {"bg": "9C755F", "fg": "FFFFFF"}   # G: end_time -> Soft Bronze
+    ]
+    
+    border_side = Side(border_style="thin", color="CBD5E1")
+    header_border = Border(left=border_side, right=border_side, top=border_side, bottom=border_side)
+    
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_idx)
+        style = column_styles[col_idx - 1]
+        cell.fill = PatternFill(start_color=style["bg"], end_color=style["bg"], fill_type="solid")
+        cell.font = Font(name="Calibri", size=11, bold=True, color=style["fg"])
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = header_border
+        
+    # Pre-populate blank row slots 2 to 101 with Auto-VLOOKUP formulas and grid borders
+    thin_border = Border(left=border_side, right=border_side, top=border_side, bottom=border_side)
+    for r in range(2, 102):
+        ws[f"B{r}"] = f'=IF(ISBLANK(A{r}),"",IFERROR(VLOOKUP(A{r},Employees!$A$2:$C${num_employees + 1},2,FALSE),""))'
+        ws[f"E{r}"] = f'=IF(ISBLANK(A{r}),"",IFERROR(VLOOKUP(A{r},Employees!$A$2:$C${num_employees + 1},3,FALSE),""))'
+        for col_idx in range(1, 8):
+            ws.cell(row=r, column=col_idx).border = thin_border
+
+    # 1) Populate active shifts in Column E of ws_emp
+    for idx, shift in enumerate(valid_shifts, 2):
+        ws_emp.cell(row=idx, column=5, value=shift)
+
+    # 2) Populate dates list in Column G of ws_emp (from 15 days ago to 45 days in future)
+    start_point = datetime.now().date() - timedelta(days=15)
+    for i in range(60):
+        dt_str = (start_point + timedelta(days=i)).strftime("%Y-%m-%d")
+        ws_emp.cell(row=i + 2, column=7, value=dt_str)
+
+    # 3) Populate times list in Column I of ws_emp (00:00 to 23:30 in 30 min intervals)
+    for hr in range(24):
+        for idx_m, mn in enumerate(["00", "30"]):
+            time_str = f"{hr:02d}:{mn}"
+            ws_emp.cell(row=hr * 2 + idx_m + 2, column=9, value=time_str)
+
+    # 4) Employee Code Selection List validation on Column A
+    emp_dv = DataValidation(type="list", formula1=f"Employees!$A$2:$A${num_employees + 1}", allow_blank=True)
+    emp_dv.error = 'Please select a valid Employee Code from the dropdown list'
+    emp_dv.errorTitle = 'Invalid Employee Code'
+    emp_dv.prompt = 'Select employee code'
+    emp_dv.promptTitle = 'Select code'
+    ws.add_data_validation(emp_dv)
+    emp_dv.add("A2:A101")
+    
+    # 5) Shift Type Selection List validation on Column D (referencing the sheet range instead of comma list text)
+    shift_dv = DataValidation(type="list", formula1=f"Employees!$E$2:$E${len(valid_shifts) + 1}", allow_blank=True)
+    shift_dv.error = 'Please select a valid shift type from the dropdown list'
+    shift_dv.errorTitle = 'Invalid Shift Type'
+    shift_dv.prompt = 'Select shift type'
+    shift_dv.promptTitle = 'Select shift'
+    ws.add_data_validation(shift_dv)
+    shift_dv.add("D2:D101")
+
+    # 6) Date Calendar Dropdown list on Column C (referencing the sheet range of dates)
+    for r in range(2, 102):
+        ws[f"C{r}"].number_format = 'yyyy-mm-dd'
+        
+    date_dv = DataValidation(type="list", formula1=f"Employees!$G$2:$G$61", allow_blank=True)
+    date_dv.error = 'Please enter or select a valid date (YYYY-MM-DD).'
+    date_dv.errorTitle = 'Invalid Date'
+    date_dv.prompt = 'Please select a shift date (YYYY-MM-DD)'
+    date_dv.promptTitle = 'Shift Date'
+    ws.add_data_validation(date_dv)
+    date_dv.add("C2:C101")
+
+    # 7) Start Time Selection List validation on Column F
+    start_time_dv = DataValidation(type="list", formula1="Employees!$I$2:$I$49", allow_blank=True)
+    start_time_dv.error = 'Please select a valid start time'
+    start_time_dv.errorTitle = 'Invalid Start Time'
+    start_time_dv.prompt = 'Select start time'
+    start_time_dv.promptTitle = 'Start Time'
+    ws.add_data_validation(start_time_dv)
+    start_time_dv.add("F2:F101")
+
+    # 8) End Time Selection List validation on Column G
+    end_time_dv = DataValidation(type="list", formula1="Employees!$I$2:$I$49", allow_blank=True)
+    end_time_dv.error = 'Please select a valid end time'
+    end_time_dv.errorTitle = 'Invalid End Time'
+    end_time_dv.prompt = 'Select end time'
+    end_time_dv.promptTitle = 'End Time'
+    ws.add_data_validation(end_time_dv)
+    end_time_dv.add("G2:G101")
+
+    # Set column widths based on sample values / headers
+    for col in ws.columns:
+        col_letter = get_column_letter(col[0].column)
+        if col_letter == 'A':
+            ws.column_dimensions[col_letter].width = 18
+        elif col_letter == 'B':
+            ws.column_dimensions[col_letter].width = 28
+        elif col_letter == 'C':
+            ws.column_dimensions[col_letter].width = 16
+        elif col_letter == 'D':
+            ws.column_dimensions[col_letter].width = 16
+        elif col_letter == 'E':
+            ws.column_dimensions[col_letter].width = 36
+        else:
+            ws.column_dimensions[col_letter].width = 14
+
+    # Save to stream
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    filename = f"Roster_Template_{project.replace(' ', '_')}.xlsx"
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 

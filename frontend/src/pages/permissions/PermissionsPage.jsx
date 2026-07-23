@@ -127,7 +127,8 @@ export default function PermissionsPage() {
 
   const rolePerms = localPerms.filter(p => p.role === selectedRole);
   const filteredRolePerms = rolePerms.filter(p => {
-    const pageName = p.page === 'shift' ? 'Shift Consumption' : p.page;
+    const pageName = p.page === 'shift' ? 'Shift Consumption' : 
+                     p.page === 'roster' ? 'Shift Management' : p.page;
     return pageName.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
@@ -368,6 +369,7 @@ export default function PermissionsPage() {
                              p.page === 'masters' ? 'Material Master' :
                              p.page === 'workflow' ? 'Workflow Config' :
                              p.page === 'inventory' ? 'Office Inventory' :
+                             p.page === 'roster' ? 'Shift Management' :
                              p.page}
                           </span>
                         </td>

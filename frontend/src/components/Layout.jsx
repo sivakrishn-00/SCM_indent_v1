@@ -336,7 +336,7 @@ export default function Layout({ children }) {
             </div>
           )}
 
-          {(hasPermission('users', 'view') || hasPermission('reports', 'view') || hasPermission('audit', 'view') || userRole === 'admin' || userRole === 'project_manager' || userRole === 'supervisor') && (
+          {(hasPermission('users', 'view') || hasPermission('reports', 'view') || hasPermission('audit', 'view') || hasPermission('roster', 'view') || userRole === 'admin' || userRole === 'project_manager' || userRole === 'supervisor') && (
             <div className="nav-dropdown">
               <button
                 type="button"
@@ -358,7 +358,7 @@ export default function Layout({ children }) {
                     Users
                   </button>
                 )}
-                {(userRole === 'admin' || userRole === 'project_manager' || userRole === 'supervisor') && (
+                {hasPermission('roster', 'view') && (
                   <button type="button" className={isActive('/shift-management') ? 'active-dropdown-item' : ''} onClick={() => navigate('/shift-management')}>
                     Shift Management
                   </button>
@@ -782,7 +782,7 @@ export default function Layout({ children }) {
               </div>
             )}
 
-            {(hasPermission('users', 'view') || hasPermission('reports', 'view') || hasPermission('audit', 'view') || userRole === 'admin' || userRole === 'project_manager' || userRole === 'supervisor') && (
+            {(hasPermission('users', 'view') || hasPermission('reports', 'view') || hasPermission('audit', 'view') || hasPermission('roster', 'view') || userRole === 'admin' || userRole === 'project_manager' || userRole === 'supervisor') && (
               <div className="mobile-drawer-dropdown">
                 <button
                   type="button"
@@ -807,7 +807,7 @@ export default function Layout({ children }) {
                         Users
                       </button>
                     )}
-                    {(userRole === 'admin' || userRole === 'project_manager' || userRole === 'supervisor') && (
+                    {hasPermission('roster', 'view') && (
                       <button type="button" className={isActive('/shift-management') ? 'active-dropdown-item' : ''} onClick={() => navigate('/shift-management')}>
                         Shift Management
                       </button>

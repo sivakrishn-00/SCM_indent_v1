@@ -137,6 +137,39 @@ export const api = {
           low_stock_threshold: lowStockThreshold
         })
       });
+    },
+    getProjectShifts(projectName) {
+      return api.request(`/projects/${encodeURIComponent(projectName)}/shifts`);
+    },
+    saveProjectShifts(projectName, shiftsList) {
+      return api.request(`/projects/${encodeURIComponent(projectName)}/shifts`, {
+        method: 'POST',
+        body: JSON.stringify({ shifts: shiftsList })
+      });
+    },
+    getCalendar(projectName, month = '') {
+      const query = month ? `?month=${encodeURIComponent(month)}` : '';
+      return api.request(`/projects/${encodeURIComponent(projectName)}/calendar${query}`);
+    },
+    saveCalendarSettings(projectName, weekoffDays) {
+      return api.request(`/projects/${encodeURIComponent(projectName)}/calendar/settings`, {
+        method: 'POST',
+        body: JSON.stringify({ weekoff_days: weekoffDays })
+      });
+    },
+    addHoliday(projectName, holidayDate, description = '') {
+      return api.request(`/projects/${encodeURIComponent(projectName)}/calendar/holidays`, {
+        method: 'POST',
+        body: JSON.stringify({ holiday_date: holidayDate, description })
+      });
+    },
+    deleteHoliday(projectName, holidayId) {
+      return api.request(`/projects/${encodeURIComponent(projectName)}/calendar/holidays/${holidayId}`, {
+        method: 'DELETE'
+      });
+    },
+    getWorkingDays(projectName, startDate, endDate) {
+      return api.request(`/projects/${encodeURIComponent(projectName)}/working-days?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`);
     }
   },
 
